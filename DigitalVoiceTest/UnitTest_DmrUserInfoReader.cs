@@ -13,7 +13,7 @@ public class UnitTest_DmrUserInfoReader(ITestOutputHelper output)
     {
         try
         {
-            var result = await DmrUserInfoReader.GetUserAsync(2622363);
+            var result = await DmrUserDataReader.GetUserAsync(2622363);
             output.WriteLine($"{result}");
         }
         catch (Exception ex)

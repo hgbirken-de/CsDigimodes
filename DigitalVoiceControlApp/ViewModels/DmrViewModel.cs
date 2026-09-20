@@ -69,7 +69,7 @@ public class DmrViewModel : ViewModelBase
         set { _rxTa = value; OnPropertyChanged(); }
     }
 
-    readonly ConcurrentDictionary<int, (string, string)> _dmrUserCache = []; // value is tuple of (callsign, name)
+    readonly ConcurrentDictionary<int, DmrUserData> _dmrUserCache = [];
 
     int _lastRequestId = 0;
 
@@ -83,10 +83,10 @@ public class DmrViewModel : ViewModelBase
         ClearLastHeardCommand = new RelayCommand<object?>(_ => ClearLastHeard());
 
         // Get all User specific TGs into internal DmrId lookup table.
-        foreach (var kvp in DmrTalkgroups.All) 
-        {
-            _dmrUserCache[kvp.Key] = (kvp.Value.Name, string.Empty);
-        }
+        //foreach (var kvp in DmrTalkgroups.All) 
+        //{
+        //    _dmrUserCache[kvp.Key] = (kvp.Value.Name, string.Empty);
+        //}
     }
 
     public async void ConsumeDmrData(DmrSessionContext sessionCtx)
@@ -105,6 +105,7 @@ public class DmrViewModel : ViewModelBase
 
         string callsign = string.Empty;
         string name = string.Empty;
+        DmrUserData? userData = null;
 
         // Copy/save session attributes
         int dstId = 0;
@@ -122,31 +123,26 @@ public class DmrViewModel : ViewModelBase
                 rxTa = sessionCtx.RxTalkerAlias;
                 if (_dmrUserCache.TryGetValue(srcId, out var value))
                 {
-                    callsign = value.Item1;
-                    name = value.Item2;
+                    userData = value;
                 }
                 else
                 {
                     try
                     {
-                        var user = await DmrUserInfoReader.GetUserAsync(srcId);
-                        if (user != null)
+                        userData = await DmrUserDataReader.GetUserAsync(srcId);
+                        if (userData != null)
                         {
-                            callsign = user.Callsign ?? "N0CALL";
-                            name = user.Name ?? "None";
+                            _dmrUserCache[srcId] = userData; // cache it
                         }
                         else
                         {
                             logger.Warn($"Unable to read user data, srcId = {srcId}");
-                            callsign = sessionCtx.RxSrcId.ToString();
                         }
                     }
                     catch (Exception ex)
                     {
                         logger.Error(ex, $"Error during read of user data, srcId = {srcId}");
-                        callsign = srcId.ToString();
                     }
-                    _dmrUserCache[srcId] = (callsign, name); // cache it
 
                     // The following code is required because async call of "DmrUserInfoReader.GetUserAsync"
                     if (requestId != _lastRequestId)
@@ -172,7 +168,7 @@ public class DmrViewModel : ViewModelBase
             switch (tm)
             {
                 case TransceiveMode.Rx:
-                    Callsign = callsign;
+                    Callsign = userData != null ? (userData.Callsign ?? "NOCALL") : "NOCALL";
                     break;
                 case TransceiveMode.Tx:
                     var us = UserSettings.Instance();
@@ -188,14 +184,14 @@ public class DmrViewModel : ViewModelBase
             //}
             for (int i = 0; i < LastHeard.Count; i++)
             {
-                if (LastHeard[i].DmrId == srcId)
+                if (LastHeard[i].SrcId == srcId)
                 {
                     LastHeard.RemoveAt(i);
                     break;
                 }
             }
 
-            var newItem = new LastHeardItemDmr(srcId, dstId, callsign, name);
+            var newItem = new LastHeardItemDmr(dstId, srcId, userData);
             LastHeard.Insert(0, newItem); // insert at the top
 
             // Limit to max 50 entries

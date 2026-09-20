@@ -48,63 +48,61 @@
   </UserControl.DataTemplates>
 
   <DockPanel>
-    <Menu DockPanel.Dock="Top" x:Name="mainMenu">
-      <MenuItem Header="File">
-        <MenuItem x:Name="_menuItemExit" Header="Exit" Command="{Binding ExitCommand}" HotKey="Alt+F4">
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/Exit_16x.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-      </MenuItem>
-
-      <!--Settings Menu-->
-      <MenuItem Header="Settings">
-        <MenuItem x:Name="_menuItemSettings" Header="Settings" Command="{Binding ShowSettingsDialogCommand}" >
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/icons8-settings-50.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-      </MenuItem>
-
-      <!--Help Menu-->
-      <MenuItem Header="_Help">
-        <MenuItem Header="_APRS.fi" Command="{Binding OpenUrlCommand}" CommandParameter="http://www.aprs.fi">
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-        <MenuItem Header="_BNetzA Rufzeichen" Command="{Binding OpenUrlCommand}" CommandParameter="https://ans.bundesnetzagentur.de/Amateurfunk/Rufzeichen.aspx">
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-        <MenuItem Header="_QRZ.com" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.qrz.com">
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-        <MenuItem Header="_QRZCQ.com" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.qrzcq.com">
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-        <MenuItem Header="_FCS Reflectors" Command="{Binding OpenUrlCommand}" CommandParameter="http://xreflector.net/">
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-        <Separator/>
-        <MenuItem Header="_About" Command="{Binding ShowAboutCommand}">
-          <MenuItem.Icon>
-            <Image Source="avares://DigitalVoiceControlApp/Assets/StatusInformation_cyan_16x.png" Width="16" Height="16"/>
-          </MenuItem.Icon>
-        </MenuItem>
-      </MenuItem>
-    </Menu>
 
     <!-- T O O L B A R  (Surrogate  "#DDDDDD" "#E6F5F5") -->
     <Border Background="#E6F5F5" DockPanel.Dock="Top" Padding="4">
       <StackPanel Orientation="Horizontal" Spacing="2">
+
+        <Button Width="33" Height="33" Content="&#9776;" FontSize="18" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+          <Button.Flyout>
+            <MenuFlyout Placement="BottomEdgeAlignedLeft">
+              <MenuItem Header="Settings" Command="{Binding ShowSettingsDialogCommand}">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/icons8-settings-50.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator/>
+              <MenuItem Header="APRS.fi" Command="{Binding OpenUrlCommand}" CommandParameter="http://www.aprs.fi">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="BNetzA Rufzeichen" Command="{Binding OpenUrlCommand}" CommandParameter="https://ans.bundesnetzagentur.de/Amateurfunk/Rufzeichen.aspx">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="QRZ.com" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.qrz.com">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="QRZCQ.com" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.qrzcq.com">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <MenuItem Header="FCS Reflectors" Command="{Binding OpenUrlCommand}" CommandParameter="http://xreflector.net/">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator/>
+              <MenuItem Header="About" Command="{Binding ShowAboutCommand}">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/StatusInformation_cyan_16x.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+              <Separator/>
+              <MenuItem Header="Exit" Command="{Binding ExitCommand}">
+                <MenuItem.Icon>
+                  <Image Source="avares://DigitalVoiceControlApp/Assets/Exit_16x.png" Width="16" Height="16"/>
+                </MenuItem.Icon>
+              </MenuItem>
+            </MenuFlyout>
+          </Button.Flyout>
+        </Button>
+
         <ToggleButton Command="{Binding ConnectCommand}" IsChecked="{Binding IsServerConnected, Mode=TwoWay}" Background="Orange" Height="33" Width="33" >
           <StackPanel Orientation="Horizontal">
             <Image Width="16" Height="16" Source="{Binding ConnectionIcon}" />
@@ -162,7 +160,7 @@
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <Grid Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" Margin="5">
+      <Grid Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="4" HorizontalAlignment="Center" Margin="5">
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto"/>
           <RowDefinition Height="Auto"/>
@@ -223,7 +221,8 @@
               IsEnabled="{Binding IsServerConnected}"
               Margin="0,10,0,10"
               VerticalContentAlignment="Center"
-              Width="300" />
+              Height="40"
+              Width="400" />
     </Grid>
   </DockPanel>
 </UserControl>

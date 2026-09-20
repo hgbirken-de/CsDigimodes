@@ -6,7 +6,7 @@ namespace DigitalVoice.Dmr;
 /// <summary>
 /// Represents a DMR user record retrieved from radioid.net.
 /// </summary>
-public record DmrUserInfo
+public record DmrUserData
 {
     public int Id { get; set; }
     public string? Callsign { get; set; }
@@ -21,7 +21,7 @@ public record DmrUserInfo
 /// <summary>
 /// Provides a helper method to retrieve DMR user information from the <c>https://radioid.net</c> API.
 /// </summary>
-public static class DmrUserInfoReader
+public static class DmrUserDataReader
 {
     static readonly HttpClient http = new();
 
@@ -29,10 +29,10 @@ public static class DmrUserInfoReader
     /// Retrieves user information from the radioid.net API for a given DMR ID.
     /// </summary>
     /// <param name="dmrId">The DMR user ID to look up.</param>
-    /// <returns>A <see cref="DmrUserInfo"/> instance with the user data if found; otherwise <c>null</c>.</returns>
+    /// <returns>A <see cref="DmrUserData"/> instance with the user data if found; otherwise <c>null</c>.</returns>
     /// <remarks>
     /// <para>
-    /// This method calls <c>https://radioid.net/api/dmr/user/?id={dmrId}</c> and parses the JSON response into a <see cref="DmrUserInfo"/> object.
+    /// This method calls <c>https://radioid.net/api/dmr/user/?id={dmrId}</c> and parses the JSON response into a <see cref="DmrUserData"/> object.
     /// </para>
     /// <para>
     /// Example usage:
@@ -43,7 +43,7 @@ public static class DmrUserInfoReader
     /// </code>
     /// </para>
     /// </remarks>
-    public static async Task<DmrUserInfo?> GetUserAsync(int dmrId)
+    public static async Task<DmrUserData?> GetUserAsync(int dmrId)
     {
         string url = $"https://radioid.net/api/dmr/user/?id={dmrId}";
 
@@ -55,7 +55,7 @@ public static class DmrUserInfoReader
             return null;
 
         var u = results[0];
-        return new DmrUserInfo
+        return new DmrUserData
         {
             Id = u.GetProperty("id").GetInt32(),
             Callsign = u.GetProperty("callsign").GetString(),
@@ -67,7 +67,7 @@ public static class DmrUserInfoReader
         };
     }
 
-    public static DmrUserInfo? GetUser(int dmrId)
+    public static DmrUserData? GetUser(int dmrId)
     {
         using var http = new HttpClient();
         var url = $"https://radioid.net/api/dmr/user/?id={dmrId}";
@@ -79,7 +79,7 @@ public static class DmrUserInfoReader
         var doc = JsonDocument.Parse(json);
         var result = doc.RootElement.GetProperty("results")[0];
 
-        return new DmrUserInfo
+        return new DmrUserData
         {
             Id = result.GetProperty("id").GetInt32(),
             Callsign = result.GetProperty("callsign").GetString(),

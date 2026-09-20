@@ -7,81 +7,80 @@
 
   <StackPanel Orientation="Vertical" Spacing="5">
 
-    <StackPanel Orientation="Horizontal" Spacing="10">
-	  <TextBlock Text="CALL" VerticalAlignment="Center" Width="40"/>
-      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding Callsign}" ToolTip.Tip="Callsign"/>
-	  <TextBlock Text="TA" VerticalAlignment="Center" Width="40"/>
-      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding RxTa}" ToolTip.Tip="Talkeralias"/>
-    </StackPanel>
+    <!-- Gruppierter Block: CALL/TA, SRC/DST, RPT - gemeinsam zentriert -->
+    <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Background="#EAF3FB" Padding="10" HorizontalAlignment="Center" Width="400">
+      <StackPanel Orientation="Vertical" Spacing="5" >
 
-    <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="SRC" VerticalAlignment="Center" Width="40" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding SrcId}" ToolTip.Tip="Source DMR-ID" />
-	  <TextBlock Text="DST" VerticalAlignment="Center" Width="40" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding DstId}" ToolTip.Tip="Destination DMR-ID" />
-    </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="CALL" VerticalAlignment="Center" Width="35"/>
+          <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding Callsign}" ToolTip.Tip="Callsign"/>
+          <TextBlock Text="TA" VerticalAlignment="Center" Width="35"/>
+          <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding RxTa}" ToolTip.Tip="Talkeralias"/>
+        </StackPanel>
 
-    <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="RPT" VerticalAlignment="Center" Width="40" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding RptId}" ToolTip.Tip="Repeater DMR-ID"/>
-    </StackPanel>
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="SRC" VerticalAlignment="Center" Width="35" />
+          <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding SrcId}" ToolTip.Tip="Source DMR-ID" />
+          <TextBlock Text="DST" VerticalAlignment="Center" Width="35" />
+          <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding DstId}" ToolTip.Tip="Destination DMR-ID" />
+        </StackPanel>
 
-	<StackPanel Orientation="Horizontal" Spacing="10">
-		<ListBox x:Name="_listBoxLastHeard"
-				 BorderBrush="Gray"
-				 BorderThickness="1"
-				 CornerRadius="3"
-				 DoubleTapped="ListBoxLastHeard_DoubleTapped"
-				 FontFamily="Consolas" FontSize="12"
-				 Height="100"
-				 ItemsSource="{Binding LastHeard}"
-				 KeyDown="ListBoxLastHeard_OnKeyDown"
-				 Margin="0,10,0,0"
-				 ScrollViewer.VerticalScrollBarVisibility="Auto"
-				 VerticalAlignment="Stretch"
-				 Width="310">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <TextBlock Text="RPT" VerticalAlignment="Center" Width="35" />
+          <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding RptId}" ToolTip.Tip="Repeater DMR-ID"/>
+        </StackPanel>
 
-			<ListBox.ItemsPanel>
-				<ItemsPanelTemplate>
-					<StackPanel Spacing="0"/>
-				</ItemsPanelTemplate>
-			</ListBox.ItemsPanel>
+      </StackPanel>
+    </Border>
 
-			<ListBox.Styles>
-				<!-- Default row background -->
-				<Style Selector="ListBoxItem">
-					<Setter Property="Background" Value="White"/>
-				</Style>
+    <!-- ListBox bleibt eigenständig, unabhängig von der Textfeld-Gruppe zentriert -->
+    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+      <ListBox x:Name="_listBoxLastHeard"
+               BorderBrush="Gray"
+               BorderThickness="1"
+               CornerRadius="3"
+               DoubleTapped="ListBoxLastHeard_DoubleTapped"
+               FontFamily="Consolas" FontSize="12"
+               Height="100"
+               ItemsSource="{Binding LastHeard}"
+               KeyDown="ListBoxLastHeard_OnKeyDown"
+               Margin="0,10,0,0"
+               ScrollViewer.VerticalScrollBarVisibility="Auto"
+               VerticalAlignment="Stretch"
+               Width="400">
 
-				<!-- Even rows -->
-				<Style Selector="ListBoxItem:nth-child(even)">
-					<Setter Property="Background" Value="#F0F0F0"/>  <!-- light grey -->
-				</Style>
+        <ListBox.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="0"/>
+          </ItemsPanelTemplate>
+        </ListBox.ItemsPanel>
 
-				<!-- Optional: highlight on hover -->
-				<Style Selector="ListBoxItem:pointerover">
-					<Setter Property="Background" Value="#D0E4FF"/>
-				</Style>
+        <ListBox.Styles>
+          <Style Selector="ListBoxItem">
+            <Setter Property="Background" Value="White"/>
+          </Style>
+          <Style Selector="ListBoxItem:nth-child(even)">
+            <Setter Property="Background" Value="#F0F0F0"/>
+          </Style>
+          <Style Selector="ListBoxItem:pointerover">
+            <Setter Property="Background" Value="#D0E4FF"/>
+          </Style>
+          <Style Selector="ListBoxItem">
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="MinHeight" Value="0"/>
+          </Style>
+        </ListBox.Styles>
 
-				<Style Selector="ListBoxItem">
-					<!-- Remove built-in spacing -->
-					<Setter Property="Padding" Value="0"/>
-					<Setter Property="Margin" Value="0"/>
-					<Setter Property="MinHeight" Value="0"/>
-					<!-- Let row size shrink to text -->
-					<!--<Setter Property="Height" Value="15"/>-->
-				</Style>
-			</ListBox.Styles>
-
-			<ListBox.ContextMenu>
-				<ContextMenu>
-					<MenuItem Header="Clear List" Command="{Binding ClearLastHeardCommand}" />
-				</ContextMenu>
-			</ListBox.ContextMenu>
-			<ToolTip.Tip>
-				<TextBlock Text="Last Heard"/>
-			</ToolTip.Tip>
-		</ListBox>
+        <ListBox.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Clear List" Command="{Binding ClearLastHeardCommand}" />
+          </ContextMenu>
+        </ListBox.ContextMenu>
+        <ToolTip.Tip>
+          <TextBlock Text="Last Heard (max. 50 Entries)"/>
+        </ToolTip.Tip>
+      </ListBox>
     </StackPanel>
     
   </StackPanel>
