@@ -1,0 +1,10 @@
+﻿
+Debug: false
+
+Host: "127.0.0.1"
+Port: 2460
+
+RecordPacket: false
+RecordPcm: false
+
+SerialPort: COM13

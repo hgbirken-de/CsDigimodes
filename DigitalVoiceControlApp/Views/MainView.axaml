@@ -1,0 +1,229 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:DigitalVoiceControlApp.Converters"
+             xmlns:v="clr-namespace:DigitalVoiceControlApp.Views"
+             xmlns:vm="clr-namespace:DigitalVoiceControlApp.ViewModels"
+             x:Class="DigitalVoiceControlApp.Views.MainView"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="600"
+             x:DataType="vm:MainViewModel">
+  
+  <UserControl.Resources>
+    <local:EnumToUpperConverter x:Key="EnumToUpperConverter" />
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="Slider.mic-small /template/Thumb">
+      <Setter Property="Width" Value="10"/>
+      <Setter Property="Height" Value="10"/>
+      <Setter Property="Background" Value="Red"/>
+    </Style>
+    <Style Selector="Slider.rx-small /template/Thumb">
+      <Setter Property="Width" Value="10"/>
+      <Setter Property="Height" Value="10"/>
+      <Setter Property="Background" Value="Red"/>
+    </Style>
+  </UserControl.Styles>
+
+  <Design.DataContext>
+    <!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+    <vm:MainViewModel />
+  </Design.DataContext>
+
+  <UserControl.DataTemplates>
+    <DataTemplate DataType="vm:DmrViewModel">
+      <v:DmrModeControl />
+    </DataTemplate>
+    <DataTemplate DataType="vm:FusionViewModel">
+      <v:FusionModeControl />
+    </DataTemplate>
+    <DataTemplate DataType="vm:DStarViewModel">
+      <v:DStarModeControl />
+    </DataTemplate>
+    <DataTemplate DataType="vm:NxdnViewModel">
+      <v:NxdnModeControl />
+    </DataTemplate>
+  </UserControl.DataTemplates>
+
+  <DockPanel>
+    <Menu DockPanel.Dock="Top" x:Name="mainMenu">
+      <MenuItem Header="File">
+        <MenuItem x:Name="_menuItemExit" Header="Exit" Command="{Binding ExitCommand}" HotKey="Alt+F4">
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/Exit_16x.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+      </MenuItem>
+
+      <!--Settings Menu-->
+      <MenuItem Header="Settings">
+        <MenuItem x:Name="_menuItemSettings" Header="Settings" Command="{Binding ShowSettingsDialogCommand}" >
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/icons8-settings-50.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+      </MenuItem>
+
+      <!--Help Menu-->
+      <MenuItem Header="_Help">
+        <MenuItem Header="_APRS.fi" Command="{Binding OpenUrlCommand}" CommandParameter="http://www.aprs.fi">
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Header="_BNetzA Rufzeichen" Command="{Binding OpenUrlCommand}" CommandParameter="https://ans.bundesnetzagentur.de/Amateurfunk/Rufzeichen.aspx">
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Header="_QRZ.com" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.qrz.com">
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Header="_QRZCQ.com" Command="{Binding OpenUrlCommand}" CommandParameter="https://www.qrzcq.com">
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+        <MenuItem Header="_FCS Reflectors" Command="{Binding OpenUrlCommand}" CommandParameter="http://xreflector.net/">
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+        <Separator/>
+        <MenuItem Header="_About" Command="{Binding ShowAboutCommand}">
+          <MenuItem.Icon>
+            <Image Source="avares://DigitalVoiceControlApp/Assets/StatusInformation_cyan_16x.png" Width="16" Height="16"/>
+          </MenuItem.Icon>
+        </MenuItem>
+      </MenuItem>
+    </Menu>
+
+    <!-- T O O L B A R  (Surrogate  "#DDDDDD" "#E6F5F5") -->
+    <Border Background="#E6F5F5" DockPanel.Dock="Top" Padding="4">
+      <StackPanel Orientation="Horizontal" Spacing="2">
+        <ToggleButton Command="{Binding ConnectCommand}" IsChecked="{Binding IsServerConnected, Mode=TwoWay}" Background="Orange" Height="33" Width="33" >
+          <StackPanel Orientation="Horizontal">
+            <Image Width="16" Height="16" Source="{Binding ConnectionIcon}" />
+          </StackPanel>
+          <ToolTip.Tip>
+            <TextBlock Text="{Binding ConnectionTooltip}" />
+          </ToolTip.Tip>
+        </ToggleButton>
+        <ComboBox ItemsSource="{Binding Modes}" SelectedItem="{Binding SelectedMode, Mode=TwoWay}" IsEnabled="{Binding IsModeComboBoxEnabled}" Width="90" VerticalAlignment="Center">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding Converter={StaticResource EnumToUpperConverter}}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+          <ToolTip.Tip>
+            <TextBlock Text="Select Operating Mode"/>
+          </ToolTip.Tip>
+        </ComboBox>
+        <ComboBox ItemsSource="{Binding LinkTargets}" SelectedItem="{Binding SelectedLinkTarget}" IsEnabled="{Binding IsReflectorsComboBoxEnabled}" Width="200" VerticalAlignment="Center">
+          <ToolTip.Tip>
+            <TextBlock Text="{Binding LinkTargetToolTip}"/>
+          </ToolTip.Tip>
+        </ComboBox>
+        <ComboBox ItemsSource="{Binding Modules}" SelectedItem="{Binding SelectedModule}" IsEnabled="{Binding IsModuleComboBoxEnabled}" IsVisible="{Binding IsModuleComboBoxVisible}" Width="65" VerticalAlignment="Center" >
+          <ToolTip.Tip>
+            <TextBlock Text="Select a Module"/>
+          </ToolTip.Tip>
+        </ComboBox>
+      </StackPanel>
+    </Border>
+
+    <!-- S T A T U S B A R -->
+    <Border DockPanel.Dock="Bottom" Background="#EEE" BorderBrush="#CCC" BorderThickness="1,0,0,0" Padding="4">
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBlock Text="{Binding StatusMessage}" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+
+    <!-- B O D Y -->
+    <Grid HorizontalAlignment="Center" Margin="5,5,5,5">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+      </Grid.RowDefinitions>
+
+      <Grid Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="4" HorizontalAlignment="Left" Margin="5">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Sliders -->
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Orientation="Vertical" Spacing="-5">
+          <!-- MIC Gain -->
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <!--<TextBlock VerticalAlignment="Center" Text="MIC:" Margin="0" Width="50"/>-->
+            <Image Source="avares://DigitalVoiceControlApp/Assets/AudioRecording.png" Width="20" Height="20" Margin="0,0,10,0" />
+            <Slider Width="280" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding MicGain, Mode=TwoWay}" >
+              <Slider.Classes>
+                <x:String>mic-small</x:String>
+              </Slider.Classes>
+            </Slider>
+            <ToolTip.Tip>
+              <TextBlock Text="MIC Gain  [-40db, 30db]"/>
+            </ToolTip.Tip>
+          </StackPanel>
+          
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <!-- RX Volume -->
+            <!--<TextBlock VerticalAlignment="Center" Text="RX Vol:" Margin="0" Width="50"/>-->
+            <Image Source="avares://DigitalVoiceControlApp/Assets/Audio_16xLG.png" Width="20" Height="20" Margin="0,0,10,0" />
+            <Slider Width="280" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding RxVolume, Mode=TwoWay}" >
+              <Slider.Classes>
+                <x:String>rx-small</x:String>
+              </Slider.Classes>
+            </Slider>
+            <ToolTip.Tip>
+              <TextBlock Text="RX Vol [-40db, 30db]"/>
+            </ToolTip.Tip>
+          </StackPanel>
+        </StackPanel>
+      </Grid>
+
+      <!-- Operating Mode specific Content -->
+      <ContentControl x:Name="_modeContent" 
+                Content="{Binding Current}" 
+                Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="2"
+                HorizontalAlignment="Center"
+                Margin="0,10,0,5"
+                VerticalAlignment="Top" />
+
+      <!-- PTT -->
+      <Button x:Name="_buttonPtt" Grid.Column="0" Grid.Row="3" Grid.ColumnSpan="4"
+              Background="{Binding PttButtonBackground}"
+              Content="PTT"
+              Command="{Binding TogglePttCommand}"
+              FontWeight="Bold"
+              HorizontalAlignment="Center" 
+              HorizontalContentAlignment="Center"
+              IsEnabled="{Binding IsServerConnected}"
+              Margin="0,10,0,10"
+              VerticalContentAlignment="Center"
+              Width="300" />
+    </Grid>
+  </DockPanel>
+</UserControl>

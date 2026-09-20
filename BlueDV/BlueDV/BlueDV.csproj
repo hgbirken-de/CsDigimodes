@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{B59496EE-F1C4-4164-83C5-89091D3E5FAA}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>BlueDV</RootNamespace>
+    <AssemblyName>BlueDV</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ApplicationIcon>BlueDV.ico</ApplicationIcon>
+    <StartupObject>BlueDV.Program</StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AGauge">
+      <HintPath>..\..\..\Program Files (x86)\BlueDV\BlueDVWindows\AGauge.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="NAudio">
+      <HintPath>..\..\..\Program Files (x86)\BlueDV\BlueDVWindows\NAudio.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\..\..\Program Files (x86)\BlueDV\BlueDVWindows\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="ProgressBarEx">
+      <HintPath>..\..\..\Program Files (x86)\BlueDV\BlueDVWindows\ProgressBarEx.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="ToggleSwitch">
+      <HintPath>..\..\..\Program Files (x86)\BlueDV\BlueDVWindows\ToggleSwitch.dll</HintPath>
+    </Reference>
+    <Reference Include="websocket-sharp-with-proxy-support">
+      <HintPath>..\..\..\Program Files (x86)\BlueDV\BlueDVWindows\websocket-sharp-with-proxy-support.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AboutBox1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutBox1.Designer.cs">
+      <DependentUpon>AboutBox1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ADNSYSTEMSStruct.cs" />
+    <Compile Include="AMBEPTTControl.cs" />
+    <Compile Include="AMBESERVER.cs" />
+    <Compile Include="AMBE_VOX.cs" />
+    <Compile Include="APRSClient.cs" />
+    <Compile Include="Arrays.cs" />
+    <Compile Include="berCounter.cs" />
+    <Compile Include="crc.cs" />
+    <Compile Include="Crc24.cs" />
+    <Compile Include="CRS129.cs" />
+    <Compile Include="CYFSConvolution.cs" />
+    <Compile Include="DCSconnection.cs" />
+    <Compile Include="DecodeDMR.cs" />
+    <Compile Include="delayQueue.cs" />
+    <Compile Include="DMRconnection.cs" />
+    <Compile Include="DMREmbeddedData.cs" />
+    <Compile Include="DMRNETincoming.cs" />
+    <Compile Include="DMRPlus.cs" />
+    <Compile Include="DMRPlusHostParser.cs" />
+    <Compile Include="DMRRepair.cs" />
+    <Compile Include="DMRsrcdstConverter.cs" />
+    <Compile Include="downloadHostsTable.cs" />
+    <Compile Include="DPLUSconnection.cs" />
+    <Compile Include="DSTARhandler.cs" />
+    <Compile Include="DTMF.cs" />
+    <Compile Include="DV4MINI.cs" />
+    <Compile Include="DVAP.cs" />
+    <Compile Include="DVMEGAAMBE.cs" />
+    <Compile Include="DVMEGASerial.cs" />
+    <Compile Include="FCSFusion.cs" />
+    <Compile Include="FileDownloader.cs" />
+    <Compile Include="Form1.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form1.Designer.cs">
+      <DependentUpon>Form1.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FreeDMRStruct.cs" />
+    <Compile Include="FusionQueue.cs" />
+    <Compile Include="fusion_extract.cs" />
+    <Compile Include="Golay24128.cs" />
+    <Compile Include="handleClinet.cs" />
+    <Compile Include="information.cs" />
+    <Compile Include="JSONCallQuery.cs" />
+    <Compile Include="killTimer.cs" />
+    <Compile Include="LastHeardRecord.cs" />
+    <Compile Include="masterVolume.cs" />
+    <Compile Include="Microsoft\CodeAnalysis\EmbeddedAttribute.cs" />
+    <Compile Include="MMDVM_HS_TIMER.cs" />
+    <Compile Include="modeTimer.cs" />
+    <Compile Include="NXDNConnect.cs" />
+    <Compile Include="NXDNLogic.cs" />
+    <Compile Include="NXDNStruct.cs" />
+    <Compile Include="playAMBE.cs" />
+    <Compile Include="productSelector.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.cs" />
+    <Compile Include="Properties\Settings.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <DependentUpon>Settings.settings</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <Compile Include="RAWSERIAL.cs" />
+    <Compile Include="RoundButton.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Server.cs" />
+    <Compile Include="Setup.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Setup.Designer.cs">
+      <DependentUpon>Setup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ShowCallTimer.cs" />
+    <Compile Include="SlowData.cs" />
+    <Compile Include="slowDataEncoder.cs" />
+    <Compile Include="soundcard.cs" />
+    <Compile Include="STA\Settings\INIFile.cs" />
+    <Compile Include="StreamServer.cs" />
+    <Compile Include="syslog.cs" />
+    <Compile Include="SystemXStruct.cs" />
+    <Compile Include="System\Runtime\CompilerServices\RefSafetyRulesAttribute.cs" />
+    <Compile Include="TalkGroupLookup.cs" />
+    <Compile Include="TGIFStruct.cs" />
+    <Compile Include="TGLookup.cs" />
+    <Compile Include="TimerRXTX.cs" />
+    <Compile Include="Timert.cs" />
+    <Compile Include="utils.cs" />
+    <Compile Include="WebServer.cs" />
+    <Compile Include="WebSocketService.cs" />
+    <Compile Include="WomenQueue.cs" />
+    <Compile Include="YSFDecode.cs" />
+    <Compile Include="YSFFusion.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="AboutBox1.resources" />
+    <EmbeddedResource Include="Form1.resources" />
+    <EmbeddedResource Include="HTML\index-japanese.html" />
+    <EmbeddedResource Include="HTML\index.html" />
+    <EmbeddedResource Include="HTML\mobile-japanese.html" />
+    <EmbeddedResource Include="HTML\mobile.html" />
+    <EmbeddedResource Include="HTML\pcm-player.js" />
+    <EmbeddedResource Include="Properties\Resources.resources" />
+    <EmbeddedResource Include="Setup.resources" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

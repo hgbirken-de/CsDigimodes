@@ -1,0 +1,17 @@
+﻿AmbeSrvUsage: false
+AmbeSrvAddr: "127.0.0.1"
+AmbeSrvPort: 2460
+
+DgidList: [0, 1, 9, 50]
+
+HotspotType: "By DL1HGB"
+Town: "Todendorf"
+Locator: "JO54OL"
+PlayAudio: false
+RecordYsfPackets: true
+RxFrequency: 434300000
+TxFrequency: 434300000
+Timeout: 2000
+
+Name: "YSF Client"
+Description: "YSF client that connects to a YSF reflector and listens for data packets sent by the reflector"

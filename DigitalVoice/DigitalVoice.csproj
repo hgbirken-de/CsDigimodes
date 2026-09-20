@@ -1,0 +1,60 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="DStar\Dcs\DCS_Hosts.txt" />
+    <None Remove="Dmr\DMR_Hosts.txt" />
+    <None Remove="DStar\Xlx\XLXhosts.csv" />
+    <None Remove="Fusion\FCSMasters.csv" />
+    <None Remove="Fusion\FCS_Hosts.csv" />
+    <None Remove="Fusion\YSF_Hosts.txt" />
+    <None Remove="DStar\Ref\DPlus_Hosts.txt" />
+    <None Remove="DStar\Xrf\DExtra_Hosts.txt" />
+    <None Remove="Nxdn\NXDNHosts.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="DStar\Dcs\DCS_Hosts.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Dmr\DMR_Hosts.txt" />
+    <EmbeddedResource Include="DStar\Xlx\XLXhosts.csv" />
+    <EmbeddedResource Include="Fusion\FCSMasters.csv">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Fusion\FCS_Hosts.csv" />
+    <EmbeddedResource Include="Fusion\YSF_Hosts.txt" />
+    <EmbeddedResource Include="DStar\Ref\DPlus_Hosts.txt" />
+    <EmbeddedResource Include="DStar\Xrf\DExtra_Hosts.txt" />
+    <EmbeddedResource Include="Nxdn\NXDNHosts.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NAudio" Version="2.2.1" />
+    <PackageReference Include="NLog" Version="6.0.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AmbeServer\AmbeServer.csproj" />
+    <ProjectReference Include="..\FusionCodec\FusionCodec.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Common\OneShotTimer.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Fusion\YsfClientConfig.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Component</SubType>
+    </None>
+  </ItemGroup>
+
+</Project>

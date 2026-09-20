@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "AmbeServerRunner": {
+      "commandName": "Project",
+      "commandLineArgs": "port=2460 useq=true record=false serialport=COM13"
+    }
+  }
+}

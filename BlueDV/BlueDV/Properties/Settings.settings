@@ -1,0 +1,123 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile CurrentProfile="(Default)" GeneratedClassNamespace="BlueDV.Properties" GeneratedClassName="Settings" xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="disableFonts" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="savedREFreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">REF001</Value>
+    </Setting>
+    <Setting Name="savedREFreflectorModule" Type="System.String" Scope="User">
+      <Value Profile="(Default)">A</Value>
+    </Setting>
+    <Setting Name="savedDCSreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">DCS001</Value>
+    </Setting>
+    <Setting Name="savedDCSreflectorModule" Type="System.String" Scope="User">
+      <Value Profile="(Default)">B</Value>
+    </Setting>
+    <Setting Name="savedXRFreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">XRF001</Value>
+    </Setting>
+    <Setting Name="savedXRFreflectorModule" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C</Value>
+    </Setting>
+    <Setting Name="savedDSTARorDMRswitch" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="savedprivateorGroupswitch" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="savedDMRmanualDial" Type="System.String" Scope="User">
+      <Value Profile="(Default)">204</Value>
+    </Setting>
+    <Setting Name="recordingVolumeDMR" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">50</Value>
+    </Setting>
+    <Setting Name="savedVOXDetectionLevel" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1000</Value>
+    </Setting>
+    <Setting Name="savedDSTARoutGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="savedDSTARinGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="savedDMRoutGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3</Value>
+    </Setting>
+    <Setting Name="savedDMRinGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">-5</Value>
+    </Setting>
+    <Setting Name="savedDMRsimpleMode" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="savedXLXreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">XLX001</Value>
+    </Setting>
+    <Setting Name="savedXLXreflectorModule" Type="System.String" Scope="User">
+      <Value Profile="(Default)">B</Value>
+    </Setting>
+    <Setting Name="savedFUSIONoutGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5</Value>
+    </Setting>
+    <Setting Name="savedFUSIONinGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">-5</Value>
+    </Setting>
+    <Setting Name="savedJPNreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">JP3YIX</Value>
+    </Setting>
+    <Setting Name="savedJPNreflectorModule" Type="System.String" Scope="User">
+      <Value Profile="(Default)">B</Value>
+    </Setting>
+    <Setting Name="savedReflectorType" Type="System.String" Scope="User">
+      <Value Profile="(Default)">JPN</Value>
+    </Setting>
+    <Setting Name="F1Location" Type="System.Drawing.Point" Scope="User">
+      <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="savedVOXHangTime" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">3000</Value>
+    </Setting>
+    <Setting Name="savedYSFreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">EUROPELINK</Value>
+    </Setting>
+    <Setting Name="savedDGID" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="savedFREEDMRreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">EU</Value>
+    </Setting>
+    <Setting Name="savedSYSTEMXreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Europe</Value>
+    </Setting>
+    <Setting Name="savedDMRManualDialCollection" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;4000&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="savedAPRSChatCallsCollection" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"&gt;
+  &lt;string&gt;PA7LIM&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="savedTGIFreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">TGIF</Value>
+    </Setting>
+    <Setting Name="savedNXDNreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">710</Value>
+    </Setting>
+    <Setting Name="savedNXDNoutGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="savedNXDNinGain" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">-1</Value>
+    </Setting>
+    <Setting Name="savedADNSYSTEMSreflector" Type="System.String" Scope="User">
+      <Value Profile="(Default)">ADN_2141_Spain</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>

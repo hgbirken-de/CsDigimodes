@@ -1,0 +1,29 @@
+ClientMgmt:
+  AccessControlFile: ./db/access_control.txt
+  CheckRE: 1
+  InactivityTimeoutSeconds: 15
+  MaxInactivityPeriodSeconds: 60
+  MaxClients: 10
+
+DgIdMgmt:
+  DgIdList: [1,9,50]
+  DgIdDefault: 50
+  DgIdLocal: 1
+  Prefix: 1
+  HomeDgIdFile: ./db/home_dgids.csv
+
+Info:
+  Description: YSF Reflector
+  Name: YsfReflector
+  ReflectorId: 00000
+  Version: 1.0.0
+
+Network:
+  IpAddr: 0.0.0.0
+  Port: 42000
+
+Protections:
+  Reactivate: 900
+  Timeout: 180
+  WildPttCount: 4
+  WildPttTime: 5

@@ -1,0 +1,234 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:DigitalVoiceControlApp.Behaviors"
+        xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        x:Class="DigitalVoiceControlApp.Views.SettingsDialog"
+        Title="Application Settings"
+        Width="550" 
+        WindowStartupLocation="CenterOwner"
+        SizeToContent="WidthAndHeight"
+        CanResize="true">
+
+  <Grid Margin="16" RowDefinitions="*,Auto">
+    
+    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Visible">
+
+      <!-- Common -->
+      <StackPanel Margin="16" Spacing="10" Orientation="Vertical" >
+        <HeaderedContentControl Header="Common" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+          <!--<HeaderedContentControl.Header>
+          <TextBlock Text="Common" FontWeight="Bold"/>
+          </HeaderedContentControl.Header>-->
+          <StackPanel Orientation="Vertical" Spacing="5">
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Callsign" VerticalAlignment="Center" Width="80" />
+              <TextBox Text="{Binding Callsign, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                       local:TextBoxBehaviors.ToUpper="True" Width="120"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Locator" VerticalAlignment="Center" Width="80" />
+              <TextBox Text="{Binding Locator, Mode=TwoWay}" Width="120"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Town" VerticalAlignment="Center" Width="80" />
+              <TextBox Text="{Binding Town, Mode=TwoWay}" Width="300"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Language" VerticalAlignment="Center" Width="80" />
+              <ComboBox SelectedItem="{Binding SelectedLanguage, Mode=TwoWay}" Width="100" >
+                <sys:String>de-DE</sys:String>
+                <sys:String>en-GB</sys:String>
+                <sys:String>en-US</sys:String>
+              </ComboBox>
+              <TextBlock Text="Text to Speech" TextAlignment="Right" VerticalAlignment="Center" Width="160" />
+              <CheckBox IsChecked="{Binding TextToSpeech, Mode=TwoWay}" />
+              <ToolTip.Tip>
+                <TextBlock Text="Enable/Disable Text to Speech"/>
+              </ToolTip.Tip>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Record UDP" VerticalAlignment="Center" Width="80" />
+              <CheckBox IsChecked="{Binding RecordRcvdUdpPackets, Mode=TwoWay}" />
+              <ToolTip.Tip>
+                <TextBlock Text="Record received UDP packets"/>
+              </ToolTip.Tip>
+            </StackPanel>
+          </StackPanel>
+        </HeaderedContentControl>
+
+        <!-- DMR Data -->
+        <HeaderedContentControl Header="DMR" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+          <StackPanel Orientation="Vertical" Spacing="5">
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Password" VerticalAlignment="Center" Width="80" />
+              <TextBox Text="{Binding Password, Mode=TwoWay}" PasswordChar="*" Width="150"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="My DMRID" VerticalAlignment="Center" Width="80" />
+              <TextBox Text="{Binding MyDmrId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                       local:DigitsOnlyBehavior.DigitsOnly="True" local:DigitsOnlyBehavior.MaxValue="16777215" 
+                       Width="150" >
+                <ToolTip.Tip>
+                  <TextBlock Text="DMRID max. 7 digits"/>
+                </ToolTip.Tip>
+              </TextBox>
+              <TextBlock Text="ESSID" TextAlignment="Right" VerticalAlignment="Center" Width="50" Margin="16,0,0,0"/>
+              <TextBox Text="{Binding Essid, Mode=TwoWay}"
+                       local:DigitsOnlyBehavior.DigitsOnly="True" local:DigitsOnlyBehavior.MaxValue="99" 
+                       Width="50">
+                <ToolTip.Tip>
+                  <TextBlock Text="ESSID max. 2 digits"/>
+                </ToolTip.Tip>
+              </TextBox>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Protocol" VerticalAlignment="Center" Width="80 "/>
+              <ComboBox ItemsSource="{Binding DmrProtocolList}" SelectedItem="{Binding SelectedDmrProtocol}" Width="150"/>
+              <ToolTip.Tip>
+                <TextBlock Text="DMR protocol to use"/>
+              </ToolTip.Tip>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="BM Server1" VerticalAlignment="Center" Width="80 "/>
+              <TextBox Text="{Binding BmServerAddr1, Mode=TwoWay}" Width="300" />
+              <TextBox Text="{Binding BmServerPort1, Mode=TwoWay}"  
+                       local:DigitsOnlyBehavior.DigitsOnly="True" 
+                       local:DigitsOnlyBehavior.MaxValue="65535" Width="50" />
+              <ToolTip.Tip>
+                <TextBlock Text="HOMEBREW BM Server"/>
+              </ToolTip.Tip>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="BM Master" VerticalAlignment="Center" Width="80 "/>
+              <ComboBox ItemsSource="{Binding DmrMasterList, Mode=TwoWay}" SelectedItem="{Binding SelectedDmrMaster}" Width="300" />
+              <ToolTip.Tip>
+                  <TextBlock Text="BM Master Server to use"/>
+              </ToolTip.Tip>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <TextBlock Text="Time Slot" VerticalAlignment="Center" Width="80 "/>
+              <ComboBox SelectedItem="{Binding SelectedTimeSlot, Mode=TwoWay}" Width="80" >
+                <sys:Int32>1</sys:Int32>
+                <sys:Int32>2</sys:Int32>
+                <ToolTip.Tip>
+                  <TextBlock Text="Time Slot"/>
+                </ToolTip.Tip>
+              </ComboBox>
+              <TextBlock Text="Color Code" TextAlignment="Right" VerticalAlignment="Center" Width="120"/>
+              <ComboBox ItemsSource="{Binding ColorCodeList}" SelectedItem="{Binding SelectedColorCode, Mode=TwoWay}" Width="80" >
+                <ToolTip.Tip>
+                  <TextBlock Text="Color Code"/>
+                </ToolTip.Tip>
+              </ComboBox>
+            </StackPanel>
+
+          </StackPanel>
+        </HeaderedContentControl>
+
+        <!-- NXDN Data -->
+        <HeaderedContentControl Header="NXDN" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+          <StackPanel Orientation="Vertical" Spacing="5">
+            <!-- Reflector address/port-->
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="NXDN Id" VerticalAlignment="Center" Width="80 "/>
+              <TextBox Text="{Binding NxdnId, Mode=TwoWay}" 
+                       local:DigitsOnlyBehavior.DigitsOnly="True"
+                       local:DigitsOnlyBehavior.MaxValue="65535" Width="150">
+                <ToolTip.Tip>
+                  <TextBlock Text="My NXDN ID"/>
+                </ToolTip.Tip>
+              </TextBox>
+            </StackPanel>
+          </StackPanel>
+        </HeaderedContentControl>
+
+        <!-- FCS Data -->
+        <HeaderedContentControl Header="FCS" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+          <StackPanel Orientation="Vertical" Spacing="5">
+            <!-- Reflector address/port-->
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <TextBlock Text="Master" VerticalAlignment="Center" Width="80 "/>
+              <ComboBox ItemsSource="{Binding FcsReflectorNameList}" SelectedItem="{Binding SelectedFcsReflectorName}" Width="300" >
+                <ToolTip.Tip>
+                  <TextBlock Text="Master Reflector Name"/>
+                </ToolTip.Tip>
+              </ComboBox>
+              <TextBox Text="{Binding FcsReflectorPort, Mode=TwoWay}" 
+                       local:DigitsOnlyBehavior.DigitsOnly="True"
+                       local:DigitsOnlyBehavior.MaxValue="65535" Width="50">
+                <ToolTip.Tip>
+                  <TextBlock Text="Master Reflector Port (default 62500)"/>
+                </ToolTip.Tip>
+              </TextBox>
+            </StackPanel>
+          </StackPanel>
+        </HeaderedContentControl>
+
+        <!-- YSF Data -->
+        <HeaderedContentControl Header="YSF" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+       
+        </HeaderedContentControl>
+
+        <!-- AMBE Data -->
+        <HeaderedContentControl Header="AMBE" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+          <StackPanel Orientation="Vertical" Spacing="5">
+            <!-- AMBE Server -->
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <RadioButton Content="Server" GroupName="ambe" IsChecked="{Binding IsServer}" Width="80" >
+                <ToolTip.Tip>
+                  <TextBlock Text="Use AMBE Server"/>
+                </ToolTip.Tip>
+              </RadioButton>
+              <TextBox IsEnabled="{Binding IsServer}" Text="{Binding AmbeServerAddr}" Width="300" >
+                <ToolTip.Tip>
+                  <TextBlock Text="AMBE Server Address"/>
+                </ToolTip.Tip>
+              </TextBox>
+              <TextBox IsEnabled="{Binding IsServer}" Text="{Binding AmbeServerPort}" 
+                       local:DigitsOnlyBehavior.DigitsOnly="True" 
+                       local:DigitsOnlyBehavior.MaxValue="65535" Width="50" >
+                <ToolTip.Tip>
+                  <TextBlock Text="AMBE Server Port"/>
+                </ToolTip.Tip>
+              </TextBox>
+            </StackPanel>
+            <!-- AMBE Stick -->
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+              <RadioButton Content="Stick" GroupName="ambe" IsChecked="{Binding IsStick}" Width="80" >
+                <ToolTip.Tip>
+                  <TextBlock Text="Use AMBE Stick"/>
+                </ToolTip.Tip>
+              </RadioButton>
+               <ComboBox IsEnabled="{Binding IsStick}" ItemsSource="{Binding AmbeStickPorts}" SelectedItem="{Binding SelectedAmbeStickPort}" Width="100" >
+                <ToolTip.Tip>
+                  <TextBlock Text="COM Port to use"/>
+                </ToolTip.Tip>
+              </ComboBox>
+              <TextBlock Text="Baud rate" TextAlignment="Right" VerticalAlignment="Center" Width="70 "/>
+              <ComboBox IsEnabled="{Binding IsStick}" SelectedItem="{Binding SelectedAmbeStickBaudrate, Mode=TwoWay}" Width="110" >
+                <sys:Int32>230400</sys:Int32>
+                <sys:Int32>460800</sys:Int32>
+                <sys:Int32>921600</sys:Int32>
+                <ToolTip.Tip>
+                  <TextBlock Text="Baud rate to use"/>
+                </ToolTip.Tip>
+              </ComboBox>
+            </StackPanel>
+          </StackPanel>
+        </HeaderedContentControl>
+        
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Buttons -->
+    <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20" Margin="0">
+      <Button Content="Apply" Command="{Binding OkCommand}" MinWidth="80" HorizontalContentAlignment="Center"/>
+      <Button Content="Discard" Command="{Binding CancelCommand}" MinWidth="80" HorizontalContentAlignment="Center"/>
+    </StackPanel>
+  </Grid>
+</Window>

@@ -1,0 +1,432 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="David PA7LIM">
+    <meta name="copyright" content="&copy; 2018">
+    <meta name="theme-color" content="#dd4b39">
+    <meta name="keywords" content="BLUEDV,David,HAM radio,streaming,DSTAR,Hello world haha, ThumbDV">
+    <meta name="description" content="HAM radio Digital Radio DSTAR streaming with AMBE">
+    <meta name="application-name" content="BlueDVAMBEWEB">
+
+
+    <title>BlueDV dashboard</title>
+    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+    <script type="text/javascript" src="http://www.pa7lim.nl/BlueDVWEB/pcm-player.js"></script>
+
+    <script>
+        $(function () {
+            $("#tabs").tabs();
+        });
+    </script>
+
+
+
+    <style>
+
+
+        @font-face {
+            font-family: "D14MI";
+            src: url('http://www.pa7lim.nl/BlueDVWEB/font.woff') format('woff');
+        }
+
+        .D14MI {
+            font-family: "D14MI";
+        }
+
+        .david {
+            font-family: "D14MI";
+            position: relative;
+            border: 6px solid #000;
+            border-radius: 9px;
+            height: 223px;
+            width: 320px;
+            background-color: #fb7c00;
+            box-shadow: 4px 4px 1px 0px rgba(0,0,0,0.1) inset;
+        }
+
+        .ui-dialog-contain {
+            margin: 1%;
+        }
+
+        .Clock-Wrapper {
+            position: relative;
+            border: 6px solid #000;
+            border-radius: 9px;
+            height: 123px;
+            width: 306px;
+            background-color: #fb7c00;
+            box-shadow: 4px 4px 1px 0px rgba(0,0,0,0.1) inset;
+        }
+
+
+        .Clock-Time-Background {
+            z-index: 50;
+            position: absolute;
+            top: 70px;
+            left: 6px;
+            color: rgba(0,0,0,0.15);
+            font-size: 70px;
+        }
+
+        .Clock-Time-Front {
+            z-index: 100;
+            position: absolute;
+            top: 70px;
+            left: 6px;
+            font-size: 70px;
+        }
+
+        .Clock-Year-Background {
+            z-index: 50;
+            position: absolute;
+            top: 13px;
+            left: 6px;
+            color: rgba(0,0,0,0.1);
+            font-size: 27px;
+        }
+
+        .Clock-Year-Front {
+            z-index: 100;
+            position: absolute;
+            top: 13px;
+            left: 6px;
+            font-size: 27px;
+        }
+
+        .dialogStatus2 {
+            background-image: url("http://www.pa7lim.nl/BlueDVWEB/greyground.jpg");
+        }
+
+        #dialogStatus {
+            background: transparent url(http://www.pa7lim.nl/BlueDVWEB/greyground.jpg) no-repeat center;
+        }
+
+        .david {
+            position: relative;
+            border: 6px solid #000;
+            border-radius: 9px;
+            height: 150px;
+            width: 360px;
+            background-color: #fb7c00;
+            box-shadow: 4px 4px 1px 0px rgba(0,0,0,0.1) inset;
+            text-shadow: none;
+        }
+
+        .wrapper {
+            border: 6px solid #000;
+            height: 50px;
+            width: 350px;
+            border-radius: 9px;
+        }
+
+
+
+        .ui-dialog .ui-dialog-titlebar {
+            padding: .2em 1em;
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+
+
+
+
+
+    <div id="dialogStatus" title="状態" class="dialogStatus2">
+        <table class="david" style="margin-top:30px; ">
+            <col>
+            <tr align="justify"><th width="110">コールサイン   </th><th><div id="call"></div></th></tr>
+            <tr align="justify"><th width="110">名前          </th><th><div id="Name"></div></th></tr>
+            <tr align="justify"><th width="110">接続先        </th><th><div id="destination"></div></th></tr>
+            <tr align="justify"><th width="110">ホームページ   </th><th><div id="hisdmrdest"></div></th></tr>
+
+        </table>
+
+        <div class="wrapper" style="margin-top:5px; " class="wrapperClass">
+            <canvas class="visualizer" height="50"></canvas>
+        </div>
+
+    </div>
+
+
+    <div id="dialogLastheard" title="交信履歴">
+        <div id="lastHeardDiv" class="lastheardclass"></div>
+    </div>
+
+    <div id="networkdialogStatus" title="ホームページ" width="320">
+        <table>
+            <col width="130">
+
+            <tr align="left"><td>モード            </td><td><div id="mode"></div></td></tr>
+            <tr align="left"><td>接続数            </td><td><div id="connectedClients"></div></td></tr>
+
+        </table>
+    </div>
+
+
+    <div id="motddialogStatus" title="メッセージ" width="100">
+        <div id="motd"></div>
+    </div>
+
+
+
+    <div id="aboutDialog" title="ヘルプ">
+        <table>
+            <col width="130">
+            <tr align="left"><td>アプリケーション</td><td>BlueDV Windows WEB</td></tr>
+            <tr align="left"><td>開  発  者      </td><td>David PA7LIM</td></tr>
+            <tr align="left"><td>翻  訳  者      </td><td>JH1TWX</td></tr>
+            <tr align="left"><td>バージョン      </td><td><div id="version"></div></td></tr>
+            <tr align="left"><td>ハードウェア     </td><td><div id="hardware"></div></td></tr>
+            <tr align="left"><td>ホームページ </td><td><a href="http://www.pa7lim.nl/" target="_blank">www.pa7lim.nl</a></td></tr>
+            <tr align="left"><th>ボリューム         </th><th><input type="button" value="消音" id="MyMuteButton"><input type="button" value="消音解除" id="MyunmuteButton"></th></tr>
+
+        </table>
+    </div>
+
+    <script>
+        var lastHeard = [];
+        var lastCall = "";
+
+
+        $(function () {
+            var ws = null;
+            
+            // websocket listener
+            window.onload = function () {
+                var voicePort = 7777;
+
+                $('#MyMuteButton').click(function () {
+                    player.volume(0);
+                });
+                $('#MyunmuteButton').click(function () {
+                    player.volume(1);
+                });
+
+                var socketURL = 'ws://' + window.location.hostname + ':' + General();
+                var player = new PCMPlayer({
+                    encoding: '16bitInt',
+                    channels: 1,
+                    sampleRate: 8000,
+                    flushingTime: 1000
+                });
+
+
+                function start() {
+                    ws = new WebSocket(socketURL);
+                    ws.binaryType = 'arraybuffer';
+                    ws.addEventListener('message', function (event) {
+                        var data = new Uint8Array(event.data);
+                        player.feed(data);
+
+                    });
+                    ws.onclose = function () {
+                        // Try to reconnect in 5 seconds
+                        document.getElementById("destination").innerHTML = "Reconnecting";
+                        check();
+                    };
+                    ws.onerror = function () {
+                        console.log('error');
+                    };
+                    player.volume(1);
+                }
+
+
+                function check() {
+                    if (!ws || ws.readyState == 3) start();
+                }
+
+                start();
+
+                setInterval(check, 5000);
+
+            }
+
+
+            $("#dialogStatus").dialog({
+                closeOnEscape: false,
+                resizable: false,
+                width: 320,
+                height: 390,
+                position: { my: "left top", at: "left top", of: window },
+                open: function (event, ui) {
+                    $(".ui-dialog-titlebar-close", ui.dialog | ui).hide();
+                }
+            });
+
+            $("#motddialogStatus").dialog({
+                closeOnEscape: false,
+                resizable: false,
+                width: 320,
+                height: 200,
+                position: { my: "left top", at: "right top", of: window },
+                open: function (event, ui) {
+                    $(".ui-dialog-titlebar-close", ui.dialog | ui).hide();
+                }
+            });
+
+
+
+            $("#dialogLastheard").dialog({
+                closeOnEscape: false,
+                width: 320,
+                position: { my: "left top", at: "left center", of: window },
+                open: function (event, ui) {
+                    $(".ui-dialog-titlebar-close", ui.dialog | ui).hide();
+                }
+            });
+
+            $("#networkdialogStatus").dialog({
+                closeOnEscape: false,
+                width: 320,
+                position: { my: "left top", at: "right center", of: window },
+                open: function (event, ui) {
+                    $(".ui-dialog-titlebar-close", ui.dialog | ui).hide();
+                }
+            });
+
+            $("#aboutDialog").dialog({
+                closeOnEscape: false,
+                width: 320,
+                open: function (event, ui) {
+                    $(".ui-dialog-titlebar-close", ui.dialog | ui).hide();
+                }
+            });
+
+
+            setTimeout(startRefresh(), 1000);
+            setTimeout(startNetworkRefresh(), 10000);
+            setTimeout(startMotdRefresh(), 10000);
+            General();
+        });
+
+        function startRefresh() {
+            setTimeout(startRefresh, 1000);
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var myObj = JSON.parse(this.responseText);
+                    var id = myObj.hisdmrid;
+                    var hisCall = myObj.Call;
+                    var mode = myObj.mode;
+                    document.getElementById("call").innerHTML = myObj.Call;
+                    document.getElementById("destination").innerHTML = myObj.destination;
+
+                    if (myObj.Call != lastCall) {
+                        showQuery(myObj.Call, myObj.destination, myObj.mode);
+                        lastCall = myObj.Call;
+                    }
+
+                    if (myObj.Call == "        " || myObj.Call == "0" || myObj.Call == null || myObj.Call == "" || myObj.destination == "0") {
+                        clearScreen();
+                    }
+
+                } else {
+
+                }
+            };
+            xmlhttp.open("GET", "/api/reccall", true);
+            xmlhttp.send();
+
+            var clearScreen = function () {
+                document.getElementById("call").innerHTML = "";
+                document.getElementById("destination").innerHTML = "";
+                document.getElementById("Name").innerHTML = "";
+            }
+
+            var showQuery = function (idd, hisdest, mode) {
+                var xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        var myObj = JSON.parse(this.responseText);
+
+                        try {
+                            document.getElementById("Name").innerHTML = myObj[0].Name; // if name null.. FIXME:
+                            if (myObj[0].Name != null)
+                                lastHeard.push("<tr  align=\"left\"><td width=\"200\">" + myObj[0].Call + "</td><td width=\"320\">" + myObj[0].Name + "</td><td width=\"230\">" + hisdest + "</td><td width=\"120\">" + mode + "</td></tr>");
+                            if (lastHeard.length > 10) lastHeard.shift();
+
+                            $('#lastHeardDiv').html("<table><tr align=\"left\"><th>コールサイン</th><th>名前</th><th>リフレクター</th><th>モード</th></tr>" + lastHeard.join("") + "</table>");
+
+                        }
+                        catch (error) {
+                            if (idd != '0') {
+                                lastHeard.push("<tr  align=\"left\"><td width=\"200\">" + idd + "</td><td width=\"320\">" + "不明" + "</td><td width=\"230\">" + hisdest + "</td><td width=\"130\">" + mode + "</td></tr>");
+                                if (lastHeard.length > 10) lastHeard.shift();
+
+                                $('#lastHeardDiv').html("<table><tr align=\"left\"><th>コールサイン</th><th>名前</th><th>リフレクター</th><th>モード</th></tr>" + lastHeard.join("") + "</table>");
+                            }
+                        }
+                    }
+                };
+                console.log("Call : [" + idd + "] mode [" + mode + "]");
+
+                if (idd != "        " && mode != "IDLE" && idd != "") {
+                    if (idd != null) {
+                        xmlhttp.open("GET", "http://api.brandmeister.network/user_query.php?id=" + idd, true);
+                        xmlhttp.send();
+                    } else {
+                        lastHeard.push("<tr  align=\"left\"><td width=\"200\">" + idd + "</td><td width=\"320\">" + "不明" + "</td><td width=\"230\">" + hisdest + "</td><td width=\"130\">" + mode + "</td></tr>");
+                        if (lastHeard.length > 10) lastHeard.shift();
+
+                        $('#lastHeardDiv').html("<table><tr align=\"left\"><th>コールサイン</th><th>名前</th><th>リフレクター</th><th>Mode</th></tr>" + lastHeard.join("") + "</table>");
+                    }
+                }
+            }
+        }
+
+        function startNetworkRefresh() {
+            setTimeout(startNetworkRefresh, 10000);
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var myObj = JSON.parse(this.responseText);
+                    //document.getElementById("hostname").innerHTML = myObj.hostname;
+                    document.getElementById("connectedClients").innerHTML = myObj.connectedClients;
+                    document.getElementById("mode").innerHTML = myObj.mode;
+
+
+                }
+            };
+            xmlhttp.open("GET", "/api/networkstatus", true);
+            xmlhttp.send();
+        }
+
+        function startMotdRefresh() {
+            setTimeout(startMotdRefresh, 20000);
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var myObj = JSON.parse(this.responseText);
+                    document.getElementById("motd").innerHTML = myObj.motd;
+                }
+            };
+            xmlhttp.open("GET", "/api/motd", true);
+            xmlhttp.send();
+        }
+
+        function General() {
+            
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.onreadystatechange = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    var myObj = JSON.parse(this.responseText);
+                    voicePort = myObj.voiceport;
+                    document.getElementById("version").innerHTML = myObj.appVersion;
+                    document.getElementById("hardware").innerHTML = myObj.radio_version;
+                    return voicePort;
+                }
+            };
+            xmlhttp.open("GET", "/api/general", false); // sync
+            xmlhttp.send();
+            return voicePort;
+        }
+
+    </script>
+</body>
+</html>

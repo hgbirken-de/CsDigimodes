@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="DigitalVoiceControlApp.Views.DcsModeControl">
+
+  <StackPanel Orientation="Vertical" Spacing="5">
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="GW" VerticalAlignment="Center" Width="60" />
+      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding Gw}" />
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="SRC" VerticalAlignment="Center" Width="60"/>
+      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding Src}"/>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="DST" VerticalAlignment="Center" Width="60" />
+      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding Dst}" />
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+      <TextBlock Text="Message" VerticalAlignment="Center" Width="60" />
+      <TextBox Focusable="False" IsReadOnly="True" Width="230" Text="{Binding Message}">
+        <ToolTip.Tip>
+          <TextBlock Text="User Message"/>
+        </ToolTip.Tip>
+      </TextBox>
+    </StackPanel>
+
+    <StackPanel Orientation="Horizontal" Spacing="10">
+	<ListBox x:Name="_listBoxLastHeard"
+			 BorderBrush="Gray"
+			 BorderThickness="1"
+			 CornerRadius="3"
+			 DoubleTapped="ListBoxLastHeard_DoubleTapped"
+			 FontFamily="Consolas" FontSize="12"
+			 Height="100"
+			 ItemsSource="{Binding LastHeard}"
+			 KeyDown="ListBoxLastHeard_OnKeyDown"
+			 Margin="0,10,0,0"
+			 ScrollViewer.VerticalScrollBarVisibility="Auto"
+			 VerticalAlignment="Stretch"
+			 Width="310">
+		<ListBox.ItemsPanel>
+			<ItemsPanelTemplate>
+				<StackPanel Spacing="0"/>
+			</ItemsPanelTemplate>
+		</ListBox.ItemsPanel>
+
+		<ListBox.Styles>
+			<!-- Default row background -->
+			<Style Selector="ListBoxItem">
+				<Setter Property="Background" Value="White"/>
+			</Style>
+
+			<!-- Even rows -->
+			<Style Selector="ListBoxItem:nth-child(even)">
+				<Setter Property="Background" Value="#F0F0F0"/>  <!-- light grey -->
+			</Style>
+
+			<!-- Optional: highlight on hover -->
+			<Style Selector="ListBoxItem:pointerover">
+				<Setter Property="Background" Value="#D0E4FF"/>
+			</Style>
+			<Style Selector="ListBoxItem">
+				<!-- Remove built-in spacing -->
+				<Setter Property="Padding" Value="0"/>
+				<Setter Property="Margin" Value="0"/>
+				<Setter Property="MinHeight" Value="0"/>
+				<!-- Let row size shrink to text -->
+				<!--<Setter Property="Height" Value="15"/>-->
+			</Style>
+		</ListBox.Styles>
+		<ToolTip.Tip>
+			<TextBlock Text="Last Heard"/>
+		</ToolTip.Tip>
+      </ListBox>
+    </StackPanel>
+
+  </StackPanel>
+</UserControl>
