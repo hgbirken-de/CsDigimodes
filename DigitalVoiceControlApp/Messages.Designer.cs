@@ -70,7 +70,7 @@ namespace DigitalVoiceControlApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected to DMR: {0}.
+        ///   Looks up a localized string similar to Connected to {0} ({1}).
         /// </summary>
         internal static string connected_dmr {
             get {
@@ -79,7 +79,7 @@ namespace DigitalVoiceControlApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected to FCS {0}.
+        ///   Looks up a localized string similar to Connected to {0}.
         /// </summary>
         internal static string connected_fcs {
             get {
@@ -88,7 +88,7 @@ namespace DigitalVoiceControlApp {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Connected to NXDN {0}.
+        ///   Looks up a localized string similar to Connected to {0}.
         /// </summary>
         internal static string connected_nxdn {
             get {

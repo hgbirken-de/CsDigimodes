@@ -121,10 +121,10 @@
     <value>Verbunden mit {0} {1}</value>
   </data>
   <data name="connected_dmr" xml:space="preserve">
-    <value>Verbunden mit DMR: {0}</value>
+    <value>Verbunden mit: {0} ({1})</value>
   </data>
   <data name="connected_fcs" xml:space="preserve">
-    <value>Verbunden mit FCS {0}</value>
+    <value>Verbunden mit {0}</value>
   </data>
   <data name="connected_nxdn" xml:space="preserve">
     <value>Verbunden mit {0}</value>

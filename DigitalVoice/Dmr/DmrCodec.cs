@@ -545,44 +545,6 @@ public class DmrCodec
 
 
     /// <summary>
-    /// Extracts the 6-byte Embedded Identifier (EI) from a DMR frame payload.
-    /// </summary>
-    /// <param name="payload">The full DMR frame payload (at least 33 bytes from the specified offset).</param>
-    /// <param name="offset">The starting index within <paramref name="payload"/> where the 33-byte frame begins.</param>
-    /// <param name="eiOut">A 6-byte array that will receive the extracted EI bytes.</param>
-    /// <exception cref="ArgumentNullException">Thrown if <paramref name="payload"/> or <paramref name="eiOut"/> is null.</exception>
-    /// <exception cref="ArgumentException">
-    /// Thrown if <paramref name="payload"/> does not contain at least 33 bytes from <paramref name="offset"/>,
-    /// or if <paramref name="eiOut"/> has fewer than 6 bytes.
-    /// </exception>
-    /// <remarks>
-    /// The extraction process takes the lower nibble of the first byte, combines it with the upper nibble 
-    /// of the next byte, and continues this pattern across the payload bytes:
-    /// <list type="bullet">
-    ///   <item>eiOut[0] = low nibble of payload[offset+13] + high nibble of payload[offset+14]</item>
-    ///   <item>eiOut[1] = low nibble of payload[offset+14] + high nibble of payload[offset+15]</item>
-    ///   <item>eiOut[2] = low nibble of payload[offset+15] + high nibble of payload[offset+16]</item>
-    ///   <item>eiOut[3] = low nibble of payload[offset+16] + high nibble of payload[offset+17]</item>
-    ///   <item>eiOut[4] = low nibble of payload[offset+17] + high nibble of payload[offset+18]</item>
-    ///   <item>eiOut[5] = low nibble of payload[offset+18] + high nibble of payload[offset+19]</item>
-    /// </list>
-    /// This corresponds to the DMR embedded signaling extraction for blocks B–F in the voice frame.
-    /// </remarks>
-    public static void ExtractEiFromFrame(byte[] payload, int offset, byte[] eiOut)
-    {
-        if (payload == null || payload.Length < offset + 33) throw new ArgumentException($"{payload} must contain at least 33 bytes from offset");
-        if (eiOut == null || eiOut.Length < 6) throw new ArgumentException($"{eiOut} must be 6 bytes");
-
-        // low nibble of frame[offset + 13], then frame[offset + 14..18], then high nibble of frame[offset + 19].
-        eiOut[0] = (byte)(((payload[offset + 13] & 0x0F) << 4) | (payload[offset + 14] >> 4));
-        eiOut[1] = (byte)(((payload[offset + 14] & 0x0F) << 4) | (payload[offset + 15] >> 4));
-        eiOut[2] = (byte)(((payload[offset + 15] & 0x0F) << 4) | (payload[offset + 16] >> 4));
-        eiOut[3] = (byte)(((payload[offset + 16] & 0x0F) << 4) | (payload[offset + 17] >> 4));
-        eiOut[4] = (byte)(((payload[offset + 17] & 0x0F) << 4) | (payload[offset + 18] >> 4));
-        eiOut[5] = (byte)(((payload[offset + 18] & 0x0F) << 4) | (payload[offset + 19] >> 4));
-    }
-
-    /// <summary>
     /// Converts 8 boolean values (most significant bit first) into a single byte.
     /// </summary>
     /// <param name="bits">Array of at least 8 booleans representing bit values.</param>
@@ -700,27 +662,144 @@ public class DmrCodec
     // TA stuf
 
     /// <summary>
-    ///  Extracts the 6-byte Embedded Identifier (EI) from a DMR frame payload.
-    //Args:
-    //        payload(bytes | bytearray) : The full DMR frame payload(must contain at least 33 bytes from offset).
-    //        offset(int) : The starting index within payload where the 33-byte frame begins.
-    //        ei_out(bytearray): A 6-byte array that will receive the extracted EI bytes.
+    /// Extracts the 6-byte Embedded Identifier (EI) from a DMR frame payload.
     /// </summary>
-    /// <param name="payload">The full DMR frame payload(must contain at least 33 bytes from offset).</param>
-    /// <param name="eiOut"></param>
-    /// <exception cref="ArgumentException"></exception>
-    static void ExtractEiFromFrame(ReadOnlySpan<byte> payload, Span<byte> eiOut)
+    /// <param name="payload">
+    /// The full DMR frame payload (must contain at least 33 bytes from <paramref name="offset"/>).
+    /// </param>
+    /// <param name="offset">The starting index within <paramref name="payload"/> where the 33-byte frame begins.</param>
+    /// <param name="eiOut">A 6-byte array that receives the extracted EI bytes.</param>
+    /// <exception cref="ArgumentException">
+    /// Thrown if <paramref name="payload"/> or <paramref name="eiOut"/> is null or too short.
+    /// </exception>
+    /// <remarks>
+    /// Per ETSI TS 102 361-1: the EI bits are packed across the low nibble of
+    /// byte (offset+13), the full bytes (offset+14)..(offset+18), and the high
+    /// nibble of byte (offset+19) - this is the exact inverse of
+    /// <c>EncodeEmbeddedSignaling</c> / <c>WriteEmbeddedData</c>.
+    /// </remarks>
+    public static void ExtractEiFromFrame(byte[] payload, int offset, byte[] eiOut)
     {
-        if (payload.Length < 33) throw new ArgumentException("frame must be 33 bytes");
-        if (eiOut.Length < 6) throw new ArgumentException("eiOut must be 6 bytes");
+        if (payload == null || payload.Length < offset + 33) throw new ArgumentException($"{payload} must contain at least 33 bytes from offset");
+        if (eiOut == null || eiOut.Length < 6) throw new ArgumentException($"{eiOut} must be 6 bytes");
 
-        // See explanation earlier: low nibble of f[13], then f[14]..f[18], then high nibble of f[19].
-        eiOut[0] = (byte)(((payload[13] & 0x0F) << 4) | (payload[14] >> 4));
-        eiOut[1] = (byte)(((payload[14] & 0x0F) << 4) | (payload[15] >> 4));
-        eiOut[2] = (byte)(((payload[15] & 0x0F) << 4) | (payload[16] >> 4));
-        eiOut[3] = (byte)(((payload[16] & 0x0F) << 4) | (payload[17] >> 4));
-        eiOut[4] = (byte)(((payload[17] & 0x0F) << 4) | (payload[18] >> 4));
-        eiOut[5] = (byte)(((payload[18] & 0x0F) << 4) | (payload[19] >> 4));
+        // low nibble of frame[offset + 13], then frame[offset + 14..18], then high nibble of frame[offset + 19].
+        eiOut[0] = (byte)(((payload[offset + 13] & 0x0F) << 4) | (payload[offset + 14] >> 4));
+        eiOut[1] = (byte)(((payload[offset + 14] & 0x0F) << 4) | (payload[offset + 15] >> 4));
+        eiOut[2] = (byte)(((payload[offset + 15] & 0x0F) << 4) | (payload[offset + 16] >> 4));
+        eiOut[3] = (byte)(((payload[offset + 16] & 0x0F) << 4) | (payload[offset + 17] >> 4));
+        eiOut[4] = (byte)(((payload[offset + 17] & 0x0F) << 4) | (payload[offset + 18] >> 4));
+        eiOut[5] = (byte)(((payload[offset + 18] & 0x0F) << 4) | (payload[offset + 19] >> 4));
+    }
+
+    /// <summary>
+    /// Decodes the 16-bit embedded signaling (EI) field of a voice frame - inverse
+    /// of <see cref="EncodeEmbeddedSignaling"/> / the QR(16,7,6) encoding via <see cref="EncodingTable1676"/>.
+    /// </summary>
+    /// <param name="dmrFrame">The full DMR frame payload (offset 20 is the start of the 33-byte burst).</param>
+    /// <returns>
+    /// A tuple (ColorCode, Lcss), or <c>null</c> if the codeword could not be
+    /// corrected (more than 2 bit errors, since the code's minimum distance is 6).
+    /// </returns>
+    public static (int ColorCode, int Lcss)? DecodeEmbeddedSignaling(byte[] dmrFrame)
+    {
+        byte[] ei = new byte[6];
+        ExtractEiFromFrame(dmrFrame, 20, ei);
+        int received = (ei[0] << 8) | ei[5];
+
+        int bestValue = -1;
+        int bestDist = 99;
+
+        for (int value = 0; value < EncodingTable1676.Length; value++)
+        {
+            int dist = System.Numerics.BitOperations.PopCount((uint)(received ^ EncodingTable1676[value]));
+            if (dist < bestDist)
+            {
+                bestValue = value;
+                bestDist = dist;
+            }
+        }
+
+        if (bestDist > 2)
+            return null;
+
+        int colorCode = (bestValue >> 3) & 0x0F;
+        int lcss = bestValue & 0x03;
+        return (colorCode, lcss);
+    }
+
+    /// <summary>
+    /// Reconstructs the 9-byte LC data from a fully-assembled 128-bit embedded
+    /// codeword (4 fragments from voice frames B-E of one superframe) - inverse
+    /// of <see cref="EncodeEmbeddedData"/>.
+    /// </summary>
+    /// <param name="encodedLcBits">
+    /// 128 bits, assembled from <see cref="WriteEmbeddedData"/> fragments 1-4.
+    /// </param>
+    /// <returns>
+    /// 9 bytes of LC data (LcData[0] is the FLCO byte), or <c>null</c> if the
+    /// CRC check failed or a row was uncorrectable.
+    /// </returns>
+    public static byte[]? DecodeEmbeddedData(bool[] encodedLcBits)
+    {
+        // 1) column-wise de-interleave (exact inverse of encode's final packing loop)
+        bool[] tmp128 = new bool[128];
+        int b = 0;
+        for (int a = 0; a < 128; a++)
+        {
+            tmp128[b] = encodedLcBits[a];
+            b += 16;
+            if (b > 127)
+                b -= 127;
+        }
+
+        // 2) Hamming(16,11,4) decode each of the 7 data rows
+        for (int a = 0; a < 112; a += 16)
+        {
+            bool[] row = new bool[16];
+            Array.Copy(tmp128, a, row, 0, 16);
+            if (!Hamming.Decode16114(row))
+            {
+                logger.Error($"DecodeEmbeddedData: Hamming decode failed at row {a}");
+                return null;
+            }
+            Array.Copy(row, 0, tmp128, a, 16);
+        }
+
+        // 3) extract 5-bit CRC from its fixed positions
+        int crcRecv = (tmp128[106] ? 0x01 : 0)
+                    | (tmp128[90] ? 0x02 : 0)
+                    | (tmp128[74] ? 0x04 : 0)
+                    | (tmp128[58] ? 0x08 : 0)
+                    | (tmp128[42] ? 0x10 : 0);
+
+        // 4) reassemble the 72 LC bits (inverse of the segment-copy loop)
+        bool[] tmp72 = new bool[72];
+        b = 0;
+        for (int segment = 0; segment < 7; segment++)
+        {
+            int start = segment * 16;
+            int length = (segment < 2) ? 11 : 10;
+            for (int a = start; a < start + length; a++, b++)
+            {
+                tmp72[b] = tmp128[a];
+            }
+        }
+
+        int crcCalc = Crc.EncodeFiveBit(tmp72);
+        if (crcCalc != crcRecv)
+        {
+            logger.Error($"DecodeEmbeddedData: CRC mismatch (recv={crcRecv}, calc={crcCalc})");
+            return null;
+        }
+
+        byte[] lcData = new byte[9];
+        for (int i = 0; i < 9; i++)
+        {
+            lcData[i] = BitsToByteBE(tmp72, i * 8);
+        }
+
+        return lcData;
     }
 
 }

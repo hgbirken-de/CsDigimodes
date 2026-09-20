@@ -8,23 +8,22 @@
   <StackPanel Orientation="Vertical" Spacing="5">
 
     <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="Callsign" VerticalAlignment="Center" Width="60"/>
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding Callsign}"/>
+	  <TextBlock Text="CALL" VerticalAlignment="Center" Width="40"/>
+      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding Callsign}" ToolTip.Tip="Callsign"/>
+	  <TextBlock Text="TA" VerticalAlignment="Center" Width="40"/>
+      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding RxTa}" ToolTip.Tip="Talkeralias"/>
     </StackPanel>
 
     <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="SRC ID" VerticalAlignment="Center" Width="60" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding SrcId}"/>
+      <TextBlock Text="SRC" VerticalAlignment="Center" Width="40" />
+      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding SrcId}" ToolTip.Tip="Source DMR-ID" />
+	  <TextBlock Text="DST" VerticalAlignment="Center" Width="40" />
+      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding DstId}" ToolTip.Tip="Destination DMR-ID" />
     </StackPanel>
 
     <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="DST ID" VerticalAlignment="Center" Width="60" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding DstId}" />
-    </StackPanel>
-
-    <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="RPT ID" VerticalAlignment="Center" Width="60" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding RptId}" />
+      <TextBlock Text="RPT" VerticalAlignment="Center" Width="40" />
+      <TextBox Focusable="False" IsReadOnly="True" Width="100" Text="{Binding RptId}" ToolTip.Tip="Repeater DMR-ID"/>
     </StackPanel>
 
 	<StackPanel Orientation="Horizontal" Spacing="10">

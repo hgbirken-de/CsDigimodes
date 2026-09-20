@@ -42,6 +42,7 @@ public record DmrSessionContext
     public int RxTimeSlot { get; set; }
     public int RxVoiceOrDataSeq { get; set; }
     public byte[] Salt { get; set; } = [];
+    public string RxTalkerAlias { get; set; } = "";
 
     #endregion
 

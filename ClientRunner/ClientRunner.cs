@@ -32,7 +32,7 @@ class ClientRunner
 
     static void Main(string[] args)
     {
-        DmrProtocol dmrProtocol = DmrProtocol.Homebrew;
+        DmrProtocol dmrProtocol = DmrProtocol.MmdvmHost;
         Mode clientType = Mode.Dmr;         // <====  S E L E C T  C L I E N T  H E R E
 
         AppDomain.CurrentDomain.ProcessExit += (sender, e) =>

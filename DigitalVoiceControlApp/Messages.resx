@@ -121,13 +121,13 @@
     <value>Connected to {0} {1}</value>
   </data>
   <data name="connected_dmr" xml:space="preserve">
-    <value>Connected to DMR: {0}</value>
+    <value>Connected to {0} ({1})</value>
   </data>
   <data name="connected_fcs" xml:space="preserve">
-    <value>Connected to FCS {0}</value>
+    <value>Connected to {0}</value>
   </data>
   <data name="connected_nxdn" xml:space="preserve">
-    <value>Connected to NXDN {0}</value>
+    <value>Connected to {0}</value>
   </data>
   <data name="connected_ref" xml:space="preserve">
     <value>Connected to {0} {1}</value>

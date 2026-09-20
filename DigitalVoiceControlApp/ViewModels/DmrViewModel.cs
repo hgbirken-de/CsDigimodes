@@ -21,6 +21,7 @@ public class DmrViewModel : ViewModelBase
     string _srcId = string.Empty;
     string _dstId = string.Empty;
     string _rptId = string.Empty;
+    string _rxTa = string.Empty;
 
     string _flco = string.Empty;
 
@@ -57,11 +58,15 @@ public class DmrViewModel : ViewModelBase
         set { _rptId = value; OnPropertyChanged(); }
     }
 
-
     public string SrcId
     {
         get => _srcId;
         set { _srcId = value; OnPropertyChanged(); }
+    }
+    public string RxTa
+    {
+        get => _rxTa;
+        set { _rxTa = value; OnPropertyChanged(); }
     }
 
     readonly ConcurrentDictionary<int, (string, string)> _dmrUserCache = []; // value is tuple of (callsign, name)
@@ -92,6 +97,7 @@ public class DmrViewModel : ViewModelBase
         {
             // Clear model/view
             Dispatcher.UIThread.Post(() => { Clear(); });
+            sessionCtx.RxTalkerAlias = "";
             return; // no last heard
         }
 
@@ -104,6 +110,7 @@ public class DmrViewModel : ViewModelBase
         int dstId = 0;
         int rptId = 0;
         int srcId = 0;
+        string rxTa = string.Empty;
         TransceiveMode tm = sessionCtx.TransceiveMode;
         
         switch (tm)
@@ -112,6 +119,7 @@ public class DmrViewModel : ViewModelBase
                 dstId = sessionCtx.RxDstId;
                 rptId = sessionCtx.RxRptId;
                 srcId = sessionCtx.RxSrcId;
+                rxTa = sessionCtx.RxTalkerAlias;
                 if (_dmrUserCache.TryGetValue(srcId, out var value))
                 {
                     callsign = value.Item1;
@@ -159,6 +167,7 @@ public class DmrViewModel : ViewModelBase
             DstId = dstId > 0 ? dstId.ToString() : string.Empty;
             RptId = rptId > 0 ? rptId.ToString() : string.Empty;
             SrcId = srcId.ToString();
+            RxTa = rxTa;
 
             switch (tm)
             {
@@ -186,8 +195,8 @@ public class DmrViewModel : ViewModelBase
                 }
             }
 
-            var newItem = new LastHeardItemDmr(srcId, callsign, name);
-            LastHeard.Insert(0, newItem); // insert the new item at the top
+            var newItem = new LastHeardItemDmr(srcId, dstId, callsign, name);
+            LastHeard.Insert(0, newItem); // insert at the top
 
             // Limit to max 50 entries
             if (LastHeard.Count > 50)
@@ -203,11 +212,12 @@ public class DmrViewModel : ViewModelBase
     internal void Clear()
     {
         logger.Debug($"");
-        Callsign = " ";
+        Callsign = "";
         Flco = string.Empty;
         DstId = string.Empty;
         RptId = string.Empty;
         SrcId = string.Empty;
+        RxTa = string.Empty;
     }
 
     public void ClearLastHeard()

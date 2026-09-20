@@ -61,6 +61,10 @@ public sealed class DmrClient2
 
     public ConsumeDmrData? ExternalDmrDataConsumer;
 
+    // TA Stuff
+    readonly EmbeddedLcAccumulator _embeddedLcAccumulator = new();
+    readonly TalkerAliasAssembler _taAssembler = new();
+
     static DmrClient2()
     {
         new byte[] {0x61, 0x01, 0x42, 0x02, 0x00, 0xA0}.CopyTo(ambeSpeechPacket, 0);
@@ -198,6 +202,26 @@ public sealed class DmrClient2
     private void ProcessDmrdPacket(byte[] dmrPkt)
     {
         byte[] dmr3Ambe = DmrCodec.DecodeDmrFrame(_clientState, dmrPkt);
+
+        if (_clientState.RxFrameType is FrameType.Voice or FrameType.VoiceSync)
+        {
+            byte[]? lcData = _embeddedLcAccumulator.AddFrame(dmrPkt, _clientState.RxVoiceOrDataSeq);
+            if (lcData != null)
+            {
+                Flco flco = (Flco)(lcData[0] & 0x3F);
+                logger.Debug($"Decoded embedded LC: flco={flco}, lcData={Convert.ToHexString(lcData)}");
+
+                if (flco is Flco.TA_HEADER or Flco.TA_BLOCK1 or Flco.TA_BLOCK2 or Flco.TA_BLOCK3)
+                {
+                    string? aliasText = _taAssembler.AddFragment(lcData);
+                    if (aliasText != null)
+                    {
+                        logger.Info($"Talker Alias decoded: {aliasText}");
+                        _clientState.RxTalkerAlias = aliasText;
+                    }
+                }
+            }
+        }
 
         switch (_clientState.RxFrameType)
         {

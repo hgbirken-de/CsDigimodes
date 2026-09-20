@@ -405,8 +405,8 @@ public class MainViewModel : ViewModelBase
                     StartStopDmr(true);
                     msg = us.Dmr.Protocol switch
                     {
-                        DmrProtocol.Homebrew => string.Format(Messages.connected_dmr, us.Dmr.BmServerAddr1),
-                        DmrProtocol.MmdvmHost => string.Format(Messages.connected_dmr, us.Dmr.Master),
+                        DmrProtocol.Homebrew => string.Format(Messages.connected_dmr, us.Dmr.BmServerAddr1, "HOMEBREW"),
+                        DmrProtocol.MmdvmHost => string.Format(Messages.connected_dmr, us.Dmr.Master, "MMDVMHOST"),
                         _ => throw new NotImplementedException(),
                     };
                     break;
