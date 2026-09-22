@@ -1,6 +1,5 @@
 ﻿using DigitalVoice.Dmr;
 using System;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 namespace DigitalVoiceControlApp.ViewModels;
