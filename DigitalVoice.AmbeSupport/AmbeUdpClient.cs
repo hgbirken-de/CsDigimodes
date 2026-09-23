@@ -6,9 +6,9 @@ using System.Net.Sockets;
 namespace DigitalVoice.AmbeSupport;
 
 /// <summary>
-/// Implementation of a AMBE client. The client uses an AMBE server to send/receive data typically to decompress/compress AMBE data.
+/// Implementation of a AMBE UDP client. The client uses an AMBE server to send/receive data typically to decompress/compress AMBE data.
 /// </summary>
-public sealed class AmbeClient : IDisposable
+public sealed class AmbeUdpClient : IAmbe3000RController, IDisposable
 {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -21,13 +21,15 @@ public sealed class AmbeClient : IDisposable
     private readonly IPEndPoint _remote;
     private bool _disposed;
 
+    public bool IsOpen => throw new NotImplementedException();
+
     /// <summary>
     /// Constructor.
     /// </summary>
     /// <param name="ip">the ip-address of the AMBE server</param>
     /// <param name="port">the port number of the AMBE server</param>
     /// <param name="timeoutMs">timeout value in millis</param>
-    public AmbeClient(string ip = "127.0.0.1", int port = 2460, int timeoutMs = 1000)
+    public AmbeUdpClient(string ip = "127.0.0.1", int port = 2460, int timeoutMs = 1000)
     {
         logger.Debug($"ip={ip}, port={port}, timeout={timeoutMs}");
         _udpClient = new UdpClient();
@@ -273,6 +275,39 @@ public sealed class AmbeClient : IDisposable
             _udpClient.Dispose();
             _disposed = true;
         }
+    }
+
+
+    // Die folgenden werden im Kontext dieser Klasse nicht benötigt!
+    // 
+    public void Open()
+    {
+       
+    }
+
+    public void Close()
+    {
+        
+    }
+
+    public string? GetProductId()
+    {
+        throw new NotImplementedException();
+    }
+
+    public string? GetVersion()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void Reset()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<byte[]?> SendReceivePacketAsync(byte[] packet, CancellationToken cancellationToken = default)
+    {
+        throw new NotImplementedException();
     }
 }
 

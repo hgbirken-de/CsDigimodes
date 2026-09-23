@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualBasic;
-using NLog;
+﻿using NLog;
 using System.IO.Ports;
 using System.Text;
 

@@ -1,11 +1,11 @@
 ﻿using NAudio.Wave;
 
-namespace AmbeServer;
+namespace DigitalVoice.AudioSupport;
 
 /// <summary>
 /// PCM recorder that writes PCM data to a WAV file using NAudio's WaveFileWriter.
 /// </summary>
-public class WavPcmRecorder : IDisposable
+public class WavPcmRecorder : IWavPcmRecorder, IDisposable
 {
     private WaveFileWriter? _writer;
     private bool _disposed;

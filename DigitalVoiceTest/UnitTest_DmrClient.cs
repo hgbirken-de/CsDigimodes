@@ -1,6 +1,5 @@
-
-using DigitalVoice.Config;
 using DigitalVoice.Dmr;
+using DigitalVoiceControlApp.Config;
 using System.Security.Cryptography;
 using System.Text;
 using Xunit.Abstractions;
@@ -128,7 +127,7 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
     [Fact]
     public void Test_Sha256()
     {
-        var us = UserSettings.Instance()
+        var us = UserSettings.Instance();
         byte[] salt = { 0xf9, 0x6f, 0x4b, 0xe6 };
         string pwd = us.Dmr.Password;
 

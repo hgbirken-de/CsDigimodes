@@ -1,6 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using DigitalVoice.Config;
+using DigitalVoiceControlApp.Config;
 using MsBox.Avalonia;
 using MsBox.Avalonia.Enums;
 using NLog;

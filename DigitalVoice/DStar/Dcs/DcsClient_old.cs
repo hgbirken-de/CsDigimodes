@@ -1,4 +1,4 @@
-﻿using AmbeServer;
+﻿
 using DigitalVoice.AmbeSupport;
 using DigitalVoice.Common;
 using NLog;
@@ -35,13 +35,9 @@ public class DcsClient_old
 
     readonly System.Timers.Timer _txTimer = new(20);
 
-    readonly AmbeClient _ambeClient;
-
     readonly ConcurrentQueue<byte[]> _rxQueue = new();
 
     PacketRecorder? _packetRecorder; // used for read/write operations, only one at a time
-
-    WavPcmRecorder? _wavRecorder;
 
     int _rxInactivityTicks = 0;
 
@@ -63,8 +59,6 @@ public class DcsClient_old
         _pingTimer.Elapsed += PingTimerCallback;
         _rxTimer.Elapsed += RxTimerCallback;
 
-        _ambeClient = new();
-
         if (_cfg.SimulationMode)
         {
             //throw new NotImplementedException("Simulation mode not implemented yet.");
@@ -73,8 +67,6 @@ public class DcsClient_old
         {
             Connect();
         }
-
-        InitDV3000();
     }
 
     /// <summary>
@@ -83,7 +75,6 @@ public class DcsClient_old
     /// </summary>
     private void InitDV3000()
     {
-        if (_ambeClient == null) return;
         byte[][] packets =
         [
             [0x61, 0x00, 0x01, 0x00, 0x36], // Query for configuration pin state at power-up or reset
@@ -94,7 +85,7 @@ public class DcsClient_old
 
         foreach (var p in packets)
         {
-            byte[] resp = _ambeClient.SendReceivePacket(p);
+            byte[]? resp = _cfg.AmbeController!.SendReceivePacket(p);
             logger.Debug($"send: {Convert.ToHexString(p)}");
             logger.Debug($"rcvd: {Convert.ToHexString(resp)}");
         }
@@ -413,8 +404,7 @@ public class DcsClient_old
             _packetRecorder?.Close();
             _packetRecorder = null;
 
-            _wavRecorder?.Close();
-            _wavRecorder = null;
+            _cfg.WavPcmRecorder?.Close();
         }
     }
 
@@ -451,9 +441,9 @@ public class DcsClient_old
                     throw new ArgumentException($"Invalid AMBE data: {Convert.ToHexString(ambeData)}");
 
                 Buffer.BlockCopy(ambeData, 0, ambeChannelPacket, 6, 9);
-                _ambeClient?.SendPacket(ambeChannelPacket);
-                byte[]? resp = _ambeClient?.ReceivePacket();
-                //byte[]? resp = _ambeClient?.SendReceivePacket(ambeChannelPacket);
+                _cfg.AmbeController?.SendPacket(ambeChannelPacket);
+                byte[]? resp = _cfg.AmbeController!.ReceivePacket();
+                //byte[]? resp = cfg.AmbeController!.SendReceivePacket(ambeChannelPacket);
                 if (AmbeHelper.IsSpeechPacket(resp))
                 {
                     AmbeHelper.SwapPcmBytes(resp!);
@@ -583,6 +573,10 @@ public class DcsClient_old
             return;
         }
 
+        _cfg.AmbeController!.Open();
+        
+        InitDV3000();
+
         if (_cfg.SimulationMode && _cfg.RecordRcvdUdpPackets)
         {
             _cfg.RecordRcvdUdpPackets = false; // never record test data
@@ -593,13 +587,6 @@ public class DcsClient_old
         if (!Directory.Exists(dataDir))
         {
             Directory.CreateDirectory(dataDir);
-        }
-
-        // Setup Audio recorder if need
-        if (_cfg.RecordAudio)
-        {
-            string wavFile = Path.Combine("data", $"{GetType().Name}_audio_{DateTime.Now:yyyyMMddHHmmss}.wav");
-            _wavRecorder = new(wavFile);
         }
 
         // Setup packet recorder if need
@@ -633,5 +620,7 @@ public class DcsClient_old
         _clientState.IsRunning = false;
         _pingTimer.Stop();
         SendDisconnect(); // TODO: check cmd sequence
+
+        _cfg.AmbeController!.Close();
     }
 }

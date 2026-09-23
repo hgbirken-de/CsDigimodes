@@ -1,16 +1,16 @@
-﻿
-using DigitalVoice.AmbeSupport;
+﻿using DigitalVoice.AmbeSupport;
+using DigitalVoice.AudioSupport;
 using DigitalVoice.Common;
-using DigitalVoice.Config;
 using DigitalVoice.Dmr;
 using DigitalVoice.DStar.Dcs;
 using DigitalVoice.DStar.Ref;
 using DigitalVoice.DStar.Xrf;
 using DigitalVoice.Fusion;
 using DigitalVoice.Nxdn;
+using Microsoft.Extensions.Configuration;
 using NLog;
 
-namespace YsfClientRunner;
+namespace ClientRunner;
 
 /// <summary>
 /// Helper class to run the DCS-, DMR-, FCS-, and YSF-Clients.
@@ -114,6 +114,16 @@ class ClientRunner
         Console.WriteLine("Cleanup done. Bye!");
     }
 
+    static IAmbe3000RController CreateAmbeController(AmbeConfig cfg)
+    {
+        return cfg.AmbeServiceType switch
+        {
+            AmbeServiceType.Server => new AmbeUdpClient(cfg.ServerAddr, cfg.ServerPort),
+            AmbeServiceType.Stick => new Ambe3000RController(cfg.StickComport),
+            _ => throw new InvalidOperationException(),
+        };
+    }
+
    
     /// <summary>
     /// Run the DCS client.
@@ -130,7 +140,7 @@ class ClientRunner
             RefName = refName,
             Module = 'C',
             Callsign = "DL1HGB",
-            AudioPlayer = new(),
+            AudioPlayer = new AudioPlayer(),
             RecordRcvdUdpPackets = true,
             //SimulationFile = "./data/DcsClient_packets_20250912100514.bin",
             SimulationFile = "C:/Users/hgbir/AppData/Roaming/DigitalVoiceControl/Dcs/Data/Dcs_packets_20250919153621_gps.bin",
@@ -146,24 +156,32 @@ class ClientRunner
     /// <param name="dmrProtocol"Defines which DMR protocol to use.</param>
     static void RunDmrClient(DmrProtocol dmrProtocol)
     {
-        var us = UserSettings.Instance();
+        var config = new ConfigurationBuilder().AddUserSecrets<ClientRunner>().Build();
+
+        AmbeConfig ambeConfig = new()
+        {
+            AmbeServiceType = AmbeServiceType.Stick
+        };
+
         DmrClientConfig cfg = new()
         {
-            AmbeServiceType = AmbeServiceType.Stick,
-            AmbeServerAddr = "127.0.0.1",
-            AmbeServerPort = 2460,
-            AmbeStickComport = "COM13",
+            AmbeConfig = ambeConfig,
             BmServerAddress = "master1.bm262.de",
             BmServerPort = 62030,
-            Password = us.Dmr.Password,
+            Password = config["MySecrets:Password"],
             MyDmrId = 2622363,
             EssId = 15,
             RecordAudio = false,
+            RecordAudioFile = null,
+            WavPcmRecorder = null,
             RecordDmrPackets = false,
             RecordDmrPacketsFile = Path.Combine("data", $"DmrClient1_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
             SimulationMode = true,
-            AudioPlayer = new(),
+            AudioPlayer = new AudioPlayer(),
         };
+
+        cfg.AmbeController = CreateAmbeController(cfg.AmbeConfig);
+
         switch (dmrProtocol)
         {
             case DmrProtocol.Homebrew:
@@ -204,7 +222,7 @@ class ClientRunner
             HotspotType = "MMDVM",
             RxFrequency = 434300000,
             TxFrequency = 434300000,
-            AudioPlayer = new(),
+            AudioPlayer = new AudioPlayer(),
 
             RecordAudio = false,
             RecordAudioFile = Path.Combine("data", $"fcs_audio_{DateTime.Now:yyyyMMddHHmmss}.wav"),
@@ -239,7 +257,7 @@ class ClientRunner
             NxdnReflectorId = id,
             Callsign = "DL1HGB",
             MyNxdnId = 39251,
-            AudioPlayer = new(),
+            AudioPlayer = new AudioPlayer(),
 
             RecordAudio = false,
             RecordAudioFile = Path.Combine("data", $"nxdn_audio_{DateTime.Now:yyyyMMddHHmmss}.wav"),
@@ -270,7 +288,7 @@ class ClientRunner
             RefName = refName,
             Module = 'C',
             Callsign = "DL1HGB",
-            AudioPlayer = new(),
+            AudioPlayer = new AudioPlayer(),
             RecordRefPackets = true,
             SimulationFile = null,
             SimulationMode = false,
@@ -328,7 +346,7 @@ class ClientRunner
             SimulationFile = simulationFile,
             SimulationMode = true,
 
-            AudioPlayer = new(),
+            AudioPlayer = new AudioPlayer(),
         };
 
         ysfClient = new(cfg);
@@ -350,7 +368,7 @@ class ClientRunner
             RefName = refName,
             Module = 'B',
             Callsign = "DL1HGB",
-            AudioPlayer = new(),
+            AudioPlayer = new AudioPlayer(),
             RecordRefPackets = true,
             SimulationFile = null,
             SimulationMode = false,

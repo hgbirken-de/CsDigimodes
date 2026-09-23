@@ -1,8 +1,8 @@
 ﻿using Avalonia.Threading;
 using DigitalVoice.Common;
-using DigitalVoice.Config;
 using DigitalVoice.Dmr;
 using DigitalVoiceControlApp.Commands;
+using DigitalVoiceControlApp.Config;
 using NLog;
 using System;
 using System.Collections.Concurrent;

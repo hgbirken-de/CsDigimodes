@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace DigitalVoice.AudioSupport; 
 
-public sealed class MicrophoneReader(int sampleRate = 8000, int channels = 1) : IDisposable
+public sealed class MicrophoneReader(int sampleRate = 8000, int channels = 1) : IMicrophoneReader, IDisposable
 {
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 

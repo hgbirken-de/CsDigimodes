@@ -1,7 +1,8 @@
-﻿using NLog;
+﻿using DigitalVoice.AmbeSupport;
+using DigitalVoice.AudioSupport;
+using NLog;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using YamlDotNet.Serialization;
 
 namespace AmbeServer;
@@ -15,7 +16,7 @@ public class AmbeServer : IDisposable
 
     static readonly string _resourceFile = "AmbeServerConfig.yaml";
     
-    readonly AMBE3000RController _dv3000Controller;
+    readonly Ambe3000RController _dv3000Controller;
 
     readonly string _host = "127.0.0.1";
     readonly int _port = 2460;
@@ -70,7 +71,7 @@ public class AmbeServer : IDisposable
         }
         
         // Set up the DV3000 stick controller
-        _dv3000Controller = new AMBE3000RController(_serialPort);
+        _dv3000Controller = new Ambe3000RController(_serialPort);
         _dv3000Controller.Open();
         logger.Info($"AMBE Product ID:  {_dv3000Controller.GetProductId()}, Version: {_dv3000Controller.GetVersion()}, Serial Port: {_serialPort}");
 

@@ -1,5 +1,4 @@
 ﻿using Avalonia.Controls.ApplicationLifetimes;
-using DigitalVoice.Config;
 using DigitalVoice.AmbeSupport;
 using DigitalVoice.Dmr;
 using DigitalVoice.Fusion;
@@ -11,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Input;
+using DigitalVoiceControlApp.Config;
 
 namespace DigitalVoiceControlApp.ViewModels;
 

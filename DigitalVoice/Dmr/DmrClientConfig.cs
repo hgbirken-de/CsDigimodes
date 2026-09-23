@@ -8,6 +8,15 @@ namespace DigitalVoice.Dmr;
 public record DmrClientConfig
 {
     static readonly Logger logger = LogManager.GetCurrentClassLogger();
+   
+    public AmbeConfig? AmbeConfig { get; set; } 
+
+    public IAmbe3000RController? AmbeController { get; set; }
+
+    // Audio stuff
+    public IMicrophoneReader? MicrophoneReader { get; set; }
+    public IAudioPlayer? AudioPlayer { get; set; }
+    public IWavPcmRecorder? WavPcmRecorder { get; set; }
 
     // DMR Server
     public string BmServerAddress { get; set; } = "2621.master.brandmeister.network"; // "master1.bm262.de";
@@ -39,19 +48,6 @@ public record DmrClientConfig
     public string? SimulationModeFile { get; set; }
 
 
-    // Audio stuff
-    public MicrophoneReader? MicrophoneReader { get; set; }
-    public AudioPlayer? AudioPlayer { get; set; }
-
-
-    // AMBE stuff
-    public string AmbeServerAddr { get; set; } = "127.0.0.1";
-    public int AmbeServerPort { get; set; } = 2460;
-    public int AmbeStickBaudrate { get; set; } = 460800;
-    public string AmbeStickComport { get; set; } = "COM13";
-    public AmbeServiceType AmbeServiceType { get; set; } = AmbeServiceType.Stick;
-
-
     // Hotspot parameters
     public float Latitude { get; set; } = 54.49388f;
     public float Longitude { get; set; } = 11.18678f;
@@ -80,6 +76,12 @@ public record DmrClientConfig
     public void Validate()
     {
         int nError = 0;
+        if (AmbeController == null) 
+        {
+            logger.Error($"No ANME Controller configured.");
+            nError++;
+        }
+
         if (EssId < 0 || EssId > 99)
         {
             logger.Error($"Invalid {nameof(EssId)}: {EssId}");
@@ -108,6 +110,11 @@ public record DmrClientConfig
         if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
         {
             logger.Error("Audio recording activated but no audio output file defined.");
+            nError++;
+        }
+        if (RecordAudio && WavPcmRecorder == null)
+        {
+            logger.Error("Audio recording activated but no Wave File Writer configured.");
             nError++;
         }
         if (RecordDmrPackets && string.IsNullOrEmpty(RecordDmrPacketsFile))

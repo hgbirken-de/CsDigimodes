@@ -1,4 +1,4 @@
-﻿using AmbeServer;
+﻿
 using DigitalVoice.AmbeSupport;
 using DigitalVoice.Common;
 using DigitalVoice.DStar.Common;
@@ -36,15 +36,11 @@ public class XrfClient
 
     readonly System.Timers.Timer _txTimer = new(20);
 
-    readonly AmbeClient _ambeClient;
-
     readonly ConcurrentQueue<byte[]> _rxQueue = new();
 
     readonly ConcurrentQueue<byte[]> _txQueue = new();
 
     PacketRecorder? _packetRecorder; // used for read/write operations, only one at a time
-
-    WavPcmRecorder? _wavRecorder;
 
     int _rxInactivityTicks = 0;
 
@@ -70,8 +66,6 @@ public class XrfClient
         _rxTimer.Elapsed += RxTimerCallback;
         _txTimer.Elapsed += TxTimerCallback;
 
-        _ambeClient = new();
-
         if (_cfg.SimulationMode)
         {
             //throw new NotImplementedException("Simulation mode not implemented yet.");
@@ -80,8 +74,6 @@ public class XrfClient
         {
             Connect();
         }
-
-        InitDV3000();
     }
 
     /// <summary>
@@ -90,7 +82,6 @@ public class XrfClient
     /// </summary>
     private void InitDV3000()
     {
-        if (_ambeClient == null) return;
         byte[][] packets =
         [
             [0x61, 0x00, 0x01, 0x00, 0x36], // Query for configuration pin state at power-up or reset
@@ -101,7 +92,7 @@ public class XrfClient
 
         foreach (var p in packets)
         {
-            byte[] resp = _ambeClient.SendReceivePacket(p);
+            byte[]? resp = _cfg.AmbeController!.SendReceivePacket(p);
             logger.Debug($"send: {Convert.ToHexString(p)}");
             logger.Debug($"rcvd: {Convert.ToHexString(resp)}");
         }
@@ -167,8 +158,8 @@ public class XrfClient
 
         // TODO: swap pcm bytes
         AmbeHelper.SwapPcmBytes(pcm); // TODO: common method
-        _ambeClient.SendPacket(pcm);
-        byte[] ambe = _ambeClient.ReceivePacket();
+        _cfg.AmbeController!.SendPacket(pcm);
+        byte[]? ambe = _cfg.AmbeController!.ReceivePacket();
         if (ambe[0] == 0x61 && ambe[3] == 0x01 && ambe[4] == 0x01)
         {
             _txQueue.Enqueue(ambe[6..]);
@@ -328,8 +319,7 @@ public class XrfClient
             _packetRecorder?.Close();
             _packetRecorder = null;
 
-            _wavRecorder?.Close();
-            _wavRecorder = null;
+            _cfg.WavPcmRecorder?.Close();
         }
     }
 
@@ -370,7 +360,7 @@ public class XrfClient
                         throw new ArgumentException($"Invalid AMBE data len: {Convert.ToHexString(ambeData)}");
 
                     ambeData.CopyTo(ambeChannelPacket, 6);
-                    _ambeClient?.SendPacket(ambeChannelPacket);
+                    _cfg.AmbeController!.SendPacket(ambeChannelPacket);
                 }
                 else
                 {
@@ -380,12 +370,12 @@ public class XrfClient
 
             for (int i = 0; i < n; i++)
             {
-                byte[]? pcmData = _ambeClient?.ReceivePacket();
+                byte[]? pcmData = _cfg.AmbeController!.ReceivePacket();
                 if (AmbeHelper.IsSpeechPacket(pcmData))
                 {
                     AmbeHelper.SwapPcmBytes(pcmData!);
                     _cfg.AudioPlayer?.FeedPcmData(pcmData!, 6, pcmData!.Length - 6);
-                    _wavRecorder?.WritePcm(pcmData!, 6, pcmData!.Length - 6);
+                    _cfg.WavPcmRecorder?.WritePcm(pcmData!, 6, pcmData!.Length - 6);
                 }
                 else
                 {
@@ -472,6 +462,10 @@ public class XrfClient
             return;
         }
 
+        _cfg.AmbeController!.Open();
+
+        InitDV3000();
+
         if (_cfg.SimulationMode && _cfg.RecordRefPackets)
         {
             _cfg.RecordRefPackets = false; // never record test data
@@ -482,13 +476,6 @@ public class XrfClient
         if (!Directory.Exists(dataDir))
         {
             Directory.CreateDirectory(dataDir);
-        }
-
-        // Setup Audio recorder if need
-        if (_cfg.RecordAudio)
-        {
-            string wavFile = Path.Combine("data", $"xrf_audio_{DateTime.Now:yyyyMMddHHmmss}.wav");
-            _wavRecorder = new(wavFile);
         }
 
         // Setup packet recorder if need
@@ -522,6 +509,8 @@ public class XrfClient
         _clientState.IsRunning = false;
         _pingTimer.Stop();
         SendDisconnect(); // TODO: check cmd sequence
+
+        _cfg.AmbeController!.Close();
     }
 
     /// <summary>

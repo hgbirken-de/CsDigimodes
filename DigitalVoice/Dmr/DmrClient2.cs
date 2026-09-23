@@ -1,4 +1,4 @@
-﻿using AmbeServer;
+﻿
 using DigitalVoice.AmbeSupport;
 using DigitalVoice.Common;
 using NLog;
@@ -37,16 +37,10 @@ public sealed class DmrClient2
 
     readonly ConcurrentQueue<byte[]> _txQueue = new();
 
-    AmbeClient? _ambeClient;
-
-    AMBE3000RController? _ambe3000RController; 
-
     readonly DmrSessionContext _clientState;
 
     PacketRecorder? _packetRecorder;
     PacketRecorder? _packetReader;
-
-    WavPcmRecorder? _wavRecorder;
 
     readonly System.Timers.Timer _pingTimer = new(10000);
 
@@ -111,12 +105,7 @@ public sealed class DmrClient2
 
         foreach (var p in packets)
         {
-            byte[]? resp = _cfg.AmbeServiceType switch
-            {
-                AmbeServiceType.Server => _ambeClient?.SendReceivePacket(p),
-                AmbeServiceType.Stick => _ambe3000RController?.SendReceivePacket(p),
-                _ => throw new ArgumentOutOfRangeException(nameof(_cfg.AmbeServiceType), _cfg.AmbeServiceType, "AMBE Service type not defined"),
-            };
+            byte[]? resp = _cfg.AmbeController!.SendReceivePacket(p);
 
             logger.Debug($"send: {Convert.ToHexString(p)}");
             logger.Debug("rcvd: {}", resp != null ? Convert.ToHexString(resp) : "null");
@@ -140,20 +129,12 @@ public sealed class DmrClient2
         for (int i = 0, offset = 0; i < n; i++, offset += 9)
         {
             Buffer.BlockCopy(dmr3Ambe, offset, ambeChannelPacket, 6, 9);
-            switch(_cfg.AmbeServiceType)
-            {
-                case AmbeServiceType.Server: _ambeClient?.SendPacket(ambeChannelPacket); break;
-                case AmbeServiceType.Stick: _ambe3000RController?.SendPacket(ambeChannelPacket); break;
-            }
+            _cfg.AmbeController!.SendPacket(ambeChannelPacket);
         }
 
         for (int i = 0; i < n; i++)
         {
-            byte[]? pcm = _cfg.AmbeServiceType switch {
-                AmbeServiceType.Server => _ambeClient?.ReceivePacket(),
-                AmbeServiceType.Stick => _ambe3000RController?.ReceivePacket(),
-                _ => throw new InvalidOperationException($"AMBE Service type not defined: {_cfg.AmbeServiceType}"),
-            };
+            byte[]? pcm = _cfg.AmbeController!.ReceivePacket();
             if (AmbeHelper.IsSpeechPacket(pcm))
             {
                 _rxQueue.Enqueue(pcm!);
@@ -374,8 +355,8 @@ public sealed class DmrClient2
         _packetRecorder = null;
         _packetReader?.Close();
         _packetReader = null;
-        _wavRecorder?.Close();
-        _wavRecorder = null;
+        _cfg.WavPcmRecorder?.Close();
+       
         logger.Debug($"packetCount = {packetCount}");
     }
 
@@ -410,7 +391,7 @@ public sealed class DmrClient2
             {
                 AmbeHelper.SwapPcmBytes(pcm!);
                 _cfg.AudioPlayer?.FeedPcmData(pcm!, 6, pcm!.Length - 6);
-                _wavRecorder?.WritePcm(pcm!, 6, pcm!.Length - 6);
+                _cfg.WavPcmRecorder?.WritePcm(pcm!, 6, pcm!.Length - 6);
             }
             else
             {
@@ -598,16 +579,7 @@ public sealed class DmrClient2
             return;
         }
 
-        switch (_cfg.AmbeServiceType)
-        {
-            case AmbeServiceType.Server:
-                _ambeClient = new(_cfg.AmbeServerAddr, _cfg.AmbeServerPort);
-                break;
-            case AmbeServiceType.Stick:
-                _ambe3000RController = new(_cfg.AmbeStickComport);
-                _ambe3000RController.Open();
-                break;
-        }
+        _cfg.AmbeController!.Open();
 
         InitDV3000();
 
@@ -651,11 +623,6 @@ public sealed class DmrClient2
             }
         }
 
-        if (_cfg.RecordAudio && !string.IsNullOrEmpty(_cfg.RecordAudioFile))
-        {
-            _wavRecorder = new(_cfg.RecordAudioFile);
-        }
-
         if (_cfg.RecordDmrPackets && !string.IsNullOrEmpty(_cfg.RecordDmrPacketsFile))
         {
             _packetRecorder = new PacketRecorder(_cfg.RecordDmrPacketsFile, FileMode.Create, FileAccess.Write);
@@ -690,9 +657,7 @@ public sealed class DmrClient2
         if (!_cfg.SimulationMode)
             SendClose();
 
-        _ambe3000RController?.Close();
-        _ambe3000RController = null;
-        _ambeClient = null;
+        _cfg.AmbeController!.Close();
     }
 
     /// <summary>
@@ -762,17 +727,9 @@ public sealed class DmrClient2
             return;
 
         AmbeHelper.SwapPcmBytes(ambeSpeechPacket); // LE -> BE format
-        switch (_cfg.AmbeServiceType)
-        {
-            case AmbeServiceType.Server: _ambeClient?.SendPacket(ambeSpeechPacket); break;
-            case AmbeServiceType.Stick: _ambe3000RController?.SendPacket(ambeSpeechPacket); break;
-        }
-        byte[]? ambe = _cfg.AmbeServiceType switch
-        {
-            AmbeServiceType.Server => _ambeClient?.ReceivePacket(),
-            AmbeServiceType.Stick => _ambe3000RController?.ReceivePacket(),
-            _ => throw new InvalidOperationException($"AMBE Service type not defined: {_cfg.AmbeServiceType}"),
-        };
+        _cfg.AmbeController!.SendPacket(ambeSpeechPacket);
+
+        byte[]? ambe = _cfg.AmbeController!.ReceivePacket();
 
         if (AmbeHelper.IsAmbePacket(ambe))
         {

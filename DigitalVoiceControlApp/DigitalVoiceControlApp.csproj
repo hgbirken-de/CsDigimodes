@@ -23,9 +23,12 @@
     <PackageReference Include="NLog" Version="6.0.6" />
     <PackageReference Include="System.Speech" Version="9.0.8" />
     <PackageReference Include="TextCopy" Version="6.2.1" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DigitalVoice.AmbeSupport\DigitalVoice.AmbeSupport.csproj" />
+    <ProjectReference Include="..\DigitalVoice.AudioSupport\DigitalVoice.AudioSupport.csproj" />
     <ProjectReference Include="..\DigitalVoice\DigitalVoice.csproj" />
   </ItemGroup>
 

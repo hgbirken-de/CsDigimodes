@@ -1,6 +1,7 @@
 using Android.App;
 using Android.Content;
 using Android.Hardware.Usb;
+using NLog;
 
 namespace DigitalVoiceControlApp.Maui.Services.Ambe;
 
@@ -11,6 +12,8 @@ namespace DigitalVoiceControlApp.Maui.Services.Ambe;
 /// </summary>
 public sealed class Ambe3000Usb : IDisposable
 {
+    private static readonly Logger StaticLog = LogManager.GetCurrentClassLogger();
+
     // ---- FTDI Vendor-Request-Konstanten ----
     private const int FtdiVendorId = 0x0403;
 
@@ -550,4 +553,142 @@ public sealed class Ambe3000Usb : IDisposable
                 $"HasPermission={_usbManager.HasPermission(device)}");
         }
     }
+
+    // ------------------------------------------------------------------
+    // Statische Hilfsmethoden: einmaliger Test vs. persistente Verbindung
+    // (früher in einer eigenen AmbeConnectionTest-Klasse, jetzt hier zusammengelegt)
+    // ------------------------------------------------------------------
+
+    /// <summary>
+    /// Einmaliger End-to-End-Verbindungstest: Gerät finden -> Permission -> Öffnen
+    /// (inkl. FTDI-Init) -> Vocoder-Reset -> ProductId/Version abfragen -> Verbindung
+    /// wieder schließen. Für einen dauerhaften Verbindungsaufbau stattdessen
+    /// <see cref="ConnectAsync"/> verwenden.
+    /// </summary>
+    public static async Task<AmbeTestResult> TestConnectionAsync(Context context)
+    {
+        StaticLog.Info("=== AMBE3000 Verbindungstest gestartet ===");
+
+        var usbManager = (UsbManager)context.GetSystemService(Context.UsbService)!;
+        var device = usbManager.DeviceList.Values.FirstOrDefault(d => d.VendorId == FtdiVendorId);
+
+        if (device == null)
+        {
+            StaticLog.Error("Kein FTDI-Gerät (VID 0x0403) gefunden.");
+            foreach (var d in usbManager.DeviceList.Values)
+                StaticLog.Info($"  - {d.DeviceName} VID=0x{d.VendorId:X4} PID=0x{d.ProductId:X4} {d.ProductName}");
+
+            return new AmbeTestResult(false, null, null, "Kein AMBE-Stick (FTDI, VID 0x0403) gefunden.");
+        }
+
+        StaticLog.Info($"Gerät gefunden: {device.DeviceName}, VID=0x{device.VendorId:X4}, PID=0x{device.ProductId:X4}");
+
+        using var ambe = new Ambe3000Usb(context);
+        ambe.Log += msg => StaticLog.Info($"[Ambe3000Usb] {msg}");
+
+        bool granted = await ambe.RequestPermissionAsync(device);
+        if (!granted)
+        {
+            StaticLog.Error("USB-Permission wurde nicht erteilt.");
+            return new AmbeTestResult(false, null, null, "USB-Permission wurde nicht erteilt.");
+        }
+
+        if (!ambe.Open(device, out var failReason))
+        {
+            StaticLog.Error($"Öffnen fehlgeschlagen: {failReason}");
+            return new AmbeTestResult(false, null, null, $"Öffnen fehlgeschlagen: {failReason}");
+        }
+
+        StaticLog.Info("USB-Verbindung geöffnet, FTDI initialisiert (460800 Baud, 8N1).");
+
+        try
+        {
+            await ambe.ResetVocoderAsync();
+            var productId = await ambe.GetProductIdAsync();
+            var version = await ambe.GetVersionAsync();
+
+            StaticLog.Info($"=== AMBE3000 Verbindungstest ERFOLGREICH: {productId}, {version} ===");
+            return new AmbeTestResult(true, productId, version, null);
+        }
+        catch (TimeoutException ex)
+        {
+            StaticLog.Error(ex, "Timeout während des Protokoll-Tests.");
+            return new AmbeTestResult(false, null, null, $"Timeout: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            StaticLog.Error(ex, "Unerwarteter Fehler während des Verbindungstests.");
+            return new AmbeTestResult(false, null, null, $"Fehler: {ex.Message}");
+        }
+        finally
+        {
+            ambe.Close();
+            StaticLog.Info("Verbindung geschlossen (Testmodus).");
+        }
+    }
+
+    /// <summary>
+    /// Baut eine dauerhafte Verbindung auf (Gerät finden -> Permission -> Öffnen -> FTDI-Init
+    /// -> Vocoder-Reset -> ProductId/Version zur Verifikation) und gibt die GEÖFFNETE Instanz
+    /// zurück, statt sie wie <see cref="TestConnectionAsync"/> sofort wieder zu schließen.
+    /// Aufrufer ist dafür verantwortlich, die Instanz später über Close()/Dispose() zu schließen
+    /// (z.B. per Disconnect-Button).
+    /// </summary>
+    public static async Task<AmbeConnectResult> ConnectAsync(Context context)
+    {
+        StaticLog.Info("=== AMBE3000 Connect gestartet ===");
+
+        var usbManager = (UsbManager)context.GetSystemService(Context.UsbService)!;
+        var device = usbManager.DeviceList.Values.FirstOrDefault(d => d.VendorId == FtdiVendorId);
+
+        if (device == null)
+        {
+            StaticLog.Error("Kein FTDI-Gerät (VID 0x0403) gefunden.");
+            return new AmbeConnectResult(null, null, null, "Kein AMBE-Stick (FTDI, VID 0x0403) gefunden.");
+        }
+
+        var ambe = new Ambe3000Usb(context);
+        ambe.Log += msg => StaticLog.Info($"[Ambe3000Usb] {msg}");
+
+        bool granted = await ambe.RequestPermissionAsync(device);
+        if (!granted)
+        {
+            ambe.Dispose();
+            StaticLog.Error("USB-Permission wurde nicht erteilt.");
+            return new AmbeConnectResult(null, null, null, "USB-Permission wurde nicht erteilt.");
+        }
+
+        if (!ambe.Open(device, out var failReason))
+        {
+            ambe.Dispose();
+            StaticLog.Error($"Öffnen fehlgeschlagen: {failReason}");
+            return new AmbeConnectResult(null, null, null, $"Öffnen fehlgeschlagen: {failReason}");
+        }
+
+        try
+        {
+            await ambe.ResetVocoderAsync();
+            var productId = await ambe.GetProductIdAsync();
+            var version = await ambe.GetVersionAsync();
+
+            StaticLog.Info($"=== AMBE3000 Connect ERFOLGREICH: {productId}, {version} (Verbindung bleibt offen) ===");
+            return new AmbeConnectResult(ambe, productId, version, null);
+        }
+        catch (Exception ex)
+        {
+            StaticLog.Error(ex, "Fehler beim Connect, Verbindung wird wieder geschlossen.");
+            ambe.Close();
+            ambe.Dispose();
+            return new AmbeConnectResult(null, null, null, ex.Message);
+        }
+    }
 }
+
+/// <summary>Ergebnis von <see cref="Ambe3000Usb.TestConnectionAsync"/>.</summary>
+public sealed record AmbeTestResult(bool Success, string? ProductId, string? Version, string? ErrorMessage);
+
+/// <summary>
+/// Ergebnis von <see cref="Ambe3000Usb.ConnectAsync"/>. Bei Erfolg enthält Device die
+/// GEÖFFNETE Instanz (Aufrufer muss sie später schließen); bei Misserfolg ist Device null.
+/// </summary>
+public sealed record AmbeConnectResult(Ambe3000Usb? Device, string? ProductId, string? Version, string? ErrorMessage);

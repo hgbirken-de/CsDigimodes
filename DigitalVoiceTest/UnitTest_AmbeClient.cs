@@ -14,7 +14,7 @@ public class UnitTest_AmbeClient
     static readonly string ip_addr = "127.0.0.1";
     static readonly int port = 2460;
     
-    static readonly AmbeClient client;
+    static readonly AmbeUdpClient client;
     static UnitTest_AmbeClient()
     {
         client = new(ip_addr, port);

@@ -25,6 +25,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FusionCodec", "FusionCodec\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalVoiceControlApp.Maui", "DigitalVoiceControlApp.Maui\DigitalVoiceControlApp.Maui.csproj", "{BAA4A0EB-438F-4CC4-9BA5-CFA277BABF47}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalVoice.AmbeSupport", "DigitalVoice.AmbeSupport\DigitalVoice.AmbeSupport.csproj", "{09EFA464-657E-470A-B6C6-C30E41A68263}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalVoice.Common", "DigitalVoice.Common\DigitalVoice.Common.csproj", "{26814BA0-E1DD-4BA9-8EBA-A57E7E8B16B3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalVoice.AudioSupport", "DigitalVoice.AudioSupport\DigitalVoice.AudioSupport.csproj", "{44A7AE60-72DE-4D8E-A473-1D9AC0A5A6A4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,8 +79,21 @@ Global
 		{6BD4657C-C514-4D6D-BB8F-71ECF9B6B73F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BAA4A0EB-438F-4CC4-9BA5-CFA277BABF47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BAA4A0EB-438F-4CC4-9BA5-CFA277BABF47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAA4A0EB-438F-4CC4-9BA5-CFA277BABF47}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
 		{BAA4A0EB-438F-4CC4-9BA5-CFA277BABF47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAA4A0EB-438F-4CC4-9BA5-CFA277BABF47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09EFA464-657E-470A-B6C6-C30E41A68263}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09EFA464-657E-470A-B6C6-C30E41A68263}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09EFA464-657E-470A-B6C6-C30E41A68263}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09EFA464-657E-470A-B6C6-C30E41A68263}.Release|Any CPU.Build.0 = Release|Any CPU
+		{26814BA0-E1DD-4BA9-8EBA-A57E7E8B16B3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{26814BA0-E1DD-4BA9-8EBA-A57E7E8B16B3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{26814BA0-E1DD-4BA9-8EBA-A57E7E8B16B3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{26814BA0-E1DD-4BA9-8EBA-A57E7E8B16B3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44A7AE60-72DE-4D8E-A473-1D9AC0A5A6A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44A7AE60-72DE-4D8E-A473-1D9AC0A5A6A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44A7AE60-72DE-4D8E-A473-1D9AC0A5A6A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44A7AE60-72DE-4D8E-A473-1D9AC0A5A6A4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

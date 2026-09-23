@@ -1,4 +1,5 @@
 ﻿
+using DigitalVoice.AmbeSupport;
 using DigitalVoice.AudioSupport;
 using NLog;
 
@@ -12,10 +13,19 @@ public record YsfClientConfig
     public string ReflectorAddress { get; set; } = string.Empty;
     public int ReflectorPort { get; set; }
 
-    // AMBE
-    public bool AmbeSrvUsage { get; set; }
-    public string AmbeSrvAddr { get; set; } = "127.0.0.1";
-    public int AmbeSrvPort { get; set; } = 2460;
+    // AMBE stuff
+    public string AmbeServerAddr { get; set; } = "127.0.0.1";
+    public int AmbeServerPort { get; set; } = 2460;
+    public int AmbeStickBaudrate { get; set; } = 460800;
+    public string AmbeStickComport { get; set; } = "COM13";
+    public AmbeServiceType AmbeServiceType { get; set; } = AmbeServiceType.Stick;
+    public IAmbe3000RController? AmbeController { get; set; }
+
+
+    // Audio stuff
+    public IMicrophoneReader? MicrophoneReader { get; set; }
+    public IAudioPlayer? AudioPlayer { get; set; }
+    public IWavPcmRecorder? WavPcmRecorder { get; set; }
 
     // Simulation Mode
     public string? SimulationFile { get; set; }
@@ -43,10 +53,6 @@ public record YsfClientConfig
     public string? Name { get; set; }
     public string? Description { get; set; }
 
-    // Audio stuff
-    public MicrophoneReader? MicrophoneReader { get; set; }
-
-    public AudioPlayer? AudioPlayer { get; set; }
 
     /// <summary>
     /// Validates the current configuration state and enforces consistency rules.

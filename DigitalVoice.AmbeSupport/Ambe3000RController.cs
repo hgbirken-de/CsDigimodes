@@ -4,12 +4,12 @@ using System.IO.Ports;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace AmbeServer;
+namespace DigitalVoice.AmbeSupport;
 
 /// <summary>
 /// Class to access an AMBE3000R stick (chip).
 /// </summary>
-public class AMBE3000RController
+public class Ambe3000RController : IAmbe3000RController
 {
     static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
@@ -23,7 +23,6 @@ public class AMBE3000RController
     static readonly byte DV3000_TYPE_AMBE = 0x01;
     static readonly byte DV3000_TYPE_AUDIO = 0x02;
 
-
     readonly string _portName;
     readonly int _baudRate;
     readonly int _timeout; // milliseconds
@@ -35,7 +34,7 @@ public class AMBE3000RController
     /// <param name="portName"></param>
     /// <param name="baudRate"></param>
     /// <param name="timeout"></param>
-    public AMBE3000RController(string portName, int baudRate = 460800, int timeout = 1000)
+    public Ambe3000RController(string portName, int baudRate = 460800, int timeout = 1000)
     {
         _portName = portName;
         _baudRate = baudRate;
@@ -50,7 +49,7 @@ public class AMBE3000RController
     public void Open()
     {
         logger.Debug($"portName={_portName}, baudRate={_baudRate}");
-        if (IsSerialPortOpen())
+        if (IsOpen)
             return;
 
         serialPort = new SerialPort(_portName, _baudRate)
@@ -83,10 +82,7 @@ public class AMBE3000RController
     /// Check if the serial port is available (i.e. usable).
     /// </summary>
     /// <returns>true if available, otherwise false</returns>
-    public bool IsSerialPortOpen()
-    {
-        return serialPort != null && serialPort.IsOpen;
-    }
+    public bool IsOpen => serialPort != null && serialPort.IsOpen;
 
     /// <summary>
     /// Decode an AMBE data block.
@@ -97,7 +93,7 @@ public class AMBE3000RController
     /// <exception cref="InvalidOperationException"></exception>
     public short[] Decode(byte[] ambeData, int blockSize)
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
 
         int length = blockSize + 2; // should always be 9 for YSF
 
@@ -180,7 +176,7 @@ public class AMBE3000RController
     /// <exception cref="InvalidOperationException"></exception>
     public string? GetProductId()
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
 
         try
         { 
@@ -206,7 +202,7 @@ public class AMBE3000RController
     /// <exception cref="InvalidOperationException"></exception>
     public string? GetVersion()
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
 
         try
         { 
@@ -234,7 +230,7 @@ public class AMBE3000RController
     /// <exception cref="InvalidOperationException"></exception>
     public byte[] ReadPacketFromPort()
     {
-        if (!IsSerialPortOpen())
+        if (!IsOpen)
             throw new InvalidOperationException("Serial port is not open.");
 
         // ---- 1) Find the start byte ----
@@ -318,7 +314,7 @@ public class AMBE3000RController
 
     public void Reset()
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
 
         byte[] resetCmd = [0x90];
         serialPort!.Write(resetCmd, 0, resetCmd.Length);
@@ -333,7 +329,7 @@ public class AMBE3000RController
     /// <exception cref="InvalidOperationException"></exception>
     public byte[]? SendReceivePacket(byte[] packet)
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
         try
         {
             serialPort!.Write(packet, 0, packet.Length);            
@@ -349,7 +345,7 @@ public class AMBE3000RController
 
     public void SendPacket(byte[] packet)
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
         try
         {
             serialPort!.Write(packet, 0, packet.Length);
@@ -362,7 +358,7 @@ public class AMBE3000RController
 
     public byte[]? ReceivePacket()
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
         try
         {
             byte[] resp = ReadPacketFromPort();
@@ -385,7 +381,7 @@ public class AMBE3000RController
     /// <exception cref="InvalidOperationException"></exception>
     public async Task<byte[]?> SendReceivePacketAsync(byte[] packet, CancellationToken cancellationToken = default)
     {
-        if (!IsSerialPortOpen()) throw new InvalidOperationException("Serial port is not open.");
+        if (!IsOpen) throw new InvalidOperationException("Serial port is not open.");
 
         try
         {

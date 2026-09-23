@@ -1,8 +1,8 @@
 ﻿using Avalonia.Controls;
 using DigitalVoice.Common;
-using DigitalVoice.Config;
 using DigitalVoice.Dmr;
 using DigitalVoice.Nxdn;
+using DigitalVoiceControlApp.Config;
 using NLog;
 using System.Globalization;
 using System.IO;

@@ -3,11 +3,14 @@ using DigitalVoice.Common;
 using DigitalVoice.Dmr;
 using NLog;
 using NLog.Targets;
+using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 
 using YamlDotNet.Serialization;
 
-namespace DigitalVoice.Config;
+namespace DigitalVoiceControlApp.Config;
 
 /// <summary>
 /// Class to read/write and manage user specific settings.

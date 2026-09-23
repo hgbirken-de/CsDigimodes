@@ -1,9 +1,24 @@
-﻿using DigitalVoice.AudioSupport;
+﻿using DigitalVoice.AmbeSupport;
+using DigitalVoice.AudioSupport;
 
 namespace DigitalVoice.DStar.Xrf;
 
 public record XrfClientConfig
 {
+    // AMBE stuff
+    public string AmbeServerAddr { get; set; } = "127.0.0.1";
+    public int AmbeServerPort { get; set; } = 2460;
+    public int AmbeStickBaudrate { get; set; } = 460800;
+    public string AmbeStickComport { get; set; } = "COM13";
+    public AmbeServiceType AmbeServiceType { get; set; } = AmbeServiceType.Stick;
+    public IAmbe3000RController? AmbeController { get; set; }
+
+    // Audio stuff
+    public IMicrophoneReader? MicrophoneReader { get; set; }
+    public IAudioPlayer? AudioPlayer { get; set; }
+    public IWavPcmRecorder? WavPcmRecorder { get; set; }
+
+
     public string RefAddress { get; set; } = string.Empty;
 
     public int RefPort { get; set; } = 0;
@@ -15,9 +30,6 @@ public record XrfClientConfig
 
     public string Callsign { get; set; } = string.Empty;
 
-    public MicrophoneReader? MicrophoneReader { get; set; }
-
-    public AudioPlayer? AudioPlayer { get; set; }
 
     public bool RecordAudio { get; set; } = false;
 

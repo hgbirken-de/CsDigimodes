@@ -12,7 +12,6 @@ using DigitalVoice.DStar.Ref;
 using DigitalVoice.DStar.Xrf;
 using DigitalVoice.Fusion;
 using DigitalVoice.Nxdn;
-using DigitalVoice.Config;
 using DigitalVoiceControlApp.Commands;
 using DigitalVoiceControlApp.Services;
 using MsBox.Avalonia.ViewModels.Commands;
@@ -26,6 +25,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using DigitalVoiceControlApp.Config;
+using DigitalVoice.AmbeSupport;
+
 
 namespace DigitalVoiceControlApp.ViewModels;
 
@@ -322,9 +324,9 @@ public class MainViewModel : ViewModelBase
     RefClient? _refClient;
     YsfClient? _ysfClient;
     XrfClient? _xrfClient;
-
-    readonly MicrophoneReader _microphoneReader = new();
-    readonly AudioPlayer _audioPlayer = new();
+   
+    readonly IAudioPlayer _audioPlayer = new AudioPlayer();
+    readonly IMicrophoneReader _microphoneReader = new MicrophoneReader();
 
     readonly ConcurrentDictionary<int, (string, string)> _dmridToCallsign = [];
 
@@ -648,6 +650,16 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(Current));
     }
 
+    static IAmbe3000RController CreateAmbeController(AmbeConfig cfg)
+    {
+        return cfg.AmbeServiceType switch
+        {
+            AmbeServiceType.Server => new AmbeUdpClient(cfg.ServerAddr, cfg.ServerPort),
+            AmbeServiceType.Stick => new Ambe3000RController(cfg.StickComport),
+            _ => throw new InvalidOperationException(),
+        };
+    }
+
     private void StartStopDcs(bool arg)
     {
         logger.Debug($"arg = {arg}");
@@ -692,8 +704,18 @@ public class MainViewModel : ViewModelBase
         UserSettings us = UserSettings.Instance();
         if (arg)
         {
+            AmbeConfig ambeConfig = new()
+            {
+                AmbeServiceType = us.Ambe.ServiceType,
+                ServerAddr = us.Ambe.ServerAddr,
+                ServerPort = us.Ambe.ServerPort,
+                StickBaudrate = us.Ambe.StickBaudrate,
+                StickComport = us.Ambe.StickPort,
+            };
+
             DmrClientConfig cfg = new()
             {
+                AmbeController = CreateAmbeController(ambeConfig),
                 Callsign = us.Common.Callsign,
                 Password = us.Dmr.Password,
                 MyDmrId = us.Dmr.MyDmrId,

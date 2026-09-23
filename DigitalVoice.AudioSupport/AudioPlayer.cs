@@ -18,7 +18,7 @@ namespace DigitalVoice.AudioSupport;
 ///   <item><description>Mono or stereo channels</description></item>
 /// </list>
 /// </remarks>
-public class AudioPlayer : IDisposable
+public class AudioPlayer : IAudioPlayer, IDisposable
 {
     private readonly WaveOutEvent _waveOut;
     private readonly BufferedWaveProvider _buffer;

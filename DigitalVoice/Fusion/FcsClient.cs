@@ -1,4 +1,4 @@
-﻿using AmbeServer;
+﻿
 using DigitalVoice.AmbeSupport;
 using DigitalVoice.Common;
 using FusionCodec;
@@ -36,13 +36,10 @@ public class FcsClient
     PacketRecorder? _packetReader;
     PacketRecorder? _packetRecorder;
 
-    WavPcmRecorder? _wavRecorder;
-
     readonly ConcurrentQueue<byte[]> _rxQueue = new();
 
     readonly ConcurrentQueue<byte[]> _txQueue = new();
 
-    readonly AmbeClient _ambeClient;
 
     readonly System.Timers.Timer _pingTimer = new(5000);
 
@@ -85,10 +82,6 @@ public class FcsClient
         _pingTimer.Elapsed += PingTimerCallback;
         _rxTimer.Elapsed += RxTimerCallback;
         _txTimer.Elapsed += TxTimerCallback;
-
-        _ambeClient = new(_cfg.AmbeSrvAddr, _cfg.AmbeSrvPort);
-
-        InitDV3000();
     }
 
 
@@ -104,12 +97,12 @@ public class FcsClient
         foreach (var b in _sessionCtx.AmbeData)
         {
             b.CopyTo(ambeChannelPacket, 6);
-            _ambeClient?.SendPacket(ambeChannelPacket);
+            _cfg.AmbeController!.SendPacket(ambeChannelPacket);
         }
 
         for (int i = 0; i < _sessionCtx.AmbeData.Count; i++)
         {
-            byte[]? resp = _ambeClient?.ReceivePacket();
+            byte[]? resp = _cfg.AmbeController!.ReceivePacket();
             if (AmbeHelper.IsSpeechPacket(resp))
             {
                 _rxQueue.Enqueue(resp!);
@@ -140,7 +133,7 @@ public class FcsClient
 
         foreach (var p in packets)
         {
-            byte[]? resp = _ambeClient!.SendReceivePacket(p);
+            byte[]? resp = _cfg.AmbeController!.SendReceivePacket(p);
             logger.Debug("{}", resp != null ? Convert.ToHexString(resp) : "null");
         }
     }
@@ -272,8 +265,7 @@ public class FcsClient
             _packetRecorder?.Close();
             _packetRecorder = null;
 
-            _wavRecorder?.Close();
-            _wavRecorder = null;
+            _cfg.WavPcmRecorder?.Close();
         }
     }
 
@@ -305,7 +297,7 @@ public class FcsClient
             {
                 AmbeHelper.SwapPcmBytes(pcm!);
                 _cfg.AudioPlayer?.FeedPcmData(pcm, 6, pcm.Length - 6);
-                _wavRecorder?.WritePcm(pcm!, 6, pcm!.Length - 6);
+                _cfg.WavPcmRecorder?.WritePcm(pcm!, 6, pcm!.Length - 6);
             }
             else
             {
@@ -447,6 +439,10 @@ public class FcsClient
             return;
         }
 
+        _cfg.AmbeController!.Open();
+
+        InitDV3000();
+
         if (_cfg.SimulationMode && !string.IsNullOrEmpty(_cfg.SimulationFile))
         {
             logger.Debug($"Simulation mode, input file: {_cfg.SimulationFile}");
@@ -464,11 +460,6 @@ public class FcsClient
                 throw new Exception($"Unable to created endpoint {_cfg.ReflectorAddress}:{_cfg.ReflectorPort}");
             }
             logger.Debug($"Local socket bound to {localEp.Address}:{localEp.Port}, timeout={_socketTimeout} ms");
-        }
-
-        if (_cfg.RecordAudio && !string.IsNullOrEmpty(_cfg.RecordAudioFile))
-        {
-            _wavRecorder = new(_cfg.RecordAudioFile);
         }
 
         if (_cfg.RecordFcsPackets && !string.IsNullOrEmpty(_cfg.RecordFcsPacketsFile))
@@ -502,6 +493,8 @@ public class FcsClient
 
         _pingTimer.Stop(); // TODO: Dispose???
         _rxTimer.Stop();
+
+        _cfg.AmbeController!.Close();
     }
 
     /// <summary>
@@ -556,8 +549,8 @@ public class FcsClient
             if (_cfg.MicrophoneReader != null && _cfg.MicrophoneReader.TryRead(ambeSpeechPacket, 6, ambeSpeechPacket.Length - 6, out int bytesRead))
             {
                 AmbeHelper.SwapPcmBytes(ambeSpeechPacket); // LE -> BE
-                _ambeClient.SendPacket(ambeSpeechPacket);
-                byte[] ambe = _ambeClient.ReceivePacket();
+                _cfg.AmbeController!.SendPacket(ambeSpeechPacket);
+                byte[]? ambe = _cfg.AmbeController!.ReceivePacket();
                 if (AmbeHelper.IsAmbePacket(ambe))
                     _txQueue.Enqueue(ambe[6..]); // ignore 6 byte header
             }

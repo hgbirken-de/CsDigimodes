@@ -1,4 +1,5 @@
 ﻿using DigitalVoiceControlApp.Maui.Services.Ambe;
+using DigitalVoiceControlApp.Maui.ViewModels;
 using NLog;
 
 #if ANDROID
@@ -14,56 +15,19 @@ public partial class MainPage : ContentPage
 
     private const int FtdiVendorId = 0x0403;
 
+    private MainPageViewModel ViewModel => (MainPageViewModel)BindingContext;
+
     public MainPage()
     {
         InitializeComponent();
-    }
 
-    private void OnFindStickClicked(object sender, EventArgs e)
-    {
-#if ANDROID
-        var activity = Platform.CurrentActivity;
-
-        if (activity == null)
-        {
-            UsbResultLabel.Text = "Keine Activity verfügbar.";
-            return;
-        }
-
-        var usbManager = (UsbManager)activity.GetSystemService(Context.UsbService)!;
-        var devices = usbManager.DeviceList.Values.ToList();
-
-        Log.Info($"USB-Suche: {devices.Count} Gerät(e) gefunden.");
-
-        if (devices.Count == 0)
-        {
-            UsbResultLabel.Text = "Keine USB-Geräte gefunden.\nOTG-Adapter und Stick eingesteckt?";
-            return;
-        }
-
-        var lines = new List<string>();
-
-        foreach (var device in devices)
-        {
-            bool isAmbe = device.VendorId == FtdiVendorId;
-            string marker = isAmbe ? "✓ AMBE-Stick (FTDI)" : "?";
-
-            string line = $"{marker}  {device.ProductName ?? device.DeviceName}  " +
-                          $"VID=0x{device.VendorId:X4} PID=0x{device.ProductId:X4}";
-
-            lines.Add(line);
-            Log.Info($"  {line}");
-        }
-
-        UsbResultLabel.Text = string.Join("\n", lines);
-#else
-        UsbResultLabel.Text = "Nur auf Android verfügbar.";
-#endif
+        BindingContext = new MainPageViewModel();
+        ViewModel.ShowAlertRequested += async (title, message) => await DisplayAlert(title, message, "OK");
     }
 
     private async void OnMenuButtonClicked(object sender, EventArgs e)
     {
-        string action = await DisplayActionSheet("Menu", "Cancel", null, "Settings", "Help", "Test AMBE", "Export Log", "Exit");
+        string action = await DisplayActionSheet("Menu", "Cancel", null, "Settings", "Help", "AMBE-Test", "Export Log", "Exit");
 
         switch (action)
         {
@@ -73,8 +37,8 @@ public partial class MainPage : ContentPage
             case "Help":
                 // TODO: Help/About anzeigen
                 break;
-            case "Test AMBE":
-                await TestAmbeAsync();
+            case "AMBE-Test":
+                await RunAmbeTestAsync();
                 break;
             case "Export Log":
                 await ExportLogAsync();
@@ -85,26 +49,74 @@ public partial class MainPage : ContentPage
         }
     }
 
-    private async Task TestAmbeAsync()
+    /// <summary>
+    /// Kombinierter AMBE-Test: listet zuerst alle USB-Geräte (Erkennungscheck), führt danach,
+    /// falls ein AMBE-Stick gefunden wurde, den vollen Verbindungstest durch. Falls bereits
+    /// über den Connect-Button (ViewModel.AmbeDevice) eine Verbindung offen ist, wird
+    /// stattdessen nur auf der bestehenden Verbindung ProductId/Version erneut abgefragt
+    /// (keine zweite Verbindung, das würde an ClaimInterface scheitern).
+    /// </summary>
+    private async Task RunAmbeTestAsync()
     {
 #if ANDROID
+        if (ViewModel.AmbeDevice != null)
+        {
+            try
+            {
+                var pid = await ViewModel.AmbeDevice.GetProductIdAsync();
+                var ver = await ViewModel.AmbeDevice.GetVersionAsync();
+                await DisplayAlert("AMBE-Test", $"Bereits verbunden (Connect-Button).\nProductId: {pid}\nVersion: {ver}", "OK");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("AMBE-Test", $"Fehler auf bestehender Verbindung: {ex.Message}", "OK");
+            }
+            return;
+        }
+
         var activity = Platform.CurrentActivity;
 
         if (activity == null)
         {
-            await DisplayAlert("AMBE Test", "Keine Activity verfügbar.", "OK");
+            await DisplayAlert("AMBE-Test", "Keine Activity verfügbar.", "OK");
             return;
         }
 
-        bool ok = await AmbeConnectionTest.RunAsync(activity);
+        var usbManager = (UsbManager)activity.GetSystemService(Context.UsbService)!;
+        var devices = usbManager.DeviceList.Values.ToList();
 
-        await DisplayAlert(
-            "AMBE Test",
-            ok ? "Verbindung erfolgreich – ProductId und Version gelesen. Details siehe Log."
-               : "Fehlgeschlagen. Details siehe Log (Export Log).",
-            "OK");
+        Log.Info($"USB-Suche: {devices.Count} Gerät(e) gefunden.");
+
+        var deviceLines = new List<string>();
+        foreach (var device in devices)
+        {
+            bool isAmbe = device.VendorId == FtdiVendorId;
+            string marker = isAmbe ? "✓ AMBE-Stick (FTDI)" : "?";
+            string line = $"{marker}  {device.ProductName ?? device.DeviceName}  " +
+                          $"VID=0x{device.VendorId:X4} PID=0x{device.ProductId:X4}";
+            deviceLines.Add(line);
+            Log.Info($"  {line}");
+        }
+
+        string deviceSection = devices.Count == 0
+            ? "Keine USB-Geräte gefunden.\nOTG-Adapter und Stick eingesteckt?"
+            : string.Join("\n", deviceLines);
+
+        if (!devices.Any(d => d.VendorId == FtdiVendorId))
+        {
+            await DisplayAlert("AMBE-Test", deviceSection, "OK");
+            return;
+        }
+
+        var result = await Ambe3000Usb.TestConnectionAsync(activity);
+
+        string resultSection = result.Success
+            ? $"Verbindung erfolgreich!\nProductId: {result.ProductId}\nVersion: {result.Version}"
+            : $"Fehlgeschlagen: {result.ErrorMessage}\n(Details siehe Log)";
+
+        await DisplayAlert("AMBE-Test", $"{deviceSection}\n\n{resultSection}", "OK");
 #else
-        await DisplayAlert("AMBE Test", "Nur auf Android verfügbar.", "OK");
+        await DisplayAlert("AMBE-Test", "Nur auf Android verfügbar.", "OK");
 #endif
     }
 

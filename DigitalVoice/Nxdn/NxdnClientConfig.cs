@@ -1,4 +1,5 @@
-﻿using DigitalVoice.AudioSupport;
+﻿using DigitalVoice.AmbeSupport;
+using DigitalVoice.AudioSupport;
 using NLog;
 
 namespace DigitalVoice.Nxdn;
@@ -7,8 +8,14 @@ public class NxdnClientConfig
 {
     static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    public string AmbeSrvAddr { get; set; } = "127.0.0.1";
-    public int AmbeSrvPort { get; set; } = 2460;
+    // AMBE stuff
+    public string AmbeServerAddr { get; set; } = "127.0.0.1";
+    public int AmbeServerPort { get; set; } = 2460;
+    public int AmbeStickBaudrate { get; set; } = 460800;
+    public string AmbeStickComport { get; set; } = "COM13";
+    public AmbeServiceType AmbeServiceType { get; set; } = AmbeServiceType.Stick;
+    public IAmbe3000RController? AmbeController { get; set; }
+
 
     public string NxdnReflectorAddr { get; set; } = "";
     public int NxdnReflectorPort { get; set; } = 0;
@@ -31,13 +38,19 @@ public class NxdnClientConfig
 
 
     // Audio stuff
-    public MicrophoneReader? MicrophoneReader { get; set; }
-    public AudioPlayer? AudioPlayer { get; set; }
+    public IMicrophoneReader? MicrophoneReader { get; set; }
+    public IAudioPlayer? AudioPlayer { get; set; }
+    public IWavPcmRecorder? WavPcmRecorder { get; set; }
 
 
     public void Validate()
     {
         int nError = 0;
+        if (AmbeController != null)
+        {
+            logger.Error($"No ANME Controller configured.");
+            nError++;
+        }
         if (string.IsNullOrEmpty(Callsign) || Callsign.Length > 10)
         {
             logger.Error("Missing/Invalid callsign.");
@@ -56,6 +69,11 @@ public class NxdnClientConfig
         if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
         {
             logger.Error("Audio recording activated but no audio output file defined.");
+            nError++;
+        }
+        if (RecordAudio && WavPcmRecorder == null)
+        {
+            logger.Error("Audio recording activated but no Wave File Writer configured.");
             nError++;
         }
         if (RecordRxPackets && string.IsNullOrEmpty(RecordRxPacketsFile))

@@ -4,6 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UserSecretsId>a3b1f0d5-4120-4194-ba3d-be6c70b644bc</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,12 +36,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
     <PackageReference Include="NAudio" Version="2.2.1" />
     <PackageReference Include="NLog" Version="6.0.6" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AmbeServer\AmbeServer.csproj" />
+    <ProjectReference Include="..\DigitalVoice.Common\DigitalVoice.Common.csproj" />
     <ProjectReference Include="..\FusionCodec\FusionCodec.csproj" />
   </ItemGroup>
 

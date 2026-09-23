@@ -1,37 +1,42 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:DigitalVoiceControlApp.Maui.ViewModels"
              x:Class="DigitalVoiceControlApp.Maui.MainPage"
+             x:DataType="vm:MainPageViewModel"
              Title="Digital Voice Control">
 
-    <Grid RowDefinitions="Auto,Auto,*">
+    <Grid RowDefinitions="Auto,*">
 
-        <!-- Toolbar mit Hamburger-Menü -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*" BackgroundColor="#E6F5F5" Padding="8">
+        <!-- Toolbar mit Hamburger-Menü, Talkgroup/Reflektor-Auswahl und Connect/Disconnect -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" BackgroundColor="#E6F5F5" Padding="8" ColumnSpacing="8">
             <Button Grid.Column="0"
                     Text="&#9776;"
                     FontSize="20"
                     WidthRequest="44"
                     HeightRequest="44"
                     Clicked="OnMenuButtonClicked" />
+
+            <!-- Platzhalter: Talkgroup-/Reflektorauswahl (Inhalt je nach Mode später per Code befüllt) -->
+            <Picker x:Name="TalkgroupPicker"
+                    Grid.Column="1"
+                    Title="Talkgroup / Reflektor"
+                    VerticalOptions="Center" />
+
+            <Button x:Name="ConnectButton"
+                    Grid.Column="2"
+                    ImageSource="{Binding ConnectionIcon}"
+                    BackgroundColor="{Binding ConnectionBackgroundColor}"
+                    SemanticProperties.Description="{Binding ConnectionTooltip}"
+                    ToolTipProperties.Text="{Binding ConnectionTooltip}"
+                    WidthRequest="44"
+                    HeightRequest="44"
+                    Command="{Binding ConnectCommand}" />
         </Grid>
 
-        <!-- Einfacher USB-Erkennungstest: nur "sehen wir den Stick?", ohne Permission/FTDI/Protokoll -->
-        <VerticalStackLayout Grid.Row="1" Padding="16" Spacing="12">
-            <Button x:Name="FindStickButton"
-                    Text="USB-Geräte suchen"
-                    Clicked="OnFindStickClicked"
-                    HorizontalOptions="Fill" />
-
-            <Label x:Name="UsbResultLabel"
-                   Text="Noch nicht gesucht."
-                   FontFamily="Consolas"
-                   LineBreakMode="WordWrap" />
-        </VerticalStackLayout>
-
         <!-- Platzhalter für den restlichen Inhalt -->
-        <Label Grid.Row="2"
-               Text="Hier kommt der Inhalt hin"
+        <Label Grid.Row="1"
+               Text="Hier kommt der Inhalt hin [Build-Check: v14]"
                HorizontalOptions="Center"
                VerticalOptions="Center" />
 
