@@ -36,4 +36,5 @@ public record AmbeConfig
     /// Nur relevant, wenn <see cref="AmbeServiceType"/> auf den lokalen Stick-Zugriff gesetzt ist.
     /// </summary>
     public string StickComport { get; set; } = "COM13";
+
 }

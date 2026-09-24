@@ -387,6 +387,7 @@ public class MainViewModel : ViewModelBase
     public bool IsReflectorsComboBoxEnabled => !IsServerConnected || (SelectedMode is Mode.Dmr);
     public IBrush PttButtonBackground => _pttActive ? Brushes.Red : Brushes.LightGray;
 
+    private AmbeConfig _ambeConfig;
 
     /// <summary>
     /// Connects to the server of disconnects from the server.
@@ -397,6 +398,15 @@ public class MainViewModel : ViewModelBase
         {   // C O N N E C T
             UserSettings us = UserSettings.Instance();
             string? msg = null;
+            _ambeConfig = new() // für alle Mode
+            {
+                AmbeServiceType = us.Ambe.ServiceType,
+                ServerAddr = us.Ambe.ServerAddr,
+                ServerPort = us.Ambe.ServerPort,
+                StickBaudrate = us.Ambe.StickBaudrate,
+                StickComport = us.Ambe.StickPort,
+            };
+
             switch (SelectedMode)
             {
                 case Mode.Dcs:
@@ -650,16 +660,6 @@ public class MainViewModel : ViewModelBase
         OnPropertyChanged(nameof(Current));
     }
 
-    static IAmbe3000RController CreateAmbeController(AmbeConfig cfg)
-    {
-        return cfg.AmbeServiceType switch
-        {
-            AmbeServiceType.Server => new AmbeUdpClient(cfg.ServerAddr, cfg.ServerPort),
-            AmbeServiceType.Stick => new Ambe3000RController(cfg.StickComport),
-            _ => throw new InvalidOperationException(),
-        };
-    }
-
     private void StartStopDcs(bool arg)
     {
         logger.Debug($"arg = {arg}");
@@ -676,6 +676,9 @@ public class MainViewModel : ViewModelBase
             string? refAddr = DcsHosts.GetAddress(reflectorId);
             DcsClientConfig cfg = new()
             {
+                AmbeController = AmbeControllerFactory.Create(_ambeConfig),
+                AmbeConfig = _ambeConfig,
+
                 RefAddress = refAddr!,
                 RefPort = us.Dcs.HostPort,
                 RefName = reflectorId,
@@ -704,18 +707,11 @@ public class MainViewModel : ViewModelBase
         UserSettings us = UserSettings.Instance();
         if (arg)
         {
-            AmbeConfig ambeConfig = new()
-            {
-                AmbeServiceType = us.Ambe.ServiceType,
-                ServerAddr = us.Ambe.ServerAddr,
-                ServerPort = us.Ambe.ServerPort,
-                StickBaudrate = us.Ambe.StickBaudrate,
-                StickComport = us.Ambe.StickPort,
-            };
-
             DmrClientConfig cfg = new()
             {
-                AmbeController = CreateAmbeController(ambeConfig),
+                AmbeController = AmbeControllerFactory.Create(_ambeConfig),
+                AmbeConfig = _ambeConfig,
+
                 Callsign = us.Common.Callsign,
                 Password = us.Dmr.Password,
                 MyDmrId = us.Dmr.MyDmrId,
@@ -728,6 +724,7 @@ public class MainViewModel : ViewModelBase
                 MicrophoneReader = _microphoneReader,
                 AudioPlayer = _audioPlayer,
             };
+
             switch (us.Dmr.Protocol)
             {
                 case DmrProtocol.Homebrew:
@@ -781,6 +778,9 @@ public class MainViewModel : ViewModelBase
 
             FcsClientConfig cfg = new()
             {
+                AmbeController = AmbeControllerFactory.Create(_ambeConfig),
+                AmbeConfig = _ambeConfig,
+
                 ReflectorAddress = $"{reflectorId[..6].ToLower()}.xreflector.net",
                 ReflectorPort = us.Fcs.Port,
                 ReflectorId = reflectorId,
@@ -822,6 +822,9 @@ public class MainViewModel : ViewModelBase
 
             NxdnClientConfig cfg = new()
             {
+                AmbeController = AmbeControllerFactory.Create(_ambeConfig),
+                AmbeConfig = _ambeConfig,
+
                 NxdnReflectorAddr = Host,
                 NxdnReflectorPort = Port,
                 NxdnReflectorId = reflectorId,
@@ -863,6 +866,9 @@ public class MainViewModel : ViewModelBase
             string? refAddr = DPlusHostRepository.GetAddress(reflectorId);
             RefClientConfig cfg = new()
             {
+                AmbeController = AmbeControllerFactory.Create(_ambeConfig),
+                AmbeConfig = _ambeConfig,
+
                 RefAddress = refAddr!,
                 RefPort = us.Ref.HostPort,
                 RefName = reflectorId,
@@ -897,6 +903,9 @@ public class MainViewModel : ViewModelBase
             string? refAddr = XrfHosts.GetAddress(reflectorId);
             XrfClientConfig cfg = new()
             {
+                AmbeController = AmbeControllerFactory.Create(_ambeConfig),
+                AmbeConfig = _ambeConfig,
+
                 RefAddress = refAddr!,
                 RefPort = us.Xrf.HostPort,
                 RefName = reflectorId,
@@ -928,6 +937,9 @@ public class MainViewModel : ViewModelBase
 
             YsfClientConfig cfg = new()
             {
+                AmbeController = AmbeControllerFactory.Create(_ambeConfig),
+                AmbeConfig = _ambeConfig,
+
                 ReflectorAddress = Host,
                 ReflectorPort = Port,
                 SimulationFile = null,

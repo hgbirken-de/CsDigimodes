@@ -14,11 +14,7 @@ public record YsfClientConfig
     public int ReflectorPort { get; set; }
 
     // AMBE stuff
-    public string AmbeServerAddr { get; set; } = "127.0.0.1";
-    public int AmbeServerPort { get; set; } = 2460;
-    public int AmbeStickBaudrate { get; set; } = 460800;
-    public string AmbeStickComport { get; set; } = "COM13";
-    public AmbeServiceType AmbeServiceType { get; set; } = AmbeServiceType.Stick;
+    public AmbeConfig? AmbeConfig { get; set; }
     public IAmbe3000RController? AmbeController { get; set; }
 
 

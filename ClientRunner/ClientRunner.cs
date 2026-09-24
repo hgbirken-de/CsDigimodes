@@ -30,6 +30,12 @@ class ClientRunner
 
     static readonly ManualResetEventSlim quitEvent = new(false);
 
+    // AMBE Configuration
+    static readonly AmbeConfig ambeConfig = new()
+    {
+        AmbeServiceType = AmbeServiceType.Stick,
+    };
+
     static void Main(string[] args)
     {
         DmrProtocol dmrProtocol = DmrProtocol.MmdvmHost;
@@ -135,6 +141,9 @@ class ClientRunner
         if (refAddr == null) ArgumentException.ThrowIfNullOrEmpty(refAddr, nameof(refAddr));
         DcsClientConfig cfg = new()
         {
+            AmbeConfig = ambeConfig,
+            AmbeController = AmbeControllerFactory.Create(ambeConfig),
+
             RefAddress = refAddr,
             RefPort = 30051,
             RefName = refName,
@@ -158,14 +167,11 @@ class ClientRunner
     {
         var config = new ConfigurationBuilder().AddUserSecrets<ClientRunner>().Build();
 
-        AmbeConfig ambeConfig = new()
-        {
-            AmbeServiceType = AmbeServiceType.Stick
-        };
-
         DmrClientConfig cfg = new()
         {
             AmbeConfig = ambeConfig,
+            AmbeController = AmbeControllerFactory.Create(ambeConfig),
+
             BmServerAddress = "master1.bm262.de",
             BmServerPort = 62030,
             Password = config["MySecrets:Password"],
@@ -179,8 +185,6 @@ class ClientRunner
             SimulationMode = true,
             AudioPlayer = new AudioPlayer(),
         };
-
-        cfg.AmbeController = CreateAmbeController(cfg.AmbeConfig);
 
         switch (dmrProtocol)
         {
@@ -214,6 +218,9 @@ class ClientRunner
 
         FcsClientConfig cfg = new()
         {
+            AmbeConfig = ambeConfig,
+            AmbeController = AmbeControllerFactory.Create(ambeConfig),
+
             ReflectorAddress = "fcs004.xreflector.net",
             ReflectorPort = 62500,
             ReflectorId = "FCS00428",
@@ -252,6 +259,9 @@ class ClientRunner
 
         NxdnClientConfig cfg = new()
         {
+            AmbeConfig = ambeConfig,
+            AmbeController = AmbeControllerFactory.Create(ambeConfig),
+
             NxdnReflectorAddr = Host,
             NxdnReflectorPort = Port,
             NxdnReflectorId = id,
@@ -283,6 +293,9 @@ class ClientRunner
         if (refIpAddr == null) ArgumentException.ThrowIfNullOrEmpty(refIpAddr, nameof(refIpAddr));
         RefClientConfig cfg = new()
         {
+            AmbeConfig = ambeConfig,
+            AmbeController = AmbeControllerFactory.Create(ambeConfig),
+
             RefAddress = refIpAddr,
             RefPort = 20001,
             RefName = refName,
@@ -328,6 +341,9 @@ class ClientRunner
 
         YsfClientConfig cfg = new()
         {
+            AmbeConfig = ambeConfig,
+            AmbeController = AmbeControllerFactory.Create(ambeConfig),
+
             ReflectorAddress = Host,
             ReflectorPort = Port,
             Callsign = "DL1HGB",
@@ -363,6 +379,9 @@ class ClientRunner
         if (refIpAddr == null) ArgumentException.ThrowIfNullOrEmpty(refIpAddr, nameof(refIpAddr));
         XrfClientConfig cfg = new()
         {
+            AmbeConfig = ambeConfig,
+            AmbeController = AmbeControllerFactory.Create(ambeConfig),
+
             RefAddress = refIpAddr,
             RefPort = 30001,
             RefName = refName,
