@@ -2,7 +2,7 @@ using DigitalVoice.DStar.Common;
 using System.Text;
 using Xunit.Abstractions;
 
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_DStar_Helpers(ITestOutputHelper output)
 {

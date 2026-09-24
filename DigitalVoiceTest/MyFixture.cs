@@ -1,10 +1,10 @@
 ﻿
-using AmbeServer;
+using DigitalVoice.AmbeSupport;
 
 public class MyFixture : IDisposable
 {
 
-    AMBE3000RController  Controller;
+    Ambe3000RController Controller;
 
     public MyFixture()
     {

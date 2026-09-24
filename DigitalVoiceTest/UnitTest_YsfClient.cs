@@ -1,5 +1,4 @@
-
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_YsfClient
 {

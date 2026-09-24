@@ -1,11 +1,12 @@
 
-using AmbeServer;
+
 using DigitalVoice.AmbeSupport;
+using DigitalVoice.Common;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using Xunit.Abstractions;
 
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_AmbeClient
 {

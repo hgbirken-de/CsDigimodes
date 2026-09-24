@@ -19,7 +19,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AmbeServer\AmbeServer.csproj" />
+    <ProjectReference Include="..\DigitalVoice.AmbeSupport\DigitalVoice.AmbeSupport.csproj" />
+    <ProjectReference Include="..\DigitalVoice.Common\DigitalVoice.Common.csproj" />
     <ProjectReference Include="..\DigitalVoiceControlApp\DigitalVoiceControlApp.csproj" />
     <ProjectReference Include="..\DigitalVoice\DigitalVoice.csproj" />
   </ItemGroup>

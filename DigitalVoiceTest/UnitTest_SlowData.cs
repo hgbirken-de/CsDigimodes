@@ -1,7 +1,7 @@
 using DigitalVoice.DStar.Common;
 using Xunit.Abstractions;
 
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_SlowData(ITestOutputHelper output)
 {

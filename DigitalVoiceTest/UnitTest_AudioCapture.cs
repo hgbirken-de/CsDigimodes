@@ -1,9 +1,9 @@
 
-using AmbeServer;
+
 using DigitalVoice.AudioSupport;
 using Xunit.Abstractions;
 
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_AudioCapture(ITestOutputHelper output)
 {

@@ -2,7 +2,7 @@
 using DigitalVoice.Dmr;
 using Xunit.Abstractions;
 
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_DmrUserInfoReader(ITestOutputHelper output)
 {

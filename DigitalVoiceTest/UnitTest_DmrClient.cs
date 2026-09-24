@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using Xunit.Abstractions;
 
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_DmrClient(ITestOutputHelper output)
 {
@@ -22,11 +22,11 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
             TxRptId = 262236315,
             TxTimeSlot = 2,
         };
-        byte[] dmrPkt1 = DigitalVoice.Dmr.DmrCodec.CreateHeaderFrame(dmrClientState, false);
+        byte[] dmrPkt1 = DmrCodec.CreateHeaderFrame(dmrClientState, false);
 
-        int SrcId = (dmrPkt1[5] << 16) | (dmrPkt1[6] << 8) | dmrPkt1[7]; // 24 bits BE -> LE
-        int DstId = (dmrPkt1[8] << 16) | (dmrPkt1[9] << 8) | dmrPkt1[10]; // 24 bits BE -> LE
-        int RptId = (dmrPkt1[11] << 24) | (dmrPkt1[12] << 16) | (dmrPkt1[13] << 8) | dmrPkt1[14]; // 32 bits BE -> LE
+        int SrcId = dmrPkt1[5] << 16 | dmrPkt1[6] << 8 | dmrPkt1[7]; // 24 bits BE -> LE
+        int DstId = dmrPkt1[8] << 16 | dmrPkt1[9] << 8 | dmrPkt1[10]; // 24 bits BE -> LE
+        int RptId = dmrPkt1[11] << 24 | dmrPkt1[12] << 16 | dmrPkt1[13] << 8 | dmrPkt1[14]; // 32 bits BE -> LE
 
         byte flagBits = dmrPkt1[15];
         FrameType frameType = (FrameType)((flagBits & 0x30) >> 4);
@@ -48,8 +48,8 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
         DmrBptcCodec.Decode(b1, b2);
         output.WriteLine($"b2 = {Convert.ToHexString(b2)}");
 
-        int DstId2 = (b2[3] << 16) | (b2[4] << 8) | b2[5]; // 24 bits BE -> LE
-        int SrcId2 = (b2[6] << 16) | (b2[7] << 8) | b2[8]; // 24 bits BE -> LE
+        int DstId2 = b2[3] << 16 | b2[4] << 8 | b2[5]; // 24 bits BE -> LE
+        int SrcId2 = b2[6] << 16 | b2[7] << 8 | b2[8]; // 24 bits BE -> LE
         Flco flco2 = (Flco)(b2[0] & 0b00111111);
 
         Assert.Equal(dmrClientState.TxDstId, DstId2);
@@ -57,7 +57,7 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
         Assert.Equal(dmrClientState.TxFlco, flco2);
 
         byte[] eiData = new byte[6];
-        DigitalVoice.Dmr.DmrCodec.ExtractEiFromFrame(dmrPkt1, 20, eiData);
+        DmrCodec.ExtractEiFromFrame(dmrPkt1, 20, eiData);
 
         // the sync bytes [0x0D, 0x5D, 0x7F, 0x77, 0xFD, 0x75, 0x70]
         Assert.Equal([0xD5, 0xD7, 0xF7, 0x7F, 0xD7, 0x57], eiData);
@@ -70,7 +70,7 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
         Assert.Equal(dmrClientState.TxColorCode, colorCode);
         Assert.Equal(DataType.DataHeader, dataType);
 
-        byte[] dmrPkt2 = DigitalVoice.Dmr.DmrCodec.CreateHeaderFrame(dmrClientState, true);
+        byte[] dmrPkt2 = DmrCodec.CreateHeaderFrame(dmrClientState, true);
         Assert.Equal(2, dmrPkt2[15] & 0x0F); // seq no
     }
 
@@ -91,7 +91,7 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
 
         var ex = Assert.Throws<InvalidOperationException>(() =>
         {
-            DigitalVoice.Dmr.DmrCodec.CreateVoiceFrame(dmrClientState, []);
+            DmrCodec.CreateVoiceFrame(dmrClientState, []);
         });
 
         byte[] ambe = new byte[27]; // 3x9 ambebytes
@@ -99,13 +99,13 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
         for (int i = 1; i <= 6; i++)
         {
             dmrClientState.TxFrameCount = i;
-            byte[] dmrPkt = DigitalVoice.Dmr.DmrCodec.CreateVoiceFrame(dmrClientState, ambe);
+            byte[] dmrPkt = DmrCodec.CreateVoiceFrame(dmrClientState, ambe);
 
             Assert.Equal(i, dmrPkt[4]);
             
-            int SrcId = (dmrPkt[5] << 16) | (dmrPkt[6] << 8) | dmrPkt[7]; // 24 bits BE -> LE
-            int DstId = (dmrPkt[8] << 16) | (dmrPkt[9] << 8) | dmrPkt[10]; // 24 bits BE -> LE
-            int RptId = (dmrPkt[11] << 24) | (dmrPkt[12] << 16) | (dmrPkt[13] << 8) | dmrPkt[14]; // 32 bits BE -> LE
+            int SrcId = dmrPkt[5] << 16 | dmrPkt[6] << 8 | dmrPkt[7]; // 24 bits BE -> LE
+            int DstId = dmrPkt[8] << 16 | dmrPkt[9] << 8 | dmrPkt[10]; // 24 bits BE -> LE
+            int RptId = dmrPkt[11] << 24 | dmrPkt[12] << 16 | dmrPkt[13] << 8 | dmrPkt[14]; // 32 bits BE -> LE
 
             byte flagBits = dmrPkt[15];
             FrameType frameType = (FrameType)((flagBits & 0x30) >> 4);
@@ -134,7 +134,7 @@ public class UnitTest_DmrClient(ITestOutputHelper output)
         byte[] b = new byte[salt.Length + pwd.Length];
         salt.CopyTo(b, 0);
         Encoding.ASCII.GetBytes(pwd).CopyTo(b, salt.Length);
-        byte[] hash = System.Security.Cryptography.SHA256.HashData(b);
+        byte[] hash = SHA256.HashData(b);
 
         Assert.Equal(32, hash.Length);
 

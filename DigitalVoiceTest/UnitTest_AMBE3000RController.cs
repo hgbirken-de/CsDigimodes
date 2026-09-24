@@ -1,19 +1,19 @@
 
-using AmbeServer;
+using DigitalVoice.AmbeSupport;
 using NAudio.Wave;
 using System.Buffers.Binary;
 using System.Diagnostics;
 using Xunit.Abstractions;
 
-namespace YsfClientTest;
+namespace DigitalVoiceTest;
 
 public class UnitTest_AMBE3000RController
 {
     readonly ITestOutputHelper output;
 
-    static readonly string portName = "COM9"; // <=== define the serial port here!
+    static readonly string portName = "COM13"; // <=== define the serial port here!
 
-    static readonly AMBE3000RController controller;
+    static readonly Ambe3000RController controller;
     static UnitTest_AMBE3000RController()
     {
         controller = new(portName);
