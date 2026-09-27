@@ -8,7 +8,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace DigitalVoiceControlApp.ViewModels;
@@ -71,9 +71,11 @@ public class DmrViewModel : ViewModelBase
 
     readonly ConcurrentDictionary<int, DmrUserData> _dmrUserCache = [];
 
-    int _lastRequestId = 0;
+    // Verhindert, dass für dieselbe srcId mehrfach parallel gefetcht wird (z.B. weil
+    // ConsumeDmrData bei einer laufenden Übertragung alle ~20ms erneut aufgerufen wird).
+    readonly ConcurrentDictionary<int, byte> _pendingFetches = [];
 
-    static readonly HashSet<int> _unregisteredDmrId = []; 
+    static readonly HashSet<int> _unregisteredDmrId = [];
 
     /// <summary>
     /// Constructor.
@@ -89,7 +91,7 @@ public class DmrViewModel : ViewModelBase
         //}
     }
 
-    public async void ConsumeDmrData(DmrSessionContext sessionCtx)
+    public void ConsumeDmrData(DmrSessionContext sessionCtx)
     {
         logger.Debug($"sessionCtx = {sessionCtx}");
 
@@ -101,19 +103,14 @@ public class DmrViewModel : ViewModelBase
             return; // no last heard
         }
 
-        int requestId = Interlocked.Increment(ref _lastRequestId);
-
-        string callsign = string.Empty;
-        string name = string.Empty;
-        DmrUserData? userData = null;
-
         // Copy/save session attributes
         int dstId = 0;
         int rptId = 0;
         int srcId = 0;
         string rxTa = string.Empty;
         TransceiveMode tm = sessionCtx.TransceiveMode;
-        
+        DmrUserData? userData = null;
+
         switch (tm)
         {
             case TransceiveMode.Rx:
@@ -121,32 +118,21 @@ public class DmrViewModel : ViewModelBase
                 rptId = sessionCtx.RxRptId;
                 srcId = sessionCtx.RxSrcId;
                 rxTa = sessionCtx.RxTalkerAlias;
-                if (_dmrUserCache.TryGetValue(srcId, out var value))
+
+                if (_dmrUserCache.TryGetValue(srcId, out var cached))
                 {
-                    userData = value;
+                    userData = cached; // schon bekannt -> sofort verfügbar, kein Fetch nötig
                 }
                 else
                 {
-                    try
+                    // userData bleibt null -> Anzeige/Last-Heard-Eintrag zeigt zunächst NOCALL.
+                    // Fetch läuft im Hintergrund, Update erfolgt separat (analog Java), sobald fertig.
+                    // TryAdd verhindert, dass bei laufender Übertragung (alle ~20ms erneuter Aufruf)
+                    // mehrfach parallel für dieselbe srcId gefetcht wird.
+                    if (_pendingFetches.TryAdd(srcId, 0))
                     {
-                        userData = await DmrUserDataReader.GetUserAsync(srcId);
-                        if (userData != null)
-                        {
-                            _dmrUserCache[srcId] = userData; // cache it
-                        }
-                        else
-                        {
-                            logger.Warn($"Unable to read user data, srcId = {srcId}");
-                        }
+                        _ = FetchAndUpdateUserDataAsync(srcId);
                     }
-                    catch (Exception ex)
-                    {
-                        logger.Error(ex, $"Error during read of user data, srcId = {srcId}");
-                    }
-
-                    // The following code is required because async call of "DmrUserInfoReader.GetUserAsync"
-                    if (requestId != _lastRequestId)
-                        return; // this result is outdated -> do not update the view model
                 }
                 break;
             case TransceiveMode.Tx:
@@ -155,7 +141,6 @@ public class DmrViewModel : ViewModelBase
                 srcId = sessionCtx.TxSrcId;
                 break;
         }
-
 
         Dispatcher.UIThread.Post(() =>
         {
@@ -176,12 +161,6 @@ public class DmrViewModel : ViewModelBase
                     return; // no last heard with TX
             }
 
-            // Find index of the first item in the first 2 with the same DmrId
-            //var existingIndex = LastHeard.Take(2).Select((item, index) => new { item, index }).FirstOrDefault(x => x.item.DmrId == clientState.RxSrcId)?.index;
-            //if (existingIndex != null)
-            //{
-            //    LastHeard.RemoveAt(existingIndex.Value);
-            //}
             for (int i = 0; i < LastHeard.Count; i++)
             {
                 if (LastHeard[i].SrcId == srcId)
@@ -200,6 +179,59 @@ public class DmrViewModel : ViewModelBase
                 LastHeard.RemoveAt(50); // remove from the end
             }
         });
+    }
+
+    /// <summary>
+    /// Lädt die Nutzerdaten für eine srcId im Hintergrund und aktualisiert - falls der
+    /// zugehörige Last-Heard-Eintrag noch existiert - dessen Anzeige (analog zur Java-Version).
+    /// Existiert der Eintrag nicht mehr (z.B. durch die 50er-Begrenzung verdrängt), passiert
+    /// nichts weiter; der Cache wird trotzdem befüllt.
+    /// </summary>
+    private async Task FetchAndUpdateUserDataAsync(int srcId)
+    {
+        logger.Debug($"Fetch gestartet für srcId={srcId}");
+        try
+        {
+            var fetched = await DmrUserDataReader.GetUserAsync(srcId);
+            logger.Debug($"Fetch-Ergebnis für srcId={srcId}: Callsign={fetched?.Callsign ?? "null (kein Treffer)"}");
+
+            if (fetched != null)
+            {
+                _dmrUserCache[srcId] = fetched; // cache it
+
+                Dispatcher.UIThread.Post(() =>
+                {
+                    bool found = false;
+                    for (int i = 0; i < LastHeard.Count; i++)
+                    {
+                        if (LastHeard[i].SrcId == srcId)
+                        {
+                            LastHeard[i].Update(fetched);
+                            // Erzwingt ein CollectionChanged(Replace)-Event, auch wenn es dasselbe
+                            // Objekt ist - das zwingt die ListBox zum Neuzeichnen dieser Zeile.
+                            // Verlässlicher als PropertyChanged, unabhängig von der XAML-Bindungsart
+                            // (z.B. falls direkt auf ToString() statt auf einzelne Properties gebunden wird).
+                            LastHeard[i] = LastHeard[i];
+                            found = true;
+                            break;
+                        }
+                    }
+                    logger.Debug($"Update für srcId={srcId} im LastHeard-Eintrag gefunden={found}");
+                });
+            }
+            else
+            {
+                logger.Warn($"Unable to read user data, srcId = {srcId}");
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"Error during read of user data, srcId = {srcId}");
+        }
+        finally
+        {
+            _pendingFetches.TryRemove(srcId, out _);
+        }
     }
 
     /// <summary>

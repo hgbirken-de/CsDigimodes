@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="DigitalVoiceControlApp.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="Digital Voice Control"
+        Title="CsDigimodes"
         SizeToContent="WidthAndHeight"
         CanResize="True" >
   
