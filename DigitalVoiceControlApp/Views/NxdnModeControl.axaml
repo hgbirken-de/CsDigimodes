@@ -5,27 +5,27 @@
              mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="250"
              x:Class="DigitalVoiceControlApp.Views.NxdnModeControl">
 
+
   <StackPanel Orientation="Vertical" Spacing="5">
 
-    <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="Callsign" VerticalAlignment="Center" Width="60"/>
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding Callsign}"/>
-    </StackPanel>
+  <!-- Gruppierter Block: CALL/TA, SRC/DST, RPT - gemeinsam zentriert -->
+  <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Background="#EAF3FB" Padding="10" HorizontalAlignment="Center" Width="400">
+	  <StackPanel Orientation="Vertical" Spacing="5" >
+		  <StackPanel Orientation="Horizontal" Spacing="10">
+			  <TextBlock Text="CALL" VerticalAlignment="Center" Width="35" />
+			  <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding Callsign}" />
+			  <TextBlock Text="GW" VerticalAlignment="Center" Width="35" />
+			  <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding GwId}" />
+		  </StackPanel>
 
-    <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="SRC ID" VerticalAlignment="Center" Width="60" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding SrcId}"/>
-    </StackPanel>
-
-    <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="DST ID" VerticalAlignment="Center" Width="60" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding DstId}" />
-    </StackPanel>
-
-    <StackPanel Orientation="Horizontal" Spacing="10">
-      <TextBlock Text="GW ID" VerticalAlignment="Center" Width="60" />
-      <TextBox Focusable="False" IsReadOnly="True" Width="120" Text="{Binding GwId}" />
-    </StackPanel>
+		  <StackPanel Orientation="Horizontal" Spacing="10">
+			  <TextBlock Text="SRC" VerticalAlignment="Center" Width="35" />
+			  <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding SrcId}" />
+			  <TextBlock Text="DST" VerticalAlignment="Center" Width="35" />
+			  <TextBox Focusable="False" IsReadOnly="True" Width="130" Text="{Binding DstId}" />
+		  </StackPanel>
+	  </StackPanel>
+    </Border>
 
 	<StackPanel Orientation="Horizontal" Spacing="10">
 		<ListBox x:Name="_listBoxLastHeard"
@@ -40,7 +40,7 @@
 				 Margin="0,10,0,0"
 				 ScrollViewer.VerticalScrollBarVisibility="Auto"
 				 VerticalAlignment="Stretch"
-				 Width="310">
+				 Width="400">
 
 			<ListBox.ItemsPanel>
 				<ItemsPanelTemplate>

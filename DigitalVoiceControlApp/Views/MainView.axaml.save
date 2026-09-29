@@ -160,41 +160,47 @@
         <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <!-- Sliders -->
-      <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Background="#EAF3FB" Padding="0" HorizontalAlignment="Center" Width="400">
-      <Grid Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Margin="0" >
+      <Grid Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="4" HorizontalAlignment="Center" Margin="5">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
           <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- MIC Gain -->
-        <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="0" HorizontalAlignment="Center">
-          <Image Source="avares://DigitalVoiceControlApp/Assets/AudioRecording.png" Width="35" Height="20" Margin="0,0,4,0" />
-          <Slider Width="130" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding MicGain, Mode=TwoWay}" >
-            <Slider.Classes>
-              <x:String>mic-small</x:String>
-            </Slider.Classes>
-          </Slider>
-          <ToolTip.Tip>
-            <TextBlock Text="MIC Gain  [-40db, 30db]"/>
-          </ToolTip.Tip>
-        </StackPanel>
-
-        <!-- RX Volume -->
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="0" HorizontalAlignment="Center">
-          <Image Source="avares://DigitalVoiceControlApp/Assets/Audio_16xLG.png" Width="35" Height="20" Margin="0,0,4,0" />
-          <Slider Width="130" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding RxVolume, Mode=TwoWay}" >
-            <Slider.Classes>
-              <x:String>rx-small</x:String>
-            </Slider.Classes>
-          </Slider>
-          <ToolTip.Tip>
-            <TextBlock Text="RX Vol [-40db, 30db]"/>
-          </ToolTip.Tip>
+        <!-- Sliders -->
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Orientation="Horizontal" Spacing="20">
+          <!-- MIC Gain -->
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <!--<TextBlock VerticalAlignment="Center" Text="MIC:" Margin="0" Width="50"/>-->
+            <Image Source="avares://DigitalVoiceControlApp/Assets/AudioRecording.png" Width="35" Height="20" Margin="0,0,10,0" />
+            <Slider Width="130" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding MicGain, Mode=TwoWay}" >
+              <Slider.Classes>
+                <x:String>mic-small</x:String>
+              </Slider.Classes>
+            </Slider>
+            <ToolTip.Tip>
+              <TextBlock Text="MIC Gain  [-40db, 30db]"/>
+            </ToolTip.Tip>
+          </StackPanel>
+          
+          <StackPanel Orientation="Horizontal" Spacing="5">
+            <!-- RX Volume -->
+            <!--<TextBlock VerticalAlignment="Center" Text="RX Vol:" Margin="0" Width="50"/>-->
+            <Image Source="avares://DigitalVoiceControlApp/Assets/Audio_16xLG.png" Width="35" Height="20" Margin="0,0,10,0" />
+            <Slider Width="130" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding RxVolume, Mode=TwoWay}" >
+              <Slider.Classes>
+                <x:String>rx-small</x:String>
+              </Slider.Classes>
+            </Slider>
+            <ToolTip.Tip>
+              <TextBlock Text="RX Vol [-40db, 30db]"/>
+            </ToolTip.Tip>
+          </StackPanel>
         </StackPanel>
       </Grid>
-      </Border>
 
       <!-- Operating Mode specific Content -->
       <ContentControl x:Name="_modeContent" 
