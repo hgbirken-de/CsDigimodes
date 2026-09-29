@@ -75,8 +75,6 @@ public class DmrViewModel : ViewModelBase
     // ConsumeDmrData bei einer laufenden Übertragung alle ~20ms erneut aufgerufen wird).
     readonly ConcurrentDictionary<int, byte> _pendingFetches = [];
 
-    static readonly HashSet<int> _unregisteredDmrId = [];
-
     /// <summary>
     /// Constructor.
     /// </summary>
@@ -126,7 +124,7 @@ public class DmrViewModel : ViewModelBase
                 else
                 {
                     // userData bleibt null -> Anzeige/Last-Heard-Eintrag zeigt zunächst NOCALL.
-                    // Fetch läuft im Hintergrund, Update erfolgt separat (analog Java), sobald fertig.
+                    // Fetch läuft im Hintergrund, Update erfolgt separat, sobald fertig.
                     // TryAdd verhindert, dass bei laufender Übertragung (alle ~20ms erneuter Aufruf)
                     // mehrfach parallel für dieselbe srcId gefetcht wird.
                     if (_pendingFetches.TryAdd(srcId, 0))

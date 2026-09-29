@@ -124,6 +124,11 @@ public class MainViewModel : ViewModelBase
 
                 // Switch the Current VM so the ContentControl updates
                 SwitchMode(value);
+
+                // Load MIC gain / RX volume stored for the newly selected mode
+                // (mirrors the SelectedModule handling above).
+                MicGain = GetMicGain(value);
+                RxVolume = GetRxVolume(value);
             }
         }
     }
@@ -203,6 +208,80 @@ public class MainViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Returns the MIC gain [dB] stored for the given mode.
+    /// </summary>
+    private static double GetMicGain(Mode mode)
+    {
+        UserSettings us = UserSettings.Instance();
+        return mode switch
+        {
+            Mode.Dcs => us.Dcs.MicGain,
+            Mode.Dmr => us.Dmr.MicGain,
+            Mode.Fcs => us.Fcs.MicGain,
+            Mode.Nxdn => us.Nxdn.MicGain,
+            Mode.Ref => us.Ref.MicGain,
+            Mode.Xrf => us.Xrf.MicGain,
+            Mode.Ysf => us.Ysf.MicGain,
+            _ => 50,
+        };
+    }
+
+    /// <summary>
+    /// Stores the MIC gain [dB] for the given mode.
+    /// </summary>
+    private static void SetMicGain(Mode mode, double value)
+    {
+        UserSettings us = UserSettings.Instance();
+        switch (mode)
+        {
+            case Mode.Dcs: us.Dcs.MicGain = value; break;
+            case Mode.Dmr: us.Dmr.MicGain = value; break;
+            case Mode.Fcs: us.Fcs.MicGain = value; break;
+            case Mode.Nxdn: us.Nxdn.MicGain = value; break;
+            case Mode.Ref: us.Ref.MicGain = value; break;
+            case Mode.Xrf: us.Xrf.MicGain = value; break;
+            case Mode.Ysf: us.Ysf.MicGain = value; break;
+        }
+    }
+
+    /// <summary>
+    /// Returns the RX volume [dB] stored for the given mode.
+    /// </summary>
+    private static double GetRxVolume(Mode mode)
+    {
+        UserSettings us = UserSettings.Instance();
+        return mode switch
+        {
+            Mode.Dcs => us.Dcs.RxVolume,
+            Mode.Dmr => us.Dmr.RxVolume,
+            Mode.Fcs => us.Fcs.RxVolume,
+            Mode.Nxdn => us.Nxdn.RxVolume,
+            Mode.Ref => us.Ref.RxVolume,
+            Mode.Xrf => us.Xrf.RxVolume,
+            Mode.Ysf => us.Ysf.RxVolume,
+            _ => 50,
+        };
+    }
+
+    /// <summary>
+    /// Stores the RX volume [dB] for the given mode.
+    /// </summary>
+    private static void SetRxVolume(Mode mode, double value)
+    {
+        UserSettings us = UserSettings.Instance();
+        switch (mode)
+        {
+            case Mode.Dcs: us.Dcs.RxVolume = value; break;
+            case Mode.Dmr: us.Dmr.RxVolume = value; break;
+            case Mode.Fcs: us.Fcs.RxVolume = value; break;
+            case Mode.Nxdn: us.Nxdn.RxVolume = value; break;
+            case Mode.Ref: us.Ref.RxVolume = value; break;
+            case Mode.Xrf: us.Xrf.RxVolume = value; break;
+            case Mode.Ysf: us.Ysf.RxVolume = value; break;
+        }
+    }
+
     private double _micGain = 50;
     public double MicGain
     {
@@ -216,8 +295,7 @@ public class MainViewModel : ViewModelBase
 
                 _microphoneReader.GainDb = (float)value;
 
-                // TODO: implement this
-                UserSettings.Instance().Common.MicGain = value;
+                SetMicGain(SelectedMode, value); // stored per mode
             }
         }
     }
@@ -235,7 +313,7 @@ public class MainViewModel : ViewModelBase
 
                 _audioPlayer.GainDb = (float)value;
 
-                UserSettings.Instance().Common.RxVolume = value;
+                SetRxVolume(SelectedMode, value); // stored per mode
             }
         }
     }
@@ -345,9 +423,6 @@ public class MainViewModel : ViewModelBase
 
         // select the corresponding mode specific view model 
         SwitchMode(_selectedMode);
-
-        MicGain = us.Common.MicGain;
-        RxVolume = us.Common.RxVolume;
 
         switch (SelectedMode)
         {

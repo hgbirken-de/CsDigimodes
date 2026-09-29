@@ -13,7 +13,7 @@ using NLog;
 namespace ClientRunner;
 
 /// <summary>
-/// Helper class to run the DCS-, DMR-, FCS-, and YSF-Clients.
+/// Helper class to run the DCS, DMR, FCS, NXDN, and YSF Clients.
 /// </summary>
 class ClientRunner
 {

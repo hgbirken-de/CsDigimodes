@@ -42,7 +42,7 @@ public class NxdnClientConfig
     public void Validate()
     {
         int nError = 0;
-        if (AmbeController != null)
+        if (AmbeController == null)
         {
             logger.Error($"No ANME Controller configured.");
             nError++;

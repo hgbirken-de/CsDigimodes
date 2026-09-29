@@ -1,5 +1,4 @@
 ﻿using DigitalVoice.AmbeSupport;
-using DigitalVoice.AudioSupport;
 using DigitalVoice.Common;
 using DigitalVoice.DStar.Common;
 using NLog;

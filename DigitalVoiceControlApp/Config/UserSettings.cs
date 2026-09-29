@@ -176,6 +176,8 @@ public class Dcs
     public char LastModule { get; set; } = 'C';
     public int HostPort { get; set; } = 30051;
     public string UserMessage { get; set; } = "DVC by DL1HGB";
+    public double MicGain { get; set; } = 50;
+    public double RxVolume { get; set; } = 50;
 }
 
 public class Dmr
@@ -188,10 +190,10 @@ public class Dmr
     public string BmServerAddr1 { get; set; } = "master1.bm262.de"; // for Homebrew
     public int BmServerPort1 { get; set; } = 62030; // for Homebrew
     public string Master { get; set; } = "BM_2621_Germany";
-
     public int TimeSlot { get; set; } = 1;
-
     public int ColorCode { get; set; } = 1;
+    public double MicGain { get; set; } = 50;
+    public double RxVolume { get; set; } = 50;
 }
 
 public class Fcs
@@ -199,6 +201,8 @@ public class Fcs
     public string Master { get; set; } = "FCS001 (DE)";
     public int Port { get; set; } = 62500;
     public string LastReflector { get; set; } = "FCS00199";
+    public double MicGain { get; set; } = 50;
+    public double RxVolume { get; set; } = 50;
 }
 
 public class Gui
@@ -221,6 +225,8 @@ public class Nxdn
 {
     public int NxdnId { get; set; } = 39251;
     public int LastReflectorId { get; set; } = 20000;
+    public double MicGain { get; set; } = 50;
+    public double RxVolume { get; set; } = 50;
 }
 
 public class Ref
@@ -229,6 +235,8 @@ public class Ref
     public char LastModule { get; set; } = 'A';
     public int HostPort { get; set; } = 20001;
     public string UserMessage { get; set; } = "DVC by DL1HGB";
+    public double MicGain { get; set; } = 50;
+    public double RxVolume { get; set; } = 50;
 }
 
 public class Xrf
@@ -237,9 +245,13 @@ public class Xrf
     public char LastModule { get; set; } = 'C';
     public int HostPort { get; set; } = 30001;
     public string UserMessage { get; set; } = "DVC by DL1HGB";
+    public double MicGain { get; set; } = 50;
+    public double RxVolume { get; set; } = 50;
 }
 
 public class Ysf
 {
     public string LastReflector { get; set; } = "99999";
+    public double MicGain { get; set; } = 50;
+    public double RxVolume { get; set; } = 50;
 }
