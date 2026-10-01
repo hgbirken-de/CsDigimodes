@@ -239,7 +239,15 @@ public sealed class NxdnClient
                     packetCount++;
                     ProcessRxPacket(packet);
                 }
-                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut) { }
+                catch (SocketException ex) when (ex.SocketErrorCode == SocketError.TimedOut) {}
+                catch (OperationCanceledException) when (!_isRunning)
+                {
+                    // Erwarteter Abbruch: Stop() hat den seriellen Port geschlossen, während dieser
+                    // Thread gerade blockierend in SerialPort.ReadByte() hing. Kein echter Fehler,
+                    // sondern normales, absichtliches Herunterfahren - deshalb nur Debug statt ERROR.
+                    logger.Debug("Read cancelled due to shutdown (Stop() was called).");
+                    break;
+                }
             }
         }
         catch (Exception ex)

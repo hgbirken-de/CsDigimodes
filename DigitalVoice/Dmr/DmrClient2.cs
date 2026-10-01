@@ -344,6 +344,14 @@ public sealed class DmrClient2
                     logger.Trace($"timeout");
                 // Optionally sleep or backoff slightly here
             }
+            catch (OperationCanceledException) when (!_isRunning)
+            {
+                // Erwarteter Abbruch: Stop() hat den seriellen Port geschlossen, während dieser
+                // Thread gerade blockierend in SerialPort.ReadByte() hing. Kein echter Fehler,
+                // sondern normales, absichtliches Herunterfahren - deshalb nur Debug statt ERROR.
+                logger.Debug("Read cancelled due to shutdown (Stop() was called).");
+                break;
+            }
             catch (Exception ex)
             {
                 logger.Error(ex, "Exception during read/processing UDP packet.");
@@ -657,7 +665,7 @@ public sealed class DmrClient2
         if (!_cfg.SimulationMode)
             SendClose();
 
-        _cfg.AmbeController!.Close();
+        _cfg.AmbeController?.Close();
     }
 
     /// <summary>

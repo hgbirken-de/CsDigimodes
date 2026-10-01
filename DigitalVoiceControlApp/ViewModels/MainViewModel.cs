@@ -911,7 +911,7 @@ public class MainViewModel : ViewModelBase
                 
                 RecordAudio = false,
                 RecordRxPackets = us.Common.RecordRcvdUdpPackets,
-                RecordRxPacketsFile = us.Common.RecordRcvdUdpPackets ? Path.Combine(UserSettings.Dir(Mode.Fcs, UserSettings.FileType.Data), $"nxdn_packets_{DateTime.Now:yyyyMMddHHmmss}.bin") : null,
+                RecordRxPacketsFile = us.Common.RecordRcvdUdpPackets ? Path.Combine(UserSettings.Dir(Mode.Nxdn, UserSettings.FileType.Data), $"nxdn_packets_{DateTime.Now:yyyyMMddHHmmss}.bin") : null,
                 SimulationModeFile = null,
                 SimulationMode = false,
             };

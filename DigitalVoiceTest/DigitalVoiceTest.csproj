@@ -35,4 +35,8 @@
     </None>
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+
 </Project>
