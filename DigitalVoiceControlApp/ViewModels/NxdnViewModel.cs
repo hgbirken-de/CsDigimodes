@@ -22,6 +22,10 @@ public class NxdnViewModel : ViewModelBase
     // ConsumeNxdnData bei einer laufenden Übertragung alle ~20ms erneut aufgerufen wird).
     readonly ConcurrentDictionary<int, byte> _pendingFetches = [];
 
+    // Merkt sich srcIds, für die radioid.net nachweislich keinen Treffer hatte, damit nicht
+    // bei jedem weiteren Frame derselben (unbekannten) Übertragung erneut gefragt wird.
+    readonly ConcurrentDictionary<int, byte> _failedLookups = [];
+
     string _callsign = string.Empty;
     string _srcId = string.Empty;
     string _dstId = string.Empty;
@@ -86,7 +90,14 @@ public class NxdnViewModel : ViewModelBase
 
         if (tm == TransceiveMode.Rx)
         {
-            if (_nxdnUserCache.TryGetValue(srcId, out var cached))
+            if (srcId <= 0)
+            {
+                // srcId=0 tritt planmäßig auf, wenn über eine YSF->NXDN-Bridge ohne
+                // zuordenbare Quell-ID gefunkt wird (protokollbedingt, kein Fehler).
+                // radioid.net kennt eine solche ID nie - Fetch-Versuch von vornherein sparen.
+                userData = null;
+            }
+            else if (_nxdnUserCache.TryGetValue(srcId, out var cached))
             {
                 userData = cached; // schon bekannt -> sofort verfügbar, kein Fetch nötig
             }
@@ -96,7 +107,7 @@ public class NxdnViewModel : ViewModelBase
                 // Fetch läuft im Hintergrund, Update erfolgt separat, sobald fertig.
                 // TryAdd verhindert, dass bei laufender Übertragung (alle ~20ms erneuter Aufruf)
                 // mehrfach parallel für dieselbe srcId gefetcht wird.
-                if (_pendingFetches.TryAdd(srcId, 0))
+                if (!_failedLookups.ContainsKey(srcId) && _pendingFetches.TryAdd(srcId, 0))
                 {
                     _ = FetchAndUpdateUserDataAsync(srcId);
                 }
@@ -178,6 +189,7 @@ public class NxdnViewModel : ViewModelBase
             }
             else
             {
+                _failedLookups.TryAdd(srcId, 0);
                 logger.Warn($"Unable to read user data, srcId = {srcId}");
             }
         }

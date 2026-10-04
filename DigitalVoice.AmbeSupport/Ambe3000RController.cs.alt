@@ -25,8 +25,7 @@ public class Ambe3000RController : IAmbe3000RController
 
     readonly string _portName;
     readonly int _baudRate;
-    readonly int _timeout; // milliseconds - Timeout je einzelnem ReadByte()/Read()-Aufruf
-    readonly int _packetTimeout; // milliseconds - GESAMT-Obergrenze für einen kompletten Paket-Empfang
+    readonly int _timeout; // milliseconds
     SerialPort? serialPort;
 
     /// <summary>
@@ -34,18 +33,14 @@ public class Ambe3000RController : IAmbe3000RController
     /// </summary>
     /// <param name="portName"></param>
     /// <param name="baudRate"></param>
-    /// <param name="timeout">Timeout je einzelnem Lesevorgang (ms).</param>
-    /// <param name="packetTimeout">Gesamt-Obergrenze für den Empfang eines kompletten Pakets in
-    /// <see cref="ReadPacketFromPort"/> (ms). Verhindert unbegrenztes Warten, falls der Stick auf
-    /// eine Anfrage nie antwortet - analog zur Python-Referenzimplementierung (DEFAULT_RESPONSE_TIMEOUT_S).</param>
-    public Ambe3000RController(string portName, int baudRate = 460800, int timeout = 1000, int packetTimeout = 3000)
+    /// <param name="timeout"></param>
+    public Ambe3000RController(string portName, int baudRate = 460800, int timeout = 1000)
     {
         _portName = portName;
         _baudRate = baudRate;
         _timeout = timeout;
-        _packetTimeout = packetTimeout;
 
-        logger.Debug($"port={portName}, baudrate={baudRate}, timeout={timeout} ms, packetTimeout={packetTimeout} ms");
+        logger.Debug($"port={portName}, baudrate={baudRate}, timeout={timeout} ms");
     }
 
     /// <summary>
@@ -238,19 +233,10 @@ public class Ambe3000RController : IAmbe3000RController
         if (!IsOpen)
             throw new InvalidOperationException("Serial port is not open.");
 
-        // Gesamt-Obergrenze über ALLE drei Phasen (Start-Byte, Header, Payload) hinweg - analog
-        // zur Python-Referenzimplementierung (deadline = time.monotonic() + timeout_s). Ohne das
-        // konnte diese Methode vorher bei einem nicht antwortenden Stick unbegrenzt blockieren,
-        // weil jede einzelne TimeoutException abgefangen und mit "continue" ignoriert wurde.
-        var deadline = DateTime.UtcNow.AddMilliseconds(_packetTimeout);
-
         // ---- 1) Find the start byte ----
         byte start;
         while (true)
         {
-            if (DateTime.UtcNow > deadline)
-                throw new TimeoutException($"Timed out waiting for start byte (packetTimeout={_packetTimeout} ms).");
-
             int b;
             try
             {
@@ -258,13 +244,13 @@ public class Ambe3000RController : IAmbe3000RController
             }
             catch (TimeoutException)
             {
-                continue; // just loop again, no packet yet - Gesamt-Deadline oben begrenzt das jetzt
+                continue; // just loop again, no packet yet
             }
 
             if (b == -1)
                 continue;
 
-            if ((byte)b == DV3000_START_BYTE)
+            if ((byte)b == 0x61)
             {
                 start = (byte)b;
                 break;
@@ -280,12 +266,9 @@ public class Ambe3000RController : IAmbe3000RController
         int offset = 1;
         while (offset < 4)
         {
-            if (DateTime.UtcNow > deadline)
-                throw new TimeoutException($"Timed out reading header (packetTimeout={_packetTimeout} ms).");
-
             try
             {
-                int read = serialPort!.Read(header, offset, 4 - offset);
+                int read = serialPort.Read(header, offset, 4 - offset);
                 if (read > 0)
                 {
                     offset += read;
@@ -306,12 +289,9 @@ public class Ambe3000RController : IAmbe3000RController
 
         while (offset < length)
         {
-            if (DateTime.UtcNow > deadline)
-                throw new TimeoutException($"Timed out reading payload (packetTimeout={_packetTimeout} ms).");
-
             try
             {
-                int read = serialPort!.Read(payload, offset, length - offset);
+                int read = serialPort.Read(payload, offset, length - offset);
                 if (read > 0)
                 {
                     offset += read;
@@ -386,7 +366,7 @@ public class Ambe3000RController : IAmbe3000RController
         }
         catch (TimeoutException)
         {
-            logger.Warn($"Timeout reading chip response (packetTimeout={_packetTimeout} ms).");
+            //logger.Warn("Timeout reading chip response.");
         }
         return null;
     }

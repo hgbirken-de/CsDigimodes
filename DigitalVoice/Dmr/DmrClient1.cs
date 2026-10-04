@@ -144,7 +144,7 @@ public sealed class DmrClient1
             }
             else
             {
-                logger.Error("Invalid PCM data: {}", pcm != null ? Convert.ToHexString(pcm) : "null");
+                logger.Error($"Unexpected response from AmbeController: {(pcm != null ? Convert.ToHexString(pcm) : "null")}");
             }
         }
     }

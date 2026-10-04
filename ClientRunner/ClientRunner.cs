@@ -39,7 +39,7 @@ class ClientRunner
     static void Main(string[] args)
     {
         DmrProtocol dmrProtocol = DmrProtocol.MmdvmHost;
-        Mode clientType = Mode.Dmr;         // <====  S E L E C T  C L I E N T  H E R E
+        Mode clientType = Mode.Nxdn;         // <====  S E L E C T  C L I E N T  H E R E
 
         AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
         {
@@ -152,7 +152,7 @@ class ClientRunner
             AudioPlayer = new AudioPlayer(),
             RecordRcvdUdpPackets = true,
             //SimulationFile = "./data/DcsClient_packets_20250912100514.bin",
-            SimulationFile = "C:/Users/hgbir/AppData/Roaming/DigitalVoiceControl/Dcs/Data/Dcs_packets_20250919153621_gps.bin",
+            SimulationFile = "C:/Users/hgbir/AppData/Roaming/CsDigimodes/Dcs/Data/Dcs_packets_20250919153621_gps.bin",
             SimulationMode = true,
         };
         dcsClient = new(cfg);
@@ -201,7 +201,7 @@ class ClientRunner
                 var (_, Host, Port, _) = DmrHosts.GetHostInfo(designator);
                 cfg.BmServerAddress = Host;
                 cfg.BmServerPort = Port;
-                cfg.SimulationModeFile = "C:\\Users\\hgbir\\AppData\\Roaming\\DigitalVoiceControl\\Dmr\\Data\\DmrClient2_packets_20250815100925.bin";
+                cfg.SimulationModeFile = "C:\\Users\\hgbir\\AppData\\Roaming\\CsDigimodes\\Dmr\\Data\\DmrClient2_packets_20250815100925.bin";
 
                 dmrClient2 = new(cfg);
                 dmrClient2.Start();
@@ -214,7 +214,7 @@ class ClientRunner
     /// </summary>
     static void RunFcsClient()
     {
-        string? simulationFile = @"C:\Users\hgbir\AppData\Roaming\DigitalVoiceControl\Fcs\Data\fcs_packets_20260108125139.bin";
+        string? simulationFile = @"C:\Users\hgbir\AppData\Roaming\CsDigimodes\Fcs\Data\fcs_packets_20260108125139.bin";
 
         FcsClientConfig cfg = new()
         {
@@ -250,7 +250,7 @@ class ClientRunner
     /// </summary>
     static void RunNxdnClient()
     {
-        string? simulationFile = @"C:\Users\hgbir\AppData\Roaming\DigitalVoiceControl\Fcs\Data\fcs_packets_20260108125139.bin";
+        string? simulationFile = @"C:/Users/hgbir/AppData/Roaming/CsDigimodes/Nxdn/Data/nxdn_packets_20251222141532.bin";
 
         int id = 20421;
         var (Host, Port) = NxdnHosts.GetHostInfo(id);
@@ -336,7 +336,7 @@ class ClientRunner
         ArgumentException.ThrowIfNullOrEmpty(Host, nameof(Host));
 
         //string? simulationFile = @"C:\Users\hgbir\VisualStudio_Source\repos\YSF\YsfClientRunner\bin\Debug\net8.0\data\YsfClient_packets_20250815153315.bin";
-        string? simulationFile = "C:/Users/hgbir/AppData/Roaming/DigitalVoiceControl/Ysf/Data/ysf_packets_20251002074928.bin";
+        string? simulationFile = "C:/Users/hgbir/AppData/Roaming/CsDigimodes/Ysf/Data/ysf_packets_20251002074928.bin";
 
 
         YsfClientConfig cfg = new()

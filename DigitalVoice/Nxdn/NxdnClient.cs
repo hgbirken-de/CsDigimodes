@@ -102,15 +102,15 @@ public sealed class NxdnClient
 
         for (int i = 0; i < _sessionCtx.RxAmbeData.Count; i++)
         {
-            byte[]? resp = _cfg.AmbeController!.ReceivePacket();
-            //logger.Debug("PCM: {}", resp != null ? Convert.ToHexString(resp) : "null");
-            if (AmbeHelper.IsSpeechPacket(resp))
+            byte[]? pcm = _cfg.AmbeController!.ReceivePacket();
+            //logger.Debug($"pcm: {(resp != null ? Convert.ToHexString(resp) : "null")}");
+            if (AmbeHelper.IsSpeechPacket(pcm))
             {
-                _rxQueue.Enqueue(resp!);
+                _rxQueue.Enqueue(pcm!);
             }
             else
             {
-                logger.Error("Unexpected response from AMBE server: ", resp != null ? Convert.ToHexString(resp) : "null");
+                logger.Error($"Unexpected response from AmbeController: {(pcm != null ? Convert.ToHexString(pcm) : "null")}");
             }
         }
     }
@@ -143,7 +143,7 @@ public sealed class NxdnClient
     /// <param name="e"></param>
     private void PingTimerCallback(object? sender, ElapsedEventArgs e)
     {
-        SendNxdnp();
+        SendPing();
     }
 
     /// <summary>
@@ -353,7 +353,7 @@ public sealed class NxdnClient
     /// <summary>
     /// Send a NXDNP (Ping) message to the reflector.
     /// </summary>
-    private void SendNxdnp()
+    private void SendPing()
     {
         byte[] buffer = new byte[17];
         Encoding.ASCII.GetBytes("NXDNP").CopyTo(buffer, 0);
@@ -419,7 +419,7 @@ public sealed class NxdnClient
 
         if (!_cfg.SimulationMode)
         {
-            SendNxdnp();
+            SendPing();
             _pingTimer.Start();
         }
     }

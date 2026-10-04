@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <!--
+    WiX v5 Installer-Definition für CsDigimodes.
+    Bauen mit:  wix build Installer.wxs -o CsDigimodes-Setup.msi
+    Voraussetzung: der publish-Ordner (siehe build.ps1) muss VOR diesem Befehl existieren.
+  -->
+  <Package Name="CsDigimodes"
+           Manufacturer="DL1HGB"
+           Version="1.0.0.0"
+           UpgradeCode="f134ff31-be71-4365-a36b-8e1c40ee6997">
+    <!-- upgradeCode NIEMALS ändern, auch nicht bei neuen Versionen - sonst erkennt der
+         Installer künftige Versionen nicht mehr als Update derselben App, sondern
+         installiert parallel ein zweites Mal. "version" bei jedem Release hochzählen. -->
+
+    <!-- Verhindert, dass eine ältere MSI über eine neuere installiert wird, und
+         deinstalliert automatisch die alte Version bei einem Update. -->
+    <MajorUpgrade DowngradeErrorMessage="Eine neuere Version von CsDigimodes ist bereits installiert." />
+
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Zielverzeichnis: %ProgramFiles%\CsDigimodes -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="CsDigimodes" />
+    </StandardDirectory>
+
+    <!-- Start-Menü-Ordner -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="ApplicationProgramsFolder" Name="CsDigimodes" />
+    </StandardDirectory>
+
+    <!-- Desktop (für die optionale Desktop-Verknüpfung) -->
+    <StandardDirectory Id="DesktopFolder" />
+
+    <Feature Id="MainFeature" Title="CsDigimodes" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="ApplicationShortcutStartMenu" />
+      <ComponentRef Id="ApplicationShortcutDesktop" />
+    </Feature>
+
+    <!-- Packt ALLES aus dem publish-Ordner ein (rekursiv) - kein manuelles Auflisten
+         einzelner Dateien nötig, WiX v5 übernimmt das Harvesting automatisch. -->
+    <ComponentGroup Id="AppFiles" Directory="INSTALLFOLDER">
+      <Files Include="publish\**" />
+    </ComponentGroup>
+
+    <!-- Start-Menü-Verknüpfung -->
+    <Component Id="ApplicationShortcutStartMenu" Directory="ApplicationProgramsFolder" Guid="*">
+      <Shortcut Id="StartMenuShortcut"
+                Name="CsDigimodes"
+                Description="CsDigimodes - Digital Voice Control App"
+                Target="[INSTALLFOLDER]DigitalVoiceControlApp.Desktop.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+      <!-- Sorgt dafür, dass der Start-Menü-Ordner beim Deinstallieren wieder entfernt wird. -->
+      <RemoveFolder Id="CleanUpStartMenuFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\DL1HGB\CsDigimodes" Name="StartMenuShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <!-- Desktop-Verknüpfung (optional - einfach den kompletten Component-Block und die
+         ComponentRef oben entfernen, falls du keine Desktop-Verknüpfung willst) -->
+    <Component Id="ApplicationShortcutDesktop" Directory="DesktopFolder" Guid="*">
+      <Shortcut Id="DesktopShortcut"
+                Name="CsDigimodes"
+                Description="CsDigimodes - Digital Voice Control App"
+                Target="[INSTALLFOLDER]DigitalVoiceControlApp.Desktop.exe"
+                WorkingDirectory="INSTALLFOLDER" />
+      <RegistryValue Root="HKCU" Key="Software\DL1HGB\CsDigimodes" Name="DesktopShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+  </Package>
+</Wix>
