@@ -33,7 +33,8 @@
 
     <StackPanel Orientation="Horizontal" Spacing="10">
 	<ListBox x:Name="_listBoxLastHeard"
-			 BorderBrush="Gray"
+			 BorderBrush="{DynamicResource PanelBorderBrush}"
+			 Background="{DynamicResource ListBackgroundBrush}"
 			 BorderThickness="1"
 			 CornerRadius="3"
 			 DoubleTapped="ListBoxLastHeard_DoubleTapped"
@@ -54,17 +55,17 @@
 		<ListBox.Styles>
 			<!-- Default row background -->
 			<Style Selector="ListBoxItem">
-				<Setter Property="Background" Value="White"/>
+				<Setter Property="Background" Value="{DynamicResource ListRowBrush}"/>
 			</Style>
 
 			<!-- Even rows -->
 			<Style Selector="ListBoxItem:nth-child(even)">
-				<Setter Property="Background" Value="#F0F0F0"/>  <!-- light grey -->
+				<Setter Property="Background" Value="{DynamicResource ListRowAltBrush}"/>  <!-- alternate row -->
 			</Style>
 
 			<!-- Optional: highlight on hover -->
 			<Style Selector="ListBoxItem:pointerover">
-				<Setter Property="Background" Value="#D0E4FF"/>
+				<Setter Property="Background" Value="{DynamicResource ListRowHoverBrush}"/>
 			</Style>
 			<Style Selector="ListBoxItem">
 				<!-- Remove built-in spacing -->

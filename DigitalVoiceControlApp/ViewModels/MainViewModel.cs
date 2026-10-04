@@ -417,6 +417,7 @@ public class MainViewModel : ViewModelBase
     public MainViewModel()
     {
         UserSettings us = UserSettings.Instance();
+        _isDarkTheme = !string.Equals(us.Gui.Theme, "Light", StringComparison.OrdinalIgnoreCase);
         SelectedMode = us.Common.LastMode;
 
         _textToSpeech = us.Common.TextToSpeech;
@@ -460,7 +461,34 @@ public class MainViewModel : ViewModelBase
 
     public bool IsModeComboBoxEnabled => !IsServerConnected;
     public bool IsReflectorsComboBoxEnabled => !IsServerConnected || (SelectedMode is Mode.Dmr);
-    public IBrush PttButtonBackground => _pttActive ? Brushes.Red : Brushes.LightGray;
+    // ---- Theme (Hell/Dunkel) -------------------------------------------------------------
+    bool _isDarkTheme = true;
+
+    /// <summary>
+    /// true = dunkles Bordeaux-Theme, false = helles. Wird per Menue umgeschaltet, sofort angewendet
+    /// und in Common.Theme gemerkt (gespeichert beim Beenden der App).
+    /// </summary>
+    public bool IsDarkTheme
+    {
+        get => _isDarkTheme;
+        set
+        {
+            if (_isDarkTheme == value) return;
+            _isDarkTheme = value;
+
+            UserSettings.Instance().Gui.Theme = value ? "Dark" : "Light";
+            if (Avalonia.Application.Current is { } app)
+                app.RequestedThemeVariant = value ? Avalonia.Styling.ThemeVariant.Dark : Avalonia.Styling.ThemeVariant.Light;
+
+            OnPropertyChanged(nameof(IsDarkTheme));
+            OnPropertyChanged(nameof(PttButtonBackground)); // Ruhefarbe haengt vom Theme ab
+        }
+    }
+
+    // PTT im Ruhezustand: themeabhaengiges Rose-Grau (aktiv bleibt Rot = "sendet").
+    static readonly IBrush _pttIdleLight = new SolidColorBrush(Avalonia.Media.Color.Parse("#E7D8DC"));
+    static readonly IBrush _pttIdleDark = new SolidColorBrush(Avalonia.Media.Color.Parse("#33202A"));
+    public IBrush PttButtonBackground => _pttActive ? Brushes.Red : (_isDarkTheme ? _pttIdleDark : _pttIdleLight);
 
     private AmbeConfig _ambeConfig;
 

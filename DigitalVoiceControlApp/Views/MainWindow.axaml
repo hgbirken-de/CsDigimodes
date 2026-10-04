@@ -8,6 +8,7 @@
         x:Class="DigitalVoiceControlApp.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="CsDigimodes"
+        Background="{DynamicResource AppBackgroundBrush}"
         SizeToContent="WidthAndHeight"
         CanResize="True" >
   

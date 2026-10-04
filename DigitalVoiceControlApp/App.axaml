@@ -1,8 +1,90 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="DigitalVoiceControlApp.App"
-             RequestedThemeVariant="Default">
+             RequestedThemeVariant="Dark">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <!-- =====================================================================
+           Bordeaux-Palette, umschaltbar: je Theme (Light/Dark) eine Variante mit
+           GLEICHEN Schluesseln. Die Views nutzen {DynamicResource ...} und
+           wechseln beim Umschalten von Application.RequestedThemeVariant live.
+           Farbton aendern = nur hier aendern.
+           ===================================================================== -->
+      <ResourceDictionary.ThemeDictionaries>
+
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#6B1527" />
+          <SolidColorBrush x:Key="GoldBrush" Color="#D9A441" />
+          <SolidColorBrush x:Key="AccentRingBrush" Color="#6B1527" />
+          <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FAF5F6" />
+          <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#F1E3E7" />
+          <SolidColorBrush x:Key="PanelBorderBrush" Color="#C9A5AF" />
+          <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#EFE3E6" />
+          <SolidColorBrush x:Key="StatusBarBorderBrush" Color="#D9C3C9" />
+          <SolidColorBrush x:Key="StatusTextBrush" Color="#5B4349" />
+          <SolidColorBrush x:Key="ListBackgroundBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ListRowBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="ListRowAltBrush" Color="#F8F0F2" />
+          <SolidColorBrush x:Key="ListRowHoverBrush" Color="#EBD3DA" />
+          <!-- Fluent-Akzentleiter -->
+          <Color x:Key="SystemAccentColor">#6B1527</Color>
+          <Color x:Key="SystemAccentColorDark1">#6B1527</Color>
+          <Color x:Key="SystemAccentColorDark2">#571020</Color>
+          <Color x:Key="SystemAccentColorDark3">#430C19</Color>
+          <Color x:Key="SystemAccentColorLight1">#8E2F46</Color>
+          <Color x:Key="SystemAccentColorLight2">#AE5568</Color>
+          <Color x:Key="SystemAccentColorLight3">#CB8494</Color>
+        </ResourceDictionary>
+
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="ToolbarBackgroundBrush" Color="#4A0E1F" />
+          <SolidColorBrush x:Key="GoldBrush" Color="#E0B04B" />
+          <SolidColorBrush x:Key="AccentRingBrush" Color="#C2455F" />
+          <SolidColorBrush x:Key="AppBackgroundBrush" Color="#1B0C11" />
+          <SolidColorBrush x:Key="PanelBackgroundBrush" Color="#26121A" />
+          <SolidColorBrush x:Key="PanelBorderBrush" Color="#43212B" />
+          <SolidColorBrush x:Key="StatusBarBackgroundBrush" Color="#14080C" />
+          <SolidColorBrush x:Key="StatusBarBorderBrush" Color="#2B141B" />
+          <SolidColorBrush x:Key="StatusTextBrush" Color="#BFA1A9" />
+          <SolidColorBrush x:Key="ListBackgroundBrush" Color="#1F0F15" />
+          <SolidColorBrush x:Key="ListRowBrush" Color="#26121A" />
+          <SolidColorBrush x:Key="ListRowAltBrush" Color="#2F1620" />
+          <SolidColorBrush x:Key="ListRowHoverBrush" Color="#4A2430" />
+          <SolidColorBrush x:Key="TextControlBackground" Color="#170A0E" />
+          <SolidColorBrush x:Key="TextControlBackgroundPointerOver" Color="#1E0E13" />
+          <SolidColorBrush x:Key="TextControlBackgroundFocused" Color="#170A0E" />
+          <SolidColorBrush x:Key="TextControlBackgroundDisabled" Color="#1A0C10" />
+          <SolidColorBrush x:Key="TextControlBorderBrush" Color="#4A2A34" />
+          <SolidColorBrush x:Key="TextControlBorderBrushPointerOver" Color="#6A3A48" />
+          <SolidColorBrush x:Key="TextControlBorderBrushFocused" Color="#C2455F" />
+          <SolidColorBrush x:Key="TextControlBorderBrushDisabled" Color="#35202A" />
+          <SolidColorBrush x:Key="TextControlForeground" Color="#F3E3E7" />
+          <SolidColorBrush x:Key="SliderTrackFill" Color="#4B2A34" />
+          <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#5A3541" />
+          <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#5A3541" />
+          <SolidColorBrush x:Key="SliderTrackValueFill" Color="#C2455F" />
+          <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="#D2566F" />
+          <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="#AA3A52" />
+          <SolidColorBrush x:Key="SliderTickBarFill" Color="#6A444F" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#2A141C" />
+          <SolidColorBrush x:Key="MenuFlyoutPresenterBorderBrush" Color="#5A2A38" />
+          <SolidColorBrush x:Key="ContextMenuBackground" Color="#2A141C" />
+          <SolidColorBrush x:Key="ContextMenuBorderBrush" Color="#5A2A38" />
+          <!-- Fluent-Akzentleiter -->
+          <Color x:Key="SystemAccentColor">#A32A47</Color>
+          <Color x:Key="SystemAccentColorDark1">#8A2239</Color>
+          <Color x:Key="SystemAccentColorDark2">#6B1527</Color>
+          <Color x:Key="SystemAccentColorDark3">#4A0E1F</Color>
+          <Color x:Key="SystemAccentColorLight1">#B23A55</Color>
+          <Color x:Key="SystemAccentColorLight2">#C2455F</Color>
+          <Color x:Key="SystemAccentColorLight3">#D98598</Color>
+        </ResourceDictionary>
+
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Application.Resources>
 
   <Application.Styles>
     <FluentTheme />
@@ -24,7 +106,7 @@
             <!-- Header -->
             <Border
                 ZIndex="1"
-                Background="{DynamicResource SystemControlBackgroundAltHighBrush}"
+                Background="{DynamicResource AppBackgroundBrush}"
                 Padding="5,0,5,0"
                 Margin="5,0,0,0">
               <TextBlock
@@ -39,7 +121,7 @@
                 Grid.ColumnSpan="2"
                 CornerRadius="4"
                 Margin="0,10,0,0"
-                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                BorderBrush="{DynamicResource PanelBorderBrush}"
                 BorderThickness="1">
               <ContentPresenter
                   Name="PART_ContentPresenter"

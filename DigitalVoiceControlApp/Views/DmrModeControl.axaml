@@ -8,7 +8,7 @@
   <StackPanel Orientation="Vertical" Spacing="5">
 
     <!-- Gruppierter Block: CALL/TA, SRC/DST, RPT - gemeinsam zentriert -->
-    <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Background="#EAF3FB" Padding="10" HorizontalAlignment="Center" Width="400">
+    <Border BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="3" Background="{DynamicResource PanelBackgroundBrush}" Padding="10" HorizontalAlignment="Center" Width="400">
       <StackPanel Orientation="Vertical" Spacing="5" >
 
         <StackPanel Orientation="Horizontal" Spacing="10">
@@ -36,7 +36,8 @@
     <!-- ListBox bleibt eigenständig, unabhängig von der Textfeld-Gruppe zentriert -->
     <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
       <ListBox x:Name="_listBoxLastHeard"
-               BorderBrush="Gray"
+               BorderBrush="{DynamicResource PanelBorderBrush}"
+               Background="{DynamicResource ListBackgroundBrush}"
                BorderThickness="1"
                CornerRadius="3"
                DoubleTapped="ListBoxLastHeard_DoubleTapped"
@@ -57,13 +58,13 @@
 
         <ListBox.Styles>
           <Style Selector="ListBoxItem">
-            <Setter Property="Background" Value="White"/>
+            <Setter Property="Background" Value="{DynamicResource ListRowBrush}"/>
           </Style>
           <Style Selector="ListBoxItem:nth-child(even)">
-            <Setter Property="Background" Value="#F0F0F0"/>
+            <Setter Property="Background" Value="{DynamicResource ListRowAltBrush}"/>
           </Style>
           <Style Selector="ListBoxItem:pointerover">
-            <Setter Property="Background" Value="#D0E4FF"/>
+            <Setter Property="Background" Value="{DynamicResource ListRowHoverBrush}"/>
           </Style>
           <Style Selector="ListBoxItem">
             <Setter Property="Padding" Value="0"/>

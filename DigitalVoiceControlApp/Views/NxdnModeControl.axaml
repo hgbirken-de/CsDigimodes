@@ -9,7 +9,7 @@
   <StackPanel Orientation="Vertical" Spacing="5">
 
   <!-- Gruppierter Block: CALL/TA, SRC/DST, RPT - gemeinsam zentriert -->
-  <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Background="#EAF3FB" Padding="10" HorizontalAlignment="Center" Width="400">
+  <Border BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="3" Background="{DynamicResource PanelBackgroundBrush}" Padding="10" HorizontalAlignment="Center" Width="400">
 	  <StackPanel Orientation="Vertical" Spacing="5" >
 		  <StackPanel Orientation="Horizontal" Spacing="10">
 			  <TextBlock Text="CALL" VerticalAlignment="Center" Width="35" />
@@ -29,7 +29,8 @@
 
 	<StackPanel Orientation="Horizontal" Spacing="10">
 		<ListBox x:Name="_listBoxLastHeard"
-				 BorderBrush="Gray"
+				 BorderBrush="{DynamicResource PanelBorderBrush}"
+				 Background="{DynamicResource ListBackgroundBrush}"
 				 BorderThickness="1"
 				 CornerRadius="3"
 				 DoubleTapped="ListBoxLastHeard_DoubleTapped"
@@ -51,17 +52,17 @@
 			<ListBox.Styles>
 				<!-- Default row background -->
 				<Style Selector="ListBoxItem">
-					<Setter Property="Background" Value="White"/>
+					<Setter Property="Background" Value="{DynamicResource ListRowBrush}"/>
 				</Style>
 
 				<!-- Even rows -->
 				<Style Selector="ListBoxItem:nth-child(even)">
-					<Setter Property="Background" Value="#F0F0F0"/>  <!-- light grey -->
+					<Setter Property="Background" Value="{DynamicResource ListRowAltBrush}"/>  <!-- alternate row -->
 				</Style>
 
 				<!-- Optional: highlight on hover -->
 				<Style Selector="ListBoxItem:pointerover">
-					<Setter Property="Background" Value="#D0E4FF"/>
+					<Setter Property="Background" Value="{DynamicResource ListRowHoverBrush}"/>
 				</Style>
 
 				<Style Selector="ListBoxItem">

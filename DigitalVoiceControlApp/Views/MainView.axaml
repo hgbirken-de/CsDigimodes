@@ -11,18 +11,23 @@
   
   <UserControl.Resources>
     <local:EnumToUpperConverter x:Key="EnumToUpperConverter" />
+    <local:ThemeIconConverter x:Key="ThemeIconConverter" />
   </UserControl.Resources>
 
   <UserControl.Styles>
     <Style Selector="Slider.mic-small /template/Thumb">
-      <Setter Property="Width" Value="10"/>
-      <Setter Property="Height" Value="10"/>
-      <Setter Property="Background" Value="Red"/>
+      <Setter Property="Width" Value="12"/>
+      <Setter Property="Height" Value="12"/>
+      <Setter Property="Background" Value="{DynamicResource GoldBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentRingBrush}"/>
+      <Setter Property="BorderThickness" Value="2"/>
     </Style>
     <Style Selector="Slider.rx-small /template/Thumb">
-      <Setter Property="Width" Value="10"/>
-      <Setter Property="Height" Value="10"/>
-      <Setter Property="Background" Value="Red"/>
+      <Setter Property="Width" Value="12"/>
+      <Setter Property="Height" Value="12"/>
+      <Setter Property="Background" Value="{DynamicResource GoldBrush}"/>
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentRingBrush}"/>
+      <Setter Property="BorderThickness" Value="2"/>
     </Style>
   </UserControl.Styles>
 
@@ -47,10 +52,95 @@
     </DataTemplate>
   </UserControl.DataTemplates>
 
-  <DockPanel>
+  <DockPanel Background="{DynamicResource AppBackgroundBrush}">
 
-    <!-- T O O L B A R  (Surrogate  "#DDDDDD" "#E6F5F5") -->
-    <Border Background="#E6F5F5" DockPanel.Dock="Top" Padding="4">
+    <!-- T O O L B A R  (Bordeaux, umschaltbar) -->
+    <Border Background="{DynamicResource ToolbarBackgroundBrush}" DockPanel.Dock="Top" Padding="4">
+      <Border.Resources>
+        <!-- Diese Fluent-Ressourcen gelten NUR innerhalb der Werkzeugleiste, je Theme eine Variante. -->
+        <ResourceDictionary>
+          <ResourceDictionary.ThemeDictionaries>
+          <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="ButtonBackground" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#3AFFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#14FFFFFF" />
+            <SolidColorBrush x:Key="ButtonForeground" Color="#FBEFF1" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#FBEFF1" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBackground" Color="#D9A441" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundPointerOver" Color="#E6BA62" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundPressed" Color="#B8862B" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#F2D18A" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#F7DFA6" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#E4C070" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ComboBoxBackground" Color="#86243D" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#9A3049" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#74203A" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#7A2237" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused" Color="#86243D" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#40FFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#66FFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#66FFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled" Color="#20FFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused" Color="#D9A441" />
+            <SolidColorBrush x:Key="ComboBoxForeground" Color="#FBEFF1" />
+            <SolidColorBrush x:Key="ComboBoxForegroundFocused" Color="#FBEFF1" />
+            <SolidColorBrush x:Key="ComboBoxForegroundFocusedPressed" Color="#FBEFF1" />
+            <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="#B98F9A" />
+            <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#FBEFF1" />
+          </ResourceDictionary>
+          <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="ButtonBackground" Color="#1AFFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#2EFFFFFF" />
+            <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="ButtonForeground" Color="#F6E4E8" />
+            <SolidColorBrush x:Key="ButtonForegroundPointerOver" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="ButtonForegroundPressed" Color="#F6E4E8" />
+            <SolidColorBrush x:Key="ButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBackground" Color="#E0B04B" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundPointerOver" Color="#EBC268" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundPressed" Color="#BF923A" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundChecked" Color="#F2D18A" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPointerOver" Color="#F7DFA6" />
+            <SolidColorBrush x:Key="ToggleButtonBackgroundCheckedPressed" Color="#E4C070" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushChecked" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPointerOver" Color="Transparent" />
+            <SolidColorBrush x:Key="ToggleButtonBorderBrushCheckedPressed" Color="Transparent" />
+            <SolidColorBrush x:Key="ComboBoxBackground" Color="#5F1427" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPointerOver" Color="#721B33" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundPressed" Color="#50111F" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundDisabled" Color="#55202E" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundUnfocused" Color="#5F1427" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrush" Color="#24FFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPointerOver" Color="#44FFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushPressed" Color="#44FFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBorderBrushDisabled" Color="#0FFFFFFF" />
+            <SolidColorBrush x:Key="ComboBoxBackgroundBorderBrushFocused" Color="#E0B04B" />
+            <SolidColorBrush x:Key="ComboBoxForeground" Color="#F6E4E8" />
+            <SolidColorBrush x:Key="ComboBoxForegroundFocused" Color="#F6E4E8" />
+            <SolidColorBrush x:Key="ComboBoxForegroundFocusedPressed" Color="#F6E4E8" />
+            <SolidColorBrush x:Key="ComboBoxForegroundDisabled" Color="#9C7C85" />
+            <SolidColorBrush x:Key="ComboBoxDropDownGlyphForeground" Color="#F6E4E8" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#2A141C" />
+            <SolidColorBrush x:Key="ComboBoxDropDownBorderBrush" Color="#5A2A38" />
+          </ResourceDictionary>
+          </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+      </Border.Resources>
       <StackPanel Orientation="Horizontal" Spacing="2">
 
         <Button Width="33" Height="33" Content="&#9776;" FontSize="18" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
@@ -58,9 +148,10 @@
             <MenuFlyout Placement="BottomEdgeAlignedLeft">
               <MenuItem Header="Settings" Command="{Binding ShowSettingsDialogCommand}">
                 <MenuItem.Icon>
-                  <Image Source="avares://DigitalVoiceControlApp/Assets/icons8-settings-50.png" Width="16" Height="16"/>
+                  <Image Source="{Binding $self.ActualThemeVariant, Converter={StaticResource ThemeIconConverter}, ConverterParameter=icons8-settings-50}" Width="16" Height="16"/>
                 </MenuItem.Icon>
               </MenuItem>
+              <MenuItem Header="Dark theme" ToggleType="CheckBox" IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
               <Separator/>
               <MenuItem Header="APRS.fi" Command="{Binding OpenUrlCommand}" CommandParameter="http://www.aprs.fi">
                 <MenuItem.Icon>
@@ -96,14 +187,14 @@
               <Separator/>
               <MenuItem Header="Exit" Command="{Binding ExitCommand}">
                 <MenuItem.Icon>
-                  <Image Source="avares://DigitalVoiceControlApp/Assets/Exit_16x.png" Width="16" Height="16"/>
+                  <Image Source="{Binding $self.ActualThemeVariant, Converter={StaticResource ThemeIconConverter}, ConverterParameter=Exit_16x}" Width="16" Height="16"/>
                 </MenuItem.Icon>
               </MenuItem>
             </MenuFlyout>
           </Button.Flyout>
         </Button>
 
-        <ToggleButton Command="{Binding ConnectCommand}" IsChecked="{Binding IsServerConnected, Mode=TwoWay}" Background="Orange" Height="33" Width="33" >
+        <ToggleButton Command="{Binding ConnectCommand}" IsChecked="{Binding IsServerConnected, Mode=TwoWay}" Background="{DynamicResource GoldBrush}" Height="33" Width="33" >
           <StackPanel Orientation="Horizontal">
             <Image Width="16" Height="16" Source="{Binding ConnectionIcon}" />
           </StackPanel>
@@ -135,12 +226,12 @@
     </Border>
 
     <!-- S T A T U S B A R -->
-    <Border DockPanel.Dock="Bottom" Background="#EEE" BorderBrush="#CCC" BorderThickness="1,0,0,0" Padding="4">
+    <Border DockPanel.Dock="Bottom" Background="{DynamicResource StatusBarBackgroundBrush}" BorderBrush="{DynamicResource StatusBarBorderBrush}" BorderThickness="1,0,0,0" Padding="4">
       <Grid>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <TextBlock Text="{Binding StatusMessage}" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding StatusMessage}" Foreground="{DynamicResource StatusTextBrush}" Grid.Column="0" HorizontalAlignment="Left" VerticalAlignment="Center" />
       </Grid>
     </Border>
 
@@ -161,7 +252,7 @@
       </Grid.RowDefinitions>
 
       <!-- Sliders -->
-      <Border BorderBrush="Gray" BorderThickness="1" CornerRadius="3" Background="#EAF3FB" Padding="0" HorizontalAlignment="Center" Width="400">
+      <Border BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="3" Background="{DynamicResource PanelBackgroundBrush}" Padding="0" HorizontalAlignment="Center" Width="400">
       <Grid Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Margin="0" >
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
@@ -170,7 +261,7 @@
 
         <!-- MIC Gain -->
         <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="0" HorizontalAlignment="Center">
-          <Image Source="avares://DigitalVoiceControlApp/Assets/AudioRecording.png" Width="35" Height="20" Margin="0,0,4,0" />
+          <Image Source="{Binding $self.ActualThemeVariant, Converter={StaticResource ThemeIconConverter}, ConverterParameter=AudioRecording}" Width="35" Height="20" Margin="0,0,4,0" />
           <Slider Width="130" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding MicGain, Mode=TwoWay}" >
             <Slider.Classes>
               <x:String>mic-small</x:String>
@@ -183,7 +274,7 @@
 
         <!-- RX Volume -->
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="0" HorizontalAlignment="Center">
-          <Image Source="avares://DigitalVoiceControlApp/Assets/Audio_16xLG.png" Width="35" Height="20" Margin="0,0,4,0" />
+          <Image Source="{Binding $self.ActualThemeVariant, Converter={StaticResource ThemeIconConverter}, ConverterParameter=Audio_16xLG}" Width="35" Height="20" Margin="0,0,4,0" />
           <Slider Width="130" Maximum="30" Minimum="-40" TickPlacement="BottomRight" TickFrequency="10" IsSnapToTickEnabled="False" Value="{Binding RxVolume, Mode=TwoWay}" >
             <Slider.Classes>
               <x:String>rx-small</x:String>

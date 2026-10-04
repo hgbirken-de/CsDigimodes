@@ -4,6 +4,7 @@
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
         x:Class="DigitalVoiceControlApp.Views.SettingsDialog"
         Title="Application Settings"
+        Background="{DynamicResource AppBackgroundBrush}"
         Width="550" 
         WindowStartupLocation="CenterOwner"
         SizeToContent="WidthAndHeight"
@@ -15,7 +16,7 @@
 
       <!-- Common -->
       <StackPanel Margin="16" Spacing="10" Orientation="Vertical" >
-        <HeaderedContentControl Header="Common" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+        <HeaderedContentControl Header="Common" BorderThickness="1" BorderBrush="{DynamicResource PanelBorderBrush}" CornerRadius="4" Padding="10">
           <!--<HeaderedContentControl.Header>
           <TextBlock Text="Common" FontWeight="Bold"/>
           </HeaderedContentControl.Header>-->
@@ -57,7 +58,7 @@
         </HeaderedContentControl>
 
         <!-- DMR Data -->
-        <HeaderedContentControl Header="DMR" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+        <HeaderedContentControl Header="DMR" BorderThickness="1" BorderBrush="{DynamicResource PanelBorderBrush}" CornerRadius="4" Padding="10">
           <StackPanel Orientation="Vertical" Spacing="5">
             <StackPanel Orientation="Horizontal" Spacing="10" >
               <TextBlock Text="Password" VerticalAlignment="Center" Width="80" />
@@ -131,7 +132,7 @@
         </HeaderedContentControl>
 
         <!-- NXDN Data -->
-        <HeaderedContentControl Header="NXDN" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+        <HeaderedContentControl Header="NXDN" BorderThickness="1" BorderBrush="{DynamicResource PanelBorderBrush}" CornerRadius="4" Padding="10">
           <StackPanel Orientation="Vertical" Spacing="5">
             <!-- Reflector address/port-->
             <StackPanel Orientation="Horizontal" Spacing="10" >
@@ -148,7 +149,7 @@
         </HeaderedContentControl>
 
         <!-- FCS Data -->
-        <HeaderedContentControl Header="FCS" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+        <HeaderedContentControl Header="FCS" BorderThickness="1" BorderBrush="{DynamicResource PanelBorderBrush}" CornerRadius="4" Padding="10">
           <StackPanel Orientation="Vertical" Spacing="5">
             <!-- Reflector address/port-->
             <StackPanel Orientation="Horizontal" Spacing="10" >
@@ -170,12 +171,12 @@
         </HeaderedContentControl>
 
         <!-- YSF Data -->
-        <HeaderedContentControl Header="YSF" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+        <HeaderedContentControl Header="YSF" BorderThickness="1" BorderBrush="{DynamicResource PanelBorderBrush}" CornerRadius="4" Padding="10">
        
         </HeaderedContentControl>
 
         <!-- AMBE Data -->
-        <HeaderedContentControl Header="AMBE" BorderThickness="1" BorderBrush="LightGray" CornerRadius="4" Padding="10">
+        <HeaderedContentControl Header="AMBE" BorderThickness="1" BorderBrush="{DynamicResource PanelBorderBrush}" CornerRadius="4" Padding="10">
           <StackPanel Orientation="Vertical" Spacing="5">
             <!-- AMBE Server -->
             <StackPanel Orientation="Horizontal" Spacing="10" >

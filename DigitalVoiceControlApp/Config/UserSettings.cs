@@ -164,6 +164,7 @@ public class Common
     public string Locator { get; set; } = "JO54OL";
     public double MicGain { get; set; } = 50;
     public string Name { get; set; } = "Unknown";
+    public string Theme { get; set; } = "Dark"; // "Dark" oder "Light"
     public bool RecordRcvdUdpPackets { get; set; } = false;
     public double RxVolume { get; set; } = 50;
     public bool TextToSpeech { get; set; } = false;
@@ -212,6 +213,7 @@ public class Gui
     public int FrameYPos { get; set; } = 10;
     public double FrameHeight { get; set; } = 0;
     public double FrameWidth { get; set; } = 0;
+    public string Theme { get; set; } = "Dark"; // "Dark" oder "Light"
 }
 
 public class Hotspot
