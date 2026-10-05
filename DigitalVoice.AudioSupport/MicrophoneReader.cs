@@ -1,5 +1,6 @@
 ﻿using NAudio.Wave;
 using NLog;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace DigitalVoice.AudioSupport; 
@@ -25,6 +26,8 @@ public sealed class MicrophoneReader(int sampleRate = 8000, int channels = 1) : 
         get => _gainDb;
         set { _gainDb = value; _gain = (float)Math.Pow(10.0, value / 20.0); }
     }
+
+    public ConcurrentQueue<byte[]> GetPcmQueue() => throw new NotSupportedException($"");
 
     public void Start()
     {

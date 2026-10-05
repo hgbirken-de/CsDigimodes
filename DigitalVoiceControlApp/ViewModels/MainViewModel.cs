@@ -404,7 +404,7 @@ public class MainViewModel : ViewModelBase
     XrfClient? _xrfClient;
    
     readonly IAudioPlayer _audioPlayer = new AudioPlayer();
-    readonly IMicrophoneReader _microphoneReader = new MicrophoneReader();
+    readonly IMicrophoneReader _microphoneReader = new MicrophoneReader2();
 
     readonly ConcurrentDictionary<int, (string, string)> _dmridToCallsign = [];
 
@@ -936,7 +936,7 @@ public class MainViewModel : ViewModelBase
                
                 AudioPlayer = _audioPlayer,
                 MicrophoneReader = _microphoneReader,
-                
+
                 RecordAudio = false,
                 RecordRxPackets = us.Common.RecordRcvdUdpPackets,
                 RecordRxPacketsFile = us.Common.RecordRcvdUdpPackets ? Path.Combine(UserSettings.Dir(Mode.Nxdn, UserSettings.FileType.Data), $"nxdn_packets_{DateTime.Now:yyyyMMddHHmmss}.bin") : null,

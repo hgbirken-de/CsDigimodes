@@ -75,6 +75,10 @@ public class DmrViewModel : ViewModelBase
     // ConsumeDmrData bei einer laufenden Übertragung alle ~20ms erneut aufgerufen wird).
     readonly ConcurrentDictionary<int, byte> _pendingFetches = [];
 
+    // Merkt sich srcIds, für die radioid.net nachweislich keinen Treffer hatte, damit nicht
+    // bei jedem weiteren Frame derselben (unbekannten) Übertragung erneut gefragt wird.
+    readonly ConcurrentDictionary<int, byte> _failedLookups = [];
+
     /// <summary>
     /// Constructor.
     /// </summary>
@@ -127,7 +131,7 @@ public class DmrViewModel : ViewModelBase
                     // Fetch läuft im Hintergrund, Update erfolgt separat, sobald fertig.
                     // TryAdd verhindert, dass bei laufender Übertragung (alle ~20ms erneuter Aufruf)
                     // mehrfach parallel für dieselbe srcId gefetcht wird.
-                    if (_pendingFetches.TryAdd(srcId, 0))
+                    if (!_failedLookups.ContainsKey(srcId) && _pendingFetches.TryAdd(srcId, 0))
                     {
                         _ = FetchAndUpdateUserDataAsync(srcId);
                     }
@@ -219,6 +223,7 @@ public class DmrViewModel : ViewModelBase
             }
             else
             {
+                _failedLookups.TryAdd(srcId, 0);
                 logger.Warn($"Unable to read user data, srcId = {srcId}");
             }
         }

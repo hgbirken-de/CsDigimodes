@@ -1,10 +1,14 @@
-﻿namespace DigitalVoice.AudioSupport;
+﻿using System.Collections.Concurrent;
+
+namespace DigitalVoice.AudioSupport;
 
 public interface IMicrophoneReader : IDisposable
 {
     event EventHandler<byte[]>? AudioAvailable;
 
     float GainDb { get; set; }
+
+    ConcurrentQueue<byte[]> GetPcmQueue();
 
     void Start();
     void Stop();

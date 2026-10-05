@@ -46,18 +46,13 @@ public sealed class NxdnClient
 
     readonly ConcurrentQueue<byte[]> _rxQueue = new();
 
+    readonly ConcurrentQueue<byte[]> _txQueue = new();
+
     readonly System.Timers.Timer _pingTimer = new(3000);
 
     readonly System.Timers.Timer _rxTimer = new(20); // corresponds to 1 AMBE/PCM block
 
-    // ---- TX: Mikrofon -> PCM-Queue (_cfg.MicrophoneReader.GetPcmQueue()) -> EIN Worker-Thread -> AMBE-Chip -> UDP ----
-    const int PcmBlockBytes = 320;                    // 20 ms PCM: 160 Samples * 2 Bytes
-
-    readonly object _chipLock = new();                // jede Transaktion mit dem AMBE-Chip exklusiv (TX-Worker und DecompressAmbe)
-    readonly object _frameLock = new();               // Frame-Versand des Workers gegen den EOT-Header abgrenzen
-    readonly AutoResetEvent _micSignal = new(false);  // vom Mikrofon geweckt (AudioAvailable)
-    CancellationTokenSource? _txCts;
-    Thread? _txThread;
+    readonly System.Timers.Timer _txTimer = new(20);
 
     Thread? _udpReaderThread; // read NXDN UDP packets
 
@@ -83,8 +78,7 @@ public sealed class NxdnClient
 
         _pingTimer.Elapsed += PingTimerCallback;
         _rxTimer.Elapsed += RxTimerCallback;
-
-       
+        _txTimer.Elapsed += TxTimerCallback;
     }
 
     /// <summary>
@@ -99,28 +93,24 @@ public sealed class NxdnClient
             return;
         }
 
-        // Die ganze Folge "4 senden, 4 lesen" exklusiv: der TX-Worker darf dazwischen nicht an den Chip.
-        lock (_chipLock)
+        foreach (var b in _sessionCtx.RxAmbeData)
         {
-            foreach (var b in _sessionCtx.RxAmbeData)
-            {
-                b.CopyTo(ambeChannelPacket, 6);
-                //logger.Debug("AMBE: {}", Convert.ToHexString(ambeChannelPacket));
-                _cfg.AmbeController!.SendPacket(ambeChannelPacket);
-            }
+            b.CopyTo(ambeChannelPacket, 6);
+            //logger.Debug("AMBE: {}", Convert.ToHexString(ambeChannelPacket));
+            _cfg.AmbeController!.SendPacket(ambeChannelPacket);
+        }
 
-            for (int i = 0; i < _sessionCtx.RxAmbeData.Count; i++)
+        for (int i = 0; i < _sessionCtx.RxAmbeData.Count; i++)
+        {
+            byte[]? pcm = _cfg.AmbeController!.ReceivePacket();
+            //logger.Debug($"pcm: {(resp != null ? Convert.ToHexString(resp) : "null")}");
+            if (AmbeHelper.IsSpeechPacket(pcm))
             {
-                byte[]? pcm = _cfg.AmbeController!.ReceivePacket();
-                //logger.Debug($"pcm: {(resp != null ? Convert.ToHexString(resp) : "null")}");
-                if (AmbeHelper.IsSpeechPacket(pcm))
-                {
-                    _rxQueue.Enqueue(pcm!);
-                }
-                else
-                {
-                    logger.Error($"Unexpected response from AmbeController: {(pcm != null ? Convert.ToHexString(pcm) : "null")}");
-                }
+                _rxQueue.Enqueue(pcm!);
+            }
+            else
+            {
+                logger.Error($"Unexpected response from AmbeController: {(pcm != null ? Convert.ToHexString(pcm) : "null")}");
             }
         }
     }
@@ -449,8 +439,6 @@ public sealed class NxdnClient
         _pingTimer.Stop(); // TODO: Dispose???
         _rxTimer.Stop();
 
-        StopTxResources(); // falls gerade gesendet wird: Mikrofon und TX-Worker beenden, bevor der Chip geschlossen wird
-
         _cfg.AmbeController!.Close();
 
         ExternalNxdnDataConsumer?.Invoke(_sessionCtx);
@@ -479,152 +467,130 @@ public sealed class NxdnClient
             logger.Debug($"Sent header: {_sessionCtx.TxFrameNumber}");
             _sessionCtx.TxFrameNumber++;
 
-            StartTxWorker();                              // zuerst der Verbraucher ...
-            if (_cfg.MicrophoneReader is { } mic)
-            {
-                mic.AudioAvailable += OnMicSignal;        // ... dann der Wecker ...
-                mic.Start();                              // ... dann das Mikrofon
-            }
+            _cfg.MicrophoneReader?.Start();
+            _txTimer.Start();
         }
         else
         {
-            StopTxResources(); // Mikrofon stoppen, Worker beenden, Queue leeren
+            _cfg.MicrophoneReader?.Stop();
+            _txTimer.Stop();
+            _txQueue.Clear();
+            
+            _sessionCtx.Eot = true;
 
-            lock (_frameLock) // nach dem Worker-Stopp kann kein Voice-Frame mehr hinter den EOT-Header rutschen
-            {
-                _sessionCtx.Eot = true;
+            byte[] frame = NxdnCodec.EncodeFrame(_sessionCtx);
+            SendDatagram(frame, frame.Length);
+            logger.Debug($"Sent header: {_sessionCtx.TxFrameNumber}");
+            _sessionCtx.TxFrameNumber++;
 
-                byte[] frame = NxdnCodec.EncodeFrame(_sessionCtx);
-                SendDatagram(frame, frame.Length);
-                logger.Debug($"Sent header: {_sessionCtx.TxFrameNumber}");
-                _sessionCtx.TxFrameNumber++;
-
-                _sessionCtx.StreamState = StreamState.End;
-                _sessionCtx.TransceiveMode = TransceiveMode.Rx;
-            }
+            _sessionCtx.StreamState = StreamState.End;
+            _sessionCtx.TransceiveMode = TransceiveMode.Rx;
 
             ExternalNxdnDataConsumer?.Invoke( _sessionCtx );
         }
     }
 
-    /// <summary>Wecker fuer den TX-Worker. Laeuft auf dem Mikrofon-Aufnahme-Thread: nur signalisieren, nichts verarbeiten.</summary>
-    private void OnMicSignal(object? sender, byte[] block) => _micSignal.Set();
+    /// <summary>
+    /// Callback method of timer <c>_txTimer</c>. 
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="e"></param>
+    //internal void TxTimerCallback(object? sender, ElapsedEventArgs e)
+    //{
 
-    /// <summary>Startet den TX-Worker (einziger Thread, der im Sendebetrieb den Chip fuer die Kodierung anspricht).</summary>
-    private void StartTxWorker()
+    //    if (_sessionCtx.TransceiveMode != TransceiveMode.Tx)
+    //        return;
+
+    //    if (_cfg.MicrophoneReader != null && _cfg.MicrophoneReader.TryRead(ambeSpeechPacket, 6, ambeSpeechPacket.Length - 6, out int bytesRead))
+    //    {
+    //        AmbeHelper.SwapPcmBytes(ambeSpeechPacket); // LE -> BE
+    //        _cfg.AmbeController!.SendPacket(ambeSpeechPacket);
+    //        byte[]? ambe = _cfg.AmbeController.ReceivePacket();
+    //        if (AmbeHelper.IsAmbePacket(ambe))
+    //            _txQueue.Enqueue(ambe![6..]); // ignore 6 byte header
+    //    }
+
+    //    // TODO: consider VW mode
+
+    //    const int n = 4; // 4 AMBE bocks per NXDND frame
+    //    if (_txQueue.Count >= n)
+    //    {
+    //        for (int i = 0; i < n; i++)
+    //        {
+    //            if (_txQueue.TryDequeue(out byte[]? item) && item.Length == 7)
+    //            {
+    //                item.CopyTo(_sessionCtx.TxAmbeData, i * 7);
+    //            }
+    //            else
+    //            {
+    //                logger.Error($"Unable to read TX queue");
+    //                // TODO: throw exception?
+    //            }
+    //        }
+    //        if (_sessionCtx.TransceiveMode == TransceiveMode.Tx) // late check to prevent thread related problems
+    //        {
+    //            byte[] nxdxdFrame = NxdnCodec.EncodeFrame(_sessionCtx);
+    //            SendDatagram(nxdxdFrame, nxdxdFrame.Length);
+    //            logger.Debug($"Sent voice frame: {_sessionCtx.TxFrameNumber}");
+    //            _sessionCtx.TxFrameNumber++;
+    //        }
+    //    }
+    //}
+
+    int _txBusy;           // 0 = frei, 1 = ein TxTimerCallback läuft
+  
+    internal void TxTimerCallback(object? sender, ElapsedEventArgs e)
     {
-        StopTxWorker();                  // falls noch einer laeuft
-        
-        _cfg.MicrophoneReader?.GetPcmQueue().Clear();           // Reste einer frueheren Sendung verwerfen
-        _micSignal.Reset();
-
-        _txCts = new CancellationTokenSource();
-        CancellationToken ct = _txCts.Token;
-        _txThread = new Thread(() => TxWorker(ct)) { IsBackground = true, Name = "NxdnTx" };
-        _txThread.Start();
-    }
-
-    /// <summary>Beendet den TX-Worker. Nach der Rueckkehr setzt er keine Voice-Frames mehr ab.</summary>
-    private void StopTxWorker()
-    {
-        CancellationTokenSource? cts = _txCts;
-        Thread? thread = _txThread;
-        _txCts = null;
-        _txThread = null;
-        if (cts == null)
+        if (_sessionCtx.TransceiveMode != TransceiveMode.Tx)
             return;
 
-        cts.Cancel();
-        _micSignal.Set(); // Worker aus WaitOne wecken
-
-        if (thread != null && thread != Thread.CurrentThread)
-        {
-            if (thread.Join(500))
-                cts.Dispose();
-            else
-                logger.Warn("TX worker did not stop within 500 ms (AMBE chip timeout?).");
-        }
-    }
-
-    /// <summary>Mikrofon abmelden/stoppen, Worker beenden, PCM-Queue leeren (idempotent).</summary>
-    private void StopTxResources()
-    {
-        if (_cfg.MicrophoneReader is { } mic)
-        {
-            mic.AudioAvailable -= OnMicSignal;
-            mic.Stop();
-        }
-        StopTxWorker();
-        _cfg.MicrophoneReader?.GetPcmQueue().Clear();
-    }
-
-    /// <summary>
-    /// TX-Worker: holt die vom Mikrofon eingereihten 20-ms-PCM-Bloecke aus der Queue, kodiert sie einzeln am
-    /// AMBE-Chip und sendet je 4 AMBE-Bloecke als ein NXDN-Frame an den Reflektor. Nur dieser Thread spricht
-    /// im Sendebetrieb den Chip an (zusammen mit DecompressAmbe() ueber _chipLock abgesichert).
-    /// </summary>
-    private void TxWorker(CancellationToken ct)
-    {
-        const int n = 4; // 4 AMBE blocks per NXDN frame
-        var ambeBlocks = new List<byte[]>(n);
-        ConcurrentQueue<byte[]> queue = _cfg.MicrophoneReader!.GetPcmQueue();
+        // Keine überlappenden Callbacks: sonst lesen mehrere Threads gleichzeitig aus dem AMBE-Port.
+        if (Interlocked.Exchange(ref _txBusy, 1) == 1)
+            return;
 
         try
         {
-            while (!ct.IsCancellationRequested)
+            // Alle bereitliegenden Mikrofonblöcke abholen. Der Timer tickt unter Windows nur alle
+            // 16-31 ms, das Mikrofon liefert aber 50 Blöcke pro Sekunde. Obergrenze gegen Endlosschleife.
+            const int MaxBlocksPerTick = 8;
+            for (int b = 0; b < MaxBlocksPerTick
+                            && _sessionCtx.TransceiveMode == TransceiveMode.Tx
+                            && _cfg.MicrophoneReader != null
+                            && _cfg.MicrophoneReader.TryRead(ambeSpeechPacket, 6, ambeSpeechPacket.Length - 6, out _); b++)
             {
-                _micSignal.WaitOne(100); // vom Mikrofon geweckt; Timeout = Sicherheitsnetz
+                AmbeHelper.SwapPcmBytes(ambeSpeechPacket); // LE -> BE
+                _cfg.AmbeController!.SendPacket(ambeSpeechPacket);
+                byte[]? ambe = _cfg.AmbeController.ReceivePacket();
+  
+                if (AmbeHelper.IsAmbePacket(ambe))
+                    _txQueue.Enqueue(ambe![6..]); // ignore 6 byte header
+                else
+                    logger.Error($"Unexpected response from AMBE chip: {(ambe != null ? Convert.ToHexString(ambe) : "null")}");
+            }
 
-                while (!ct.IsCancellationRequested && queue.TryDequeue(out byte[]? pcm))
+            const int n = 4; // 4 AMBE blocks per NXDN frame
+            while (_txQueue.Count >= n && _sessionCtx.TransceiveMode == TransceiveMode.Tx) // late check to prevent thread related problems
+            {
+                for (int i = 0; i < n; i++)
                 {
-                    if (pcm.Length != PcmBlockBytes)
-                    {
-                        logger.Error($"Unexpected PCM block size: {pcm.Length} (expected {PcmBlockBytes})");
-                        continue;
-                    }
-
-                    pcm.CopyTo(ambeSpeechPacket, 6);
-                    AmbeHelper.SwapPcmBytes(ambeSpeechPacket); // LE -> BE
-
-                    byte[]? ambe;
-                    lock (_chipLock)
-                    {
-                        _cfg.AmbeController!.SendPacket(ambeSpeechPacket);
-                        ambe = _cfg.AmbeController.ReceivePacket();
-                    }
-
-                    if (!AmbeHelper.IsAmbePacket(ambe))
-                    {
-                        logger.Error($"Unexpected response from AMBE chip: {(ambe != null ? Convert.ToHexString(ambe) : "null")}");
-                        continue;
-                    }
-
-                    ambeBlocks.Add(ambe![6..]); // ignore 6 byte header
-                    if (ambeBlocks.Count < n)
-                        continue;
-
-                    for (int i = 0; i < n; i++)
-                        ambeBlocks[i].CopyTo(_sessionCtx.TxAmbeData, i * 7);
-                    ambeBlocks.Clear();
-
-                    // TODO: consider VW mode
-
-                    lock (_frameLock)
-                    {
-                        if (ct.IsCancellationRequested)
-                            break; // Sendung wurde beendet: keinen Voice-Frame mehr hinter den EOT-Header setzen
-
-                        byte[] nxdxdFrame = NxdnCodec.EncodeFrame(_sessionCtx);
-                        SendDatagram(nxdxdFrame, nxdxdFrame.Length);
-                        logger.Debug($"Sent voice frame: {_sessionCtx.TxFrameNumber}");
-                        _sessionCtx.TxFrameNumber++;
-                    }
+                    if (_txQueue.TryDequeue(out byte[]? item) && item.Length == 7)
+                        item.CopyTo(_sessionCtx.TxAmbeData, i * 7);
+                    else
+                        logger.Error("Unable to read TX queue");
                 }
+
+                byte[] nxdxdFrame = NxdnCodec.EncodeFrame(_sessionCtx);
+                SendDatagram(nxdxdFrame, nxdxdFrame.Length);
+                _sessionCtx.TxFrameNumber++;
             }
         }
         catch (Exception ex)
         {
-            logger.Error(ex, "Exception in TxWorker.");
+            logger.Error(ex, "Exception in TxTimerCallback.");
+        }
+        finally
+        {
+            Volatile.Write(ref _txBusy, 0);
         }
     }
 }

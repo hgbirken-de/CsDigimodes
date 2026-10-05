@@ -60,18 +60,6 @@ public record DmrClientConfig
     public string VersionInfo { get; set; } = "20181107_Pi-Star";
     public string PlatformTag { get; set; } = "MMDVM_MMDVM_HS_HAT";
 
-    /// <summary>
-    /// Creates a deep copy of the current <see cref="DmrClientConfig"/> instance.
-    /// </summary>
-    /// <returns>
-    /// A new <see cref="DmrClientConfig"/> instance with property values identical 
-    /// to the original, but with separate copies of mutable collections.
-    /// </returns>
-    public DmrClientConfig DeepClone()
-    {
-        return this;
-    }
-
 
     public void Validate()
     {
