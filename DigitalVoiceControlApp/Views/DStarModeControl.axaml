@@ -7,41 +7,41 @@
 
   <StackPanel Orientation="Vertical" Spacing="5">
 
-  <Border BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="3" Background="{DynamicResource PanelBackgroundBrush}" Padding="10" HorizontalAlignment="Center" Width="400">
-			<StackPanel Orientation="Vertical" Spacing="5" >
+	  <Border BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="3" Background="{DynamicResource PanelBackgroundBrush}" Padding="10" HorizontalAlignment="Center" Width="400">
+		  <StackPanel Orientation="Vertical" Spacing="5" >
 
-				<StackPanel Orientation="Horizontal" Spacing="10">
-					<TextBlock Text="RPTR1" VerticalAlignment="Center" Width="60" />
-					<TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Rpt1}" />
-					<TextBlock Text=" RPTR2" VerticalAlignment="Center" Width="60" />
-					<TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Rpt2}" />
-				</StackPanel>
+			  <StackPanel Orientation="Horizontal" Spacing="10">
+				  <TextBlock Text="RPTR1" VerticalAlignment="Center" Width="60" />
+				  <TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Rpt1}" />
+				  <TextBlock Text=" RPTR2" VerticalAlignment="Center" Width="60" />
+				  <TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Rpt2}" />
+			  </StackPanel>
 
-				<StackPanel Orientation="Horizontal" Spacing="10">
-					<TextBlock Text="MYCALL" VerticalAlignment="Center" Width="60"/>
-					<TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Src}"/>
-					<TextBlock Text=" URCALL" VerticalAlignment="Center" Width="60" />
-					<TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Dst}" />
-				</StackPanel>
+			  <StackPanel Orientation="Horizontal" Spacing="10">
+				  <TextBlock Text="MYCALL" VerticalAlignment="Center" Width="60"/>
+				  <TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Src}"/>
+				  <TextBlock Text=" URCALL" VerticalAlignment="Center" Width="60" />
+				  <TextBox Focusable="False" IsReadOnly="True" Width="95" Text="{Binding Dst}" />
+			  </StackPanel>
 
-				<StackPanel Orientation="Horizontal" Spacing="10">
-					<TextBlock Text="Text" VerticalAlignment="Center" Width="60" />
-					<TextBox Focusable="False" IsReadOnly="True" Width="270" Text="{Binding Message}">
-						<ToolTip.Tip>
-							<TextBlock Text="User Message"/>
-						</ToolTip.Tip>
-					</TextBox>
-				</StackPanel>
+			  <StackPanel Orientation="Horizontal" Spacing="10">
+				  <TextBlock Text="Text" VerticalAlignment="Center" Width="60" />
+				  <TextBox Focusable="False" IsReadOnly="True" Width="270" Text="{Binding Message}">
+					  <ToolTip.Tip>
+						  <TextBlock Text="User Message"/>
+					  </ToolTip.Tip>
+				  </TextBox>
+			  </StackPanel>
 
-				<StackPanel Orientation="Horizontal" Spacing="10">
-					<TextBlock Text="GPS" VerticalAlignment="Center" Width="60" />
-					<TextBox Focusable="False" IsReadOnly="True" Width="270" Text="{Binding GpsData}">
-						<ToolTip.Tip>
-							<TextBlock Text="GPS Info"/>
-						</ToolTip.Tip>
-					</TextBox>
-				</StackPanel>
-			</StackPanel>
+			  <StackPanel Orientation="Horizontal" Spacing="10">
+				  <TextBlock Text="GPS" VerticalAlignment="Center" Width="60" />
+				  <TextBox Focusable="False" IsReadOnly="True" Width="270" Text="{Binding GpsData}">
+					  <ToolTip.Tip>
+						  <TextBlock Text="GPS Info"/>
+					  </ToolTip.Tip>
+				  </TextBox>
+			  </StackPanel>
+		  </StackPanel>
 	</Border>
 
     <StackPanel Orientation="Horizontal" Spacing="10">

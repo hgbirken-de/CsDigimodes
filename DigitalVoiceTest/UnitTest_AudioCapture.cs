@@ -12,7 +12,7 @@ public class UnitTest_AudioCapture(ITestOutputHelper output)
     [Fact]
     public void Test_AudioCapture()
     {
-        MicrophoneReader ac = new();
+        MicrophoneReader2 ac = new();
         WavPcmRecorder? recorder = new("mic_capture.wav");
 
         ac.Start();

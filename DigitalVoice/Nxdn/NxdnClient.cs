@@ -549,13 +549,19 @@ public sealed class NxdnClient
     /// <summary>Mikrofon abmelden/stoppen, Worker beenden, PCM-Queue leeren (idempotent).</summary>
     private void StopTxResources()
     {
-        if (_cfg.MicrophoneReader is { } mic)
+        try
         {
-            mic.AudioAvailable -= OnMicSignal;
-            mic.Stop();
-            mic.GetPcmQueue().Clear();
+            if (_cfg.MicrophoneReader is { } mic)
+            {
+                mic.AudioAvailable -= OnMicSignal;
+                mic.Stop();
+                mic.GetPcmQueue().Clear();
+            }
         }
-        StopTxWorker();
+        finally
+        {
+            StopTxWorker();
+        }
     }
 
     /// <summary>

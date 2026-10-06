@@ -38,21 +38,27 @@ public record DcsClientConfig
     public string? SimulationFile { get; set; }
     public bool SimulationMode { get; set; } = false;
 
-    public string UserMessage { get; set; } = "DVC by DL1HGB";
+    public string UserMessage { get; set; } = "CsDigimodes";
 
     public void Validate()
     {
-        int nError = 0;
+        int errCnt = 0;
         if (AmbeController == null)
         {
             logger.Error($"No ANME Controller configured.");
-            nError++;
+            errCnt++;
+        }
+
+        if (string.IsNullOrEmpty(Callsign))
+        {
+            logger.Error("No Callsign defined.");
+            errCnt++;
         }
 
         if (SimulationMode && string.IsNullOrEmpty(SimulationFile))
         {
             logger.Error("Simulation mode activated but no simulation file defined.");
-            nError++;
+            errCnt++;
         }
         if (SimulationMode && RecordRcvdUdpPackets)
         {
@@ -67,16 +73,16 @@ public record DcsClientConfig
         if (RecordAudio && WavPcmRecorder == null)
         {
             logger.Error("Audio recording activated but no Wave File Writer configured.");
-            nError++;
+            errCnt++;
         }
         if (RecordRcvdUdpPackets && string.IsNullOrEmpty(RecordRcvdUdpPacketsFile))
         {
             logger.Error("RX packet recording activated, but no recording file defined.");
-            nError++;
+            errCnt++;
         }
 
-        if (nError > 0)
-            throw new ArgumentException($"The configuration has {nError} errors, see the log for details.");
+        if (errCnt > 0)
+            throw new ArgumentException($"The configuration has {errCnt} errors, see the log for details.");
     }
 
 }

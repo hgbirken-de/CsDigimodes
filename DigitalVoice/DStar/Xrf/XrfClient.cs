@@ -18,7 +18,7 @@ public class XrfClient
 {
     static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    readonly object _lock = new();
+    
 
     readonly XrfClientConfig _cfg;
 
@@ -27,6 +27,7 @@ public class XrfClient
     readonly int _socketTimeout = 1000; // ms
 
     UdpClient? _udpClient;
+    readonly object _udpLock = new();
 
     Thread? _udpPacketReaderThread; // read  UDP packets
 
@@ -34,11 +35,17 @@ public class XrfClient
 
     readonly System.Timers.Timer _rxTimer = new(100);
 
-    readonly System.Timers.Timer _txTimer = new(20);
+    // ---- TX: Mikrofon -> PCM-Queue (gehoert dem MicrophoneReader2) -> EIN Worker-Thread -> AMBE-Chip -> UDP ----
+    const int PcmBlockBytes = 320;                    // 20 ms PCM: 160 Samples * 2 Bytes
+
+    readonly object _chipLock = new();                // jede Transaktion mit dem AMBE-Chip exklusiv (TX-Worker und RxTimerCallback)
+    readonly object _frameLock = new();               // Frame-Versand des Workers gegen das Sendeende abgrenzen
+    readonly AutoResetEvent _micSignal = new(false);  // vom Mikrofon geweckt (AudioAvailable)
+    
+    CancellationTokenSource? _txCts;
+    Thread? _txThread;
 
     readonly ConcurrentQueue<byte[]> _rxQueue = new();
-
-    readonly ConcurrentQueue<byte[]> _txQueue = new();
 
     PacketRecorder? _packetRecorder; // used for read/write operations, only one at a time
 
@@ -58,13 +65,13 @@ public class XrfClient
     /// <param name="cfg"></param>
     public XrfClient(XrfClientConfig cfg)
     {
+        cfg.Validate();
         _cfg = cfg;
 
         _clientState = new() { Reflector = _cfg.RefName + _cfg.Module };
 
         _pingTimer.Elapsed += PingTimerCallback;
         _rxTimer.Elapsed += RxTimerCallback;
-        _txTimer.Elapsed += TxTimerCallback;
 
         if (_cfg.SimulationMode)
         {
@@ -138,41 +145,6 @@ public class XrfClient
         }
     }
 
-    internal bool CaptureAudio()
-    {
-        // build header for 160 sample audio packet
-        int payloadSize = 160 * 2;        // 320 bytes
-        int totalSize = 6 + payloadSize;
-        int lengthField = totalSize - 4;   // = 322 -> 0x0142
-
-        var pcm = new byte[totalSize];
-        pcm[0] = 0x61;
-        pcm[1] = (byte)(lengthField >> 8);
-        pcm[2] = (byte)(lengthField & 0xFF);
-        pcm[3] = 0x02;
-        pcm[4] = 0x00;
-        pcm[5] = 0xA0; // 160 PCM samples
-
-        if (_cfg.MicrophoneReader == null || !_cfg.MicrophoneReader.TryRead(pcm, 6, pcm.Length - 6, out int bytesRead))
-            return false;
-
-        // TODO: swap pcm bytes
-        AmbeHelper.SwapPcmBytes(pcm); // TODO: common method
-        _cfg.AmbeController!.SendPacket(pcm);
-        byte[]? ambe = _cfg.AmbeController!.ReceivePacket();
-        if (ambe[0] == 0x61 && ambe[3] == 0x01 && ambe[4] == 0x01)
-        {
-            _txQueue.Enqueue(ambe[6..]);
-        }
-        else
-        {
-            logger.Error($"Unexpected response of AMBE server: {Convert.ToHexString(ambe)}");
-            return false;
-        }
-        return true;
-    }
-
-   
     /// <summary>
     /// Call back method to login the XRF reflector (keep alive). 
     /// </summary>
@@ -357,37 +329,41 @@ public class XrfClient
             ExternalXrfDataConsumer?.Invoke(_clientState);
         }
 
-        int n = 5; // <-- this must match the timer period (5 -> 100ms) 
+        const int n = 5; // <-- this must match the timer period (5 -> 100ms) 
         if (_clientState.TransceiveMode is TransceiveMode.Rx && _rxQueue.Count >= n)
         {
-            for (int i = 0; i < n; i++)
+            // Die ganze Folge "5 senden, 5 lesen" exklusiv: der TX-Worker darf dazwischen nicht an den Chip.
+            lock (_chipLock)
             {
-                if (_rxQueue.TryDequeue(out byte[]? ambeData))
+                for (int i = 0; i < n; i++)
                 {
-                    if (ambeData.Length != 9)
-                        throw new ArgumentException($"Invalid AMBE data len: {Convert.ToHexString(ambeData)}");
+                    if (_rxQueue.TryDequeue(out byte[]? ambeData))
+                    {
+                        if (ambeData.Length != 9)
+                            throw new ArgumentException($"Invalid AMBE data len: {Convert.ToHexString(ambeData)}");
 
-                    ambeData.CopyTo(ambeChannelPacket, 6);
-                    _cfg.AmbeController!.SendPacket(ambeChannelPacket);
+                        ambeData.CopyTo(ambeChannelPacket, 6);
+                        _cfg.AmbeController!.SendPacket(ambeChannelPacket);
+                    }
+                    else
+                    {
+                        logger.Error("Unable to read rx queue");
+                    }
                 }
-                else
-                {
-                    logger.Error("Unable to read rx queue");
-                }
-            }
 
-            for (int i = 0; i < n; i++)
-            {
-                byte[]? pcmData = _cfg.AmbeController!.ReceivePacket();
-                if (AmbeHelper.IsSpeechPacket(pcmData))
+                for (int i = 0; i < n; i++)
                 {
-                    AmbeHelper.SwapPcmBytes(pcmData!);
-                    _cfg.AudioPlayer?.FeedPcmData(pcmData!, 6, pcmData!.Length - 6);
-                    _cfg.WavPcmRecorder?.WritePcm(pcmData!, 6, pcmData!.Length - 6);
-                }
-                else
-                {
-                    logger.Error("Unexpected response from AMBE server: {0}", pcmData != null ? Convert.ToHexString(pcmData) : "null");
+                    byte[]? pcmData = _cfg.AmbeController!.ReceivePacket();
+                    if (AmbeHelper.IsSpeechPacket(pcmData))
+                    {
+                        AmbeHelper.SwapPcmBytes(pcmData!);
+                        _cfg.AudioPlayer?.FeedPcmData(pcmData!, 6, pcmData!.Length - 6);
+                        _cfg.WavPcmRecorder?.WritePcm(pcmData!, 6, pcmData!.Length - 6);
+                    }
+                    else
+                    {
+                        logger.Error("Unexpected response from AMBE server: {0}", pcmData != null ? Convert.ToHexString(pcmData) : "null");
+                    }
                 }
             }
         }
@@ -426,7 +402,7 @@ public class XrfClient
     /// <param name="len">The length of the datagram to sent.</param>
     private void SendDatagram(byte[] dgram, int len)
     {
-        lock (_lock)
+        lock (_udpLock)
         {   // UdpClient is not thread safe
             _udpClient?.Send(dgram, len);
         }
@@ -518,6 +494,8 @@ public class XrfClient
         _pingTimer.Stop();
         SendDisconnect(); // TODO: check cmd sequence
 
+        StopTxResources(); // falls gerade gesendet wird: Mikrofon und TX-Worker beenden, bevor der Chip geschlossen wird
+
         _cfg.AmbeController!.Close();
     }
 
@@ -532,8 +510,9 @@ public class XrfClient
         {
             if (!_clientState.IsRunning)
                 throw new InvalidOperationException("The client must be started before transmitting.");
-            
+
             _clientState.TransceiveMode = TransceiveMode.Tx;
+            _clientState.RxStreamState = StreamState.Transmitting;
             
             _rxTimer.Stop();
             _rxQueue.Clear();
@@ -543,52 +522,166 @@ public class XrfClient
             _clientState.TxMyCall = _cfg.Callsign;
             _clientState.TxUrCall = "CQCQCQ";
 
-            _clientState.TxUsrMsg = "DVC by DL1HGB".PadRight(20, ' ');
+            _clientState.TxUsrMsg = "CsDigimodes".PadRight(20, ' ');
 
             _clientState.TxFrameCnt = 0;
            
-            _cfg.MicrophoneReader?.Start();
-            _txTimer.Start();
-        }
-        else
-        {
-            _clientState.TransceiveMode = TransceiveMode.Rx;
-            _cfg.MicrophoneReader?.Stop();
-        }
-    }
-
-    internal void TxTimerCallback(object? sender, ElapsedEventArgs e)
-    {
-        //logger.Debug($"_clientState = {_clientState}");
-        if (_clientState.TransceiveMode == TransceiveMode.Tx)
-        {
-            _clientState.RxStreamState = StreamState.Transmitting;
-
-            if (!CaptureAudio()) // TODO: sollte in den if-Branch?
-                return;
-
-            if (!_txQueue.IsEmpty)
+            if (_cfg.MicrophoneReader is { } mic)
             {
-                if (_txQueue.TryDequeue(out byte[]? ambeData) && ambeData.Length == 9)
-                {
-                    byte[] refFrame = XrfCodec.Create(_clientState, ambeData);
-                    SendDatagram(refFrame, refFrame.Length);
-                }
-                else
-                {
-                    logger.Error("Unable to read TX queue");
-                    // TODO: this should never happen, what to do?
-                }
+                StartTxWorker();                      // zuerst der Verbraucher ...
+                mic.AudioAvailable += OnMicSignal;    // ... dann der Wecker ...
+                mic.Start();                          // ... dann das Mikrofon
             }
         }
         else
         {
-            _txTimer.Stop();
-            _txQueue.Clear();
-            //byte[] lastFrame = XrfCodec.Create(_clientState, new byte[9]);
-            //SendDatagram(lastFrame, lastFrame.Length);
-            _clientState.TxFrameCnt = 0;
-            _clientState.TxStreamId = 0;
+            StopTxResources(); // Mikrofon stoppen, Worker beenden, Queue leeren
+
+            lock (_frameLock) // nach dem Worker-Stopp kann kein Frame mehr nach dem Sendeende rausgehen
+            {
+                _clientState.TransceiveMode = TransceiveMode.Rx;
+
+                // Aufraeumen nach der Sendung (frueher im else-Zweig des TxTimerCallback)
+                //byte[] lastFrame = XrfCodec.Create(_clientState, new byte[9]);
+                //SendDatagram(lastFrame, lastFrame.Length);
+                _clientState.TxFrameCnt = 0;
+                _clientState.TxStreamId = 0;
+            }
+        }
+    }
+
+    /// <summary>Wecker fuer den TX-Worker. Laeuft auf dem Mikrofon-Aufnahme-Thread: nur signalisieren, nichts verarbeiten.</summary>
+    private void OnMicSignal(object? sender, byte[] block) => _micSignal.Set();
+
+    /// <summary>Startet den TX-Worker (einziger Thread, der im Sendebetrieb den Chip fuer die Kodierung anspricht).</summary>
+    private void StartTxWorker()
+    {
+        StopTxWorker();                                 // falls noch einer laeuft
+        _cfg.MicrophoneReader!.GetPcmQueue().Clear();   // Reste einer frueheren Sendung verwerfen
+        _micSignal.Reset();
+
+        _txCts = new CancellationTokenSource();
+        CancellationToken ct = _txCts.Token;
+        _txThread = new Thread(() => TxWorker(ct)) { IsBackground = true, Name = "XrfTx" };
+        _txThread.Start();
+    }
+
+    /// <summary>Beendet den TX-Worker. Nach der Rueckkehr setzt er keine Frames mehr ab.</summary>
+    private void StopTxWorker()
+    {
+        CancellationTokenSource? cts = _txCts;
+        Thread? thread = _txThread;
+        _txCts = null;
+        _txThread = null;
+        if (cts == null)
+            return;
+
+        cts.Cancel();
+        _micSignal.Set(); // Worker aus WaitOne wecken
+
+        if (thread != null && thread != Thread.CurrentThread)
+        {
+            if (thread.Join(500))
+                cts.Dispose();
+            else
+                logger.Warn("TX worker did not stop within 500 ms (AMBE chip timeout?).");
+        }
+    }
+
+    /// <summary>Mikrofon abmelden/stoppen, Worker beenden, PCM-Queue leeren (idempotent).</summary>
+    private void StopTxResources()
+    {
+        try
+        {
+            if (_cfg.MicrophoneReader is { } mic)
+            {
+                mic.AudioAvailable -= OnMicSignal;
+                mic.Stop();
+                mic.GetPcmQueue().Clear();
+            }
+        }
+        finally
+        {
+            StopTxWorker();
+        }
+    }
+
+    /// <summary>
+    /// TX-Worker: holt die vom Mikrofon eingereihten 20-ms-PCM-Bloecke aus der Queue, kodiert sie einzeln am
+    /// AMBE-Chip und sendet jeden AMBE-Block (9 Bytes) als eigenen XRF-Frame (D-STAR: 1 Block = 1 Frame = 20 ms).
+    /// Nur dieser Thread spricht im Sendebetrieb den Chip an (zusammen mit RxTimerCallback() ueber _chipLock abgesichert).
+    /// </summary>
+    private void TxWorker(CancellationToken ct)
+    {
+        // Sprachpaket fuer den Chip: Header + 160 PCM-Samples (nur dieser Thread benutzt das Array)
+        byte[] speechPacket = new byte[6 + PcmBlockBytes];
+        speechPacket[0] = 0x61;
+        speechPacket[1] = 0x01; // len field 320 + 6 - 4 = 322 -> 0x0142
+        speechPacket[2] = 0x42;
+        speechPacket[3] = 0x02;
+        speechPacket[4] = 0x00;
+        speechPacket[5] = 0xA0; // 160 PCM samples
+
+        ConcurrentQueue<byte[]> queue = _cfg.MicrophoneReader!.GetPcmQueue();
+
+        long sent = 0; // nur zur Diagnose (XrfCodec.Create verwaltet TxFrameCnt selbst)
+
+        try
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                _micSignal.WaitOne(100); // vom Mikrofon geweckt; Timeout = Sicherheitsnetz
+
+                while (!ct.IsCancellationRequested && queue.TryDequeue(out byte[]? pcm))
+                {
+                    if (pcm.Length != PcmBlockBytes)
+                    {
+                        logger.Error($"Unexpected PCM block size: {pcm.Length} (expected {PcmBlockBytes})");
+                        continue;
+                    }
+
+                    pcm.CopyTo(speechPacket, 6);
+                    AmbeHelper.SwapPcmBytes(speechPacket); // LE -> BE
+
+                    byte[]? ambe;
+                    lock (_chipLock)
+                    {
+                        _cfg.AmbeController!.SendPacket(speechPacket);
+                        ambe = _cfg.AmbeController.ReceivePacket();
+                    }
+
+                    if (!AmbeHelper.IsAmbePacket(ambe))
+                    {
+                        logger.Error($"Unexpected response of AMBE server: {(ambe != null ? Convert.ToHexString(ambe) : "null")}");
+                        continue;
+                    }
+
+                    byte[] ambeData = ambe![6..]; // ignore 6 byte header
+                    if (ambeData.Length != 9)
+                    {
+                        logger.Error($"Unexpected AMBE block length: {ambeData.Length} (expected 9)");
+                        continue;
+                    }
+
+                    lock (_frameLock)
+                    {
+                        if (ct.IsCancellationRequested)
+                            break; // Sendung wurde beendet: keinen Frame mehr nach dem Sendeende absetzen
+
+                        byte[] refFrame = XrfCodec.Create(_clientState, ambeData);
+                        SendDatagram(refFrame, refFrame.Length);
+                        _clientState.RxStreamState = StreamState.Transmitting;
+                    }
+
+                    sent++;
+                    if (sent % 10 == 0) // 50 Frames/s: nicht jedes einzeln loggen
+                        logger.Debug($"Sent voice frame: {sent}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, "Exception in TxWorker.");
         }
     }
 }

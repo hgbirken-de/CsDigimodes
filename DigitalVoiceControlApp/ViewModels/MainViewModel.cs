@@ -404,7 +404,7 @@ public class MainViewModel : ViewModelBase
     XrfClient? _xrfClient;
    
     readonly IAudioPlayer _audioPlayer = new AudioPlayer();
-    readonly IMicrophoneReader _microphoneReader = new MicrophoneReader2();
+    readonly IMicrophoneReader _microphoneReader = new MicrophoneReader();
 
     readonly ConcurrentDictionary<int, (string, string)> _dmridToCallsign = [];
 
