@@ -756,9 +756,9 @@ public sealed class DmrClient1
         {
             mic.AudioAvailable -= OnMicSignal;
             mic.Stop();
+            mic.GetPcmQueue().Clear();
         }
         StopTxWorker();
-        _cfg.MicrophoneReader!.GetPcmQueue().Clear();
     }
 
     /// <summary>

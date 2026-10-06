@@ -58,6 +58,7 @@ public class DcsClient
     /// <param name="cfg"></param>
     public DcsClient(DcsClientConfig cfg)
     {
+        cfg.Validate();
         _cfg = cfg;
 
         _clientState = new() { Reflector = _cfg.RefName + _cfg.Module };
@@ -366,7 +367,7 @@ public class DcsClient
             ExternalDcsDataConsumer?.Invoke(_clientState);
         }
 
-        int n = 5; // <-- this must match the rxTimer period (5 -> 100ms) 
+        const int n = 5; // <-- this must match the rxTimer period (5 -> 100ms) 
         if (_clientState.TransceiveMode is TransceiveMode.Rx && _rxQueue.Count >= n)
         {
             for (int i = 0; i < n; i++)

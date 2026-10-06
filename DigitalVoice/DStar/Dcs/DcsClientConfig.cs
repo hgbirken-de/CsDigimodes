@@ -1,10 +1,12 @@
 ﻿using DigitalVoice.AmbeSupport;
 using DigitalVoice.AudioSupport;
+using NLog;
 
 namespace DigitalVoice.DStar.Dcs;
 
 public record DcsClientConfig
 {
+    static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
     // AMBE stuff
     public AmbeConfig? AmbeConfig { get; set; }
@@ -37,5 +39,44 @@ public record DcsClientConfig
     public bool SimulationMode { get; set; } = false;
 
     public string UserMessage { get; set; } = "DVC by DL1HGB";
+
+    public void Validate()
+    {
+        int nError = 0;
+        if (AmbeController == null)
+        {
+            logger.Error($"No ANME Controller configured.");
+            nError++;
+        }
+
+        if (SimulationMode && string.IsNullOrEmpty(SimulationFile))
+        {
+            logger.Error("Simulation mode activated but no simulation file defined.");
+            nError++;
+        }
+        if (SimulationMode && RecordRcvdUdpPackets)
+        {
+            logger.Warn("RX packets recording disabled, reason: simulation mode is activated.");
+            RecordRcvdUdpPackets = false;
+        }
+        //if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
+        //{
+        //    logger.Error("Audio recording activated but no audio output file defined.");
+        //    nError++;
+        //}
+        if (RecordAudio && WavPcmRecorder == null)
+        {
+            logger.Error("Audio recording activated but no Wave File Writer configured.");
+            nError++;
+        }
+        if (RecordRcvdUdpPackets && string.IsNullOrEmpty(RecordRcvdUdpPacketsFile))
+        {
+            logger.Error("RX packet recording activated, but no recording file defined.");
+            nError++;
+        }
+
+        if (nError > 0)
+            throw new ArgumentException($"The configuration has {nError} errors, see the log for details.");
+    }
 
 }

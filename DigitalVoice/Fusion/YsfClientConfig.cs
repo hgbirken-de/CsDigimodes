@@ -95,11 +95,11 @@ public record YsfClientConfig
     /// A new <see cref="YsfClientConfig"/> instance with property values identical 
     /// to the original, but with separate copies of mutable collections.
     /// </returns>
-    public YsfClientConfig DeepClone()
-    {
-        return this with
-        {
-            DgidList = [.. this.DgidList]
-        };
-    }
+    //public YsfClientConfig DeepClone()
+    //{
+    //    return this with
+    //    {
+    //        DgidList = [.. this.DgidList]
+    //    };
+    //}
 }

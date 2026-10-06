@@ -553,9 +553,9 @@ public sealed class NxdnClient
         {
             mic.AudioAvailable -= OnMicSignal;
             mic.Stop();
+            mic.GetPcmQueue().Clear();
         }
         StopTxWorker();
-        _cfg.MicrophoneReader?.GetPcmQueue().Clear();
     }
 
     /// <summary>
