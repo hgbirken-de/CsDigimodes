@@ -586,12 +586,6 @@ public sealed class DmrClient1
 
         InitDV3000();
 
-        string dataDir = "data";
-        if (!Directory.Exists(dataDir))
-        {
-            Directory.CreateDirectory(dataDir);
-        }
-
         if (_cfg.SimulationMode)
         {
             _packetReader = new PacketRecorder(_cfg.SimulationModeFile!, FileMode.Open, FileAccess.Read);

@@ -4,6 +4,10 @@
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 
+	<!-- Mikrofon für Senden (Laufzeit-Berechtigung, wird in der App abgefragt) -->
+	<uses-permission android:name="android.permission.RECORD_AUDIO" />
+	<uses-feature android:name="android.hardware.microphone" android:required="false" />
+
 	<!-- Für AMBE3000R-Stick via USB-OTG (FTDI). "required=false" verhindert, dass der
 	     Play Store die App auf Geräten ohne USB-Host-Fähigkeit blockiert. -->
 	<uses-feature android:name="android.hardware.usb.host" android:required="false" />

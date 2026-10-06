@@ -18,8 +18,6 @@ public class DcsClient
 {
     static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-   
-
     readonly DcsClientConfig _cfg;
 
     readonly DStarSessionContext _clientState;

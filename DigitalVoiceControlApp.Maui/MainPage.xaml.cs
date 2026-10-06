@@ -1,5 +1,6 @@
-﻿using DigitalVoiceControlApp.Maui.Services.Ambe;
-using DigitalVoiceControlApp.Maui.ViewModels;
+﻿using DigitalVoiceControlApp.Maui.ViewModels;
+using Maui.AmbeSupport;
+using Maui.AudioSupport;
 using NLog;
 
 #if ANDROID
@@ -13,8 +14,6 @@ public partial class MainPage : ContentPage
 {
     private static readonly Logger Log = LogManager.GetCurrentClassLogger();
 
-    private const int FtdiVendorId = 0x0403;
-
     private MainPageViewModel ViewModel => (MainPageViewModel)BindingContext;
 
     public MainPage()
@@ -27,70 +26,72 @@ public partial class MainPage : ContentPage
 
     private async void OnMenuButtonClicked(object sender, EventArgs e)
     {
-        string action = await DisplayActionSheet("Menu", "Cancel", null, "Settings", "Help", "AMBE-Test", "Export Log", "Exit");
+        // Ein Action-Sheet kennt keine deaktivierten Einträge: Während der Verbindung bleibt "Settings" sichtbar,
+        // ist aber als gesperrt gekennzeichnet und erklärt beim Antippen, warum.
+        string settingsItem = ViewModel.IsSettingsEnabled ? "Settings" : "Settings (gesperrt)";
+        string action = await DisplayActionSheet("Menu", "Cancel", null, settingsItem, "Help", "AMBE-Test", "Audio-Test", "Export Log", "Exit");
 
-        switch (action)
+        // async void: eine unbehandelte Exception würde hier die ganze App beenden -> abfangen und anzeigen
+        try
         {
-            case "Settings":
-                // TODO: Settings-Dialog öffnen
-                break;
-            case "Help":
-                // TODO: Help/About anzeigen
-                break;
-            case "AMBE-Test":
-                await RunAmbeTestAsync();
-                break;
-            case "Export Log":
-                await ExportLogAsync();
-                break;
-            case "Exit":
-                // TODO: App beenden
-                break;
+            switch (action)
+            {
+                case "Settings":
+                    await Navigation.PushAsync(new SettingsPage());
+                    break;
+                case "Settings (gesperrt)":
+                    await DisplayAlert("Settings", "Während der Verbindung sind die Settings gesperrt. Bitte zuerst trennen.", "OK");
+                    break;
+                case "Help":
+                    // TODO: Help/About anzeigen
+                    break;
+                case "AMBE-Test":
+                    await RunAmbeTestAsync();
+                    break;
+                case "Audio-Test":
+                    await RunAudioTestAsync();
+                    break;
+                case "Export Log":
+                    await ExportLogAsync();
+                    break;
+                case "Exit":
+                    // TODO: App beenden
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Menu action '{action}' failed.");
+            await DisplayAlert("Fehler", $"{ex.GetType().Name}: {ex.Message}", "OK");
         }
     }
 
     /// <summary>
-    /// Kombinierter AMBE-Test: listet zuerst alle USB-Geräte (Erkennungscheck), führt danach,
-    /// falls ein AMBE-Stick gefunden wurde, den vollen Verbindungstest durch. Falls bereits
-    /// über den Connect-Button (ViewModel.AmbeDevice) eine Verbindung offen ist, wird
-    /// stattdessen nur auf der bestehenden Verbindung ProductId/Version erneut abgefragt
-    /// (keine zweite Verbindung, das würde an ClaimInterface scheitern).
+    /// Kombinierter AMBE-Test: listet zuerst alle USB-Geräte (Erkennungscheck), baut danach (falls ein
+    /// AMBE-Stick gefunden wurde) die Verbindung auf bzw. nutzt die vom Connect-Button bereits offene
+    /// (keine zweite Verbindung, das würde an ClaimInterface scheitern) und führt den Selbsttest
+    /// <see cref="AmbeSelfTest"/> aus: ProductId/Version, DMR-Init, Encode, Decode und Zeit pro Block.
     /// </summary>
     private async Task RunAmbeTestAsync()
     {
 #if ANDROID
-        if (ViewModel.AmbeDevice != null)
-        {
-            try
-            {
-                var pid = await ViewModel.AmbeDevice.GetProductIdAsync();
-                var ver = await ViewModel.AmbeDevice.GetVersionAsync();
-                await DisplayAlert("AMBE-Test", $"Bereits verbunden (Connect-Button).\nProductId: {pid}\nVersion: {ver}", "OK");
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("AMBE-Test", $"Fehler auf bestehender Verbindung: {ex.Message}", "OK");
-            }
-            return;
-        }
-
         var activity = Platform.CurrentActivity;
-
         if (activity == null)
         {
             await DisplayAlert("AMBE-Test", "Keine Activity verfügbar.", "OK");
             return;
         }
 
+        // Erkennungscheck: alle USB-Geräte auflisten
         var usbManager = (UsbManager)activity.GetSystemService(Context.UsbService)!;
-        var devices = usbManager.DeviceList.Values.ToList();
+        var devices = usbManager.DeviceList?.Values.ToList() ?? [];
 
         Log.Info($"USB-Suche: {devices.Count} Gerät(e) gefunden.");
 
         var deviceLines = new List<string>();
         foreach (var device in devices)
         {
-            bool isAmbe = device.VendorId == FtdiVendorId;
+            bool isAmbe = device.VendorId == AmbeUsb.FtdiVendorId;
             string marker = isAmbe ? "✓ AMBE-Stick (FTDI)" : "?";
             string line = $"{marker}  {device.ProductName ?? device.DeviceName}  " +
                           $"VID=0x{device.VendorId:X4} PID=0x{device.ProductId:X4}";
@@ -102,21 +103,78 @@ public partial class MainPage : ContentPage
             ? "Keine USB-Geräte gefunden.\nOTG-Adapter und Stick eingesteckt?"
             : string.Join("\n", deviceLines);
 
-        if (!devices.Any(d => d.VendorId == FtdiVendorId))
+        // Der Test greift auf den Stick zu, den der DMR-Client benutzt: nur im getrennten Zustand
+        if (ViewModel.IsServerConnected)
+        {
+            await DisplayAlert("AMBE-Test", $"{deviceSection}\n\nDer Stick wird gerade vom DMR-Client benutzt. Bitte zuerst trennen.", "OK");
+            return;
+        }
+
+        if (!devices.Any(d => d.VendorId == AmbeUsb.FtdiVendorId))
         {
             await DisplayAlert("AMBE-Test", deviceSection, "OK");
             return;
         }
 
-        var result = await Ambe3000Usb.TestConnectionAsync(activity);
+        var (ctrl, error) = await AmbeUsb.ConnectAsync(activity);
+        if (ctrl == null)
+        {
+            await DisplayAlert("AMBE-Test", $"{deviceSection}\n\n{error ?? "Verbindung fehlgeschlagen."}", "OK");
+            return;
+        }
 
-        string resultSection = result.Success
-            ? $"Verbindung erfolgreich!\nProductId: {result.ProductId}\nVersion: {result.Version}"
-            : $"Fehlgeschlagen: {result.ErrorMessage}\n(Details siehe Log)";
-
-        await DisplayAlert("AMBE-Test", $"{deviceSection}\n\n{resultSection}", "OK");
+        try
+        {
+            // Blockierende Chip-Zugriffe: nicht auf dem UI-Thread
+            string report = await Task.Run(() => AmbeSelfTest.Run(ctrl));
+            Log.Info(report);
+            await DisplayAlert("AMBE-Test", $"{deviceSection}\n\n{report}", "OK");
+        }
+        finally
+        {
+            ctrl.Close();
+        }
 #else
         await DisplayAlert("AMBE-Test", "Nur auf Android verfügbar.", "OK");
+#endif
+    }
+
+    /// <summary>
+    /// Audio-Test: holt die Mikrofon-Berechtigung, nimmt 3 Sekunden auf (Takt und Pegel werden ausgewertet)
+    /// und spielt die Aufnahme danach über den Lautsprecher ab.
+    /// </summary>
+    private async Task RunAudioTestAsync()
+    {
+#if ANDROID
+        if (ViewModel.IsServerConnected)
+        {
+            await DisplayAlert("Audio-Test", "Mikrofon und Lautsprecher werden gerade vom DMR-Client benutzt. Bitte zuerst trennen.", "OK");
+            return;
+        }
+
+        try
+        {
+            // Wirft eine PermissionException, wenn RECORD_AUDIO nicht in AndroidManifest.xml deklariert ist
+            var status = await Permissions.RequestAsync<Permissions.Microphone>();
+            if (status != PermissionStatus.Granted)
+            {
+                await DisplayAlert("Audio-Test", "Mikrofon-Berechtigung wurde nicht erteilt.", "OK");
+                return;
+            }
+
+            await DisplayAlert("Audio-Test", "Nach dem Tippen auf OK werden 3 Sekunden aufgenommen. Bitte sprechen. Danach wird die Aufnahme abgespielt.", "OK");
+
+            string report = await Task.Run(() => AudioSelfTest.RunAsync(3));
+            Log.Info(report);
+            await DisplayAlert("Audio-Test", report, "OK");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Audio test failed.");
+            await DisplayAlert("Audio-Test", $"Fehler: {ex.GetType().Name}: {ex.Message}", "OK");
+        }
+#else
+        await DisplayAlert("Audio-Test", "Nur auf Android verfügbar.", "OK");
 #endif
     }
 

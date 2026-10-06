@@ -63,6 +63,12 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
 		<PackageReference Include="NLog" Version="6.0.6" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+    <PackageReference Include="YamlDotNet" Version="16.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Maui.AmbeSupport\Maui.AmbeSupport.csproj" />
+	  <ProjectReference Include="..\Maui.AudioSupport\Maui.AudioSupport.csproj" />
 	</ItemGroup>
 
 </Project>

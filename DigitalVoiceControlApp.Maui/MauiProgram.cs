@@ -42,12 +42,12 @@ public static class MauiProgram
         var consoleTarget = new ConsoleTarget("console") { Layout = layout };
         var debuggerTarget = new DebuggerTarget("debugger") { Layout = layout };
 
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, fileTarget, "DigitalVoiceControlApp.*");
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, fileTarget, "DigitalVoice.*");
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget, "DigitalVoiceControlApp.*");
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget, "DigitalVoice.*");
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, debuggerTarget, "DigitalVoiceControlApp.*");
-        config.AddRule(LogLevel.Debug, LogLevel.Fatal, debuggerTarget, "DigitalVoice.*");
+        foreach (var pattern in new[] { "DigitalVoiceControlApp.*", "DigitalVoice.*", "Maui.*" })
+        {
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, fileTarget, pattern);
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, consoleTarget, pattern);
+            config.AddRule(LogLevel.Debug, LogLevel.Fatal, debuggerTarget, pattern);
+        }
 
         LogManager.Configuration = config;
     }

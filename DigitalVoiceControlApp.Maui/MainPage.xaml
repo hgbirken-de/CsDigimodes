@@ -4,12 +4,12 @@
              xmlns:vm="clr-namespace:DigitalVoiceControlApp.Maui.ViewModels"
              x:Class="DigitalVoiceControlApp.Maui.MainPage"
              x:DataType="vm:MainPageViewModel"
-             Title="Digital Voice Control">
+             Title="C# Digimodes">
 
     <Grid RowDefinitions="Auto,*">
 
-        <!-- Toolbar mit Hamburger-Menü, Talkgroup/Reflektor-Auswahl und Connect/Disconnect -->
-        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" BackgroundColor="#E6F5F5" Padding="8" ColumnSpacing="8">
+        <!-- Toolbar mit Hamburger-Menü, Mode-Auswahl, Talkgroup/Reflektor-Auswahl und Connect/Disconnect -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto" BackgroundColor="#E6F5F5" Padding="8" ColumnSpacing="8">
             <Button Grid.Column="0"
                     Text="&#9776;"
                     FontSize="20"
@@ -17,14 +17,29 @@
                     HeightRequest="44"
                     Clicked="OnMenuButtonClicked" />
 
-            <!-- Platzhalter: Talkgroup-/Reflektorauswahl (Inhalt je nach Mode später per Code befüllt) -->
-            <Picker x:Name="TalkgroupPicker"
+            <!-- Mode-Auswahl: alle Werte aus Mode.cs; während der Verbindung gesperrt -->
+            <Picker x:Name="ModePicker"
                     Grid.Column="1"
-                    Title="Talkgroup / Reflektor"
+                    Title="Mode"
+                    ItemsSource="{Binding ModeNames}"
+                    SelectedItem="{Binding SelectedModeName}"
+                    IsEnabled="{Binding IsModePickerEnabled}"
+                    TextColor="Black"
+                    TitleColor="#555555"
+                    WidthRequest="90"
                     VerticalOptions="Center" />
 
-            <Button x:Name="ConnectButton"
+            <!-- Platzhalter: Talkgroup-/Reflektorauswahl (Inhalt je nach Mode später per Code befüllt) -->
+            <Picker x:Name="TalkgroupPicker"
                     Grid.Column="2"
+                    Title="Talkgroup / Reflektor"
+                    TextColor="Black"
+                    TitleColor="#555555"
+                    VerticalOptions="Center" />
+
+            <!-- Connect/Disconnect: nur für DMR freigegeben (siehe MainPageViewModel.CanConnect) -->
+            <Button x:Name="ConnectButton"
+                    Grid.Column="3"
                     ImageSource="{Binding ConnectionIcon}"
                     BackgroundColor="{Binding ConnectionBackgroundColor}"
                     SemanticProperties.Description="{Binding ConnectionTooltip}"
@@ -34,11 +49,11 @@
                     Command="{Binding ConnectCommand}" />
         </Grid>
 
-        <!-- Platzhalter für den restlichen Inhalt -->
-        <Label Grid.Row="1"
-               Text="Hier kommt der Inhalt hin [Build-Check: v14]"
-               HorizontalOptions="Center"
-               VerticalOptions="Center" />
+        <!-- Platzhalter für den restlichen Inhalt: zeigt vorerst Status und letzte Empfangsmeldung -->
+        <VerticalStackLayout Grid.Row="1" Margin="16" Spacing="12" VerticalOptions="Center" HorizontalOptions="Center">
+            <Label Text="{Binding StatusText}" HorizontalTextAlignment="Center" FontSize="16" />
+            <Label Text="{Binding RxText}" HorizontalTextAlignment="Center" FontSize="22" FontAttributes="Bold" />
+        </VerticalStackLayout>
 
     </Grid>
 </ContentPage>

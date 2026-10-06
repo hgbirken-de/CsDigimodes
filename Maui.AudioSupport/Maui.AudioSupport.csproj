@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>21.0</SupportedOSPlatformVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Maui.AudioSupport</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Enthält IAudioPlayer, IMicrophoneReader, PcmBlockQueueWriter (plattformneutral) -->
+    <ProjectReference Include="..\DigitalVoice\DigitalVoice.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NLog" Version="6.0.6" />
+  </ItemGroup>
+
+</Project>

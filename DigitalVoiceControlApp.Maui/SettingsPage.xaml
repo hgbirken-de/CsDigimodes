@@ -1,0 +1,116 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="DigitalVoiceControlApp.Maui.SettingsPage"
+             Title="Settings">
+
+  <Grid RowDefinitions="*,Auto">
+
+    <ScrollView Grid.Row="0">
+      <VerticalStackLayout Padding="16" Spacing="12">
+
+        <!-- Common -->
+        <Border Stroke="Gray" StrokeThickness="1" Padding="12" StrokeShape="RoundRectangle 6">
+          <VerticalStackLayout Spacing="8">
+            <Label Text="Common" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+              <Label Grid.Row="0" Grid.Column="0" Text="Callsign" VerticalOptions="Center" />
+              <Entry Grid.Row="0" Grid.Column="1" Text="{Binding Callsign}" Keyboard="Plain" />
+              <Label Grid.Row="1" Grid.Column="0" Text="Locator" VerticalOptions="Center" />
+              <Entry Grid.Row="1" Grid.Column="1" Text="{Binding Locator}" Keyboard="Plain" />
+              <Label Grid.Row="2" Grid.Column="0" Text="Town" VerticalOptions="Center" />
+              <Entry Grid.Row="2" Grid.Column="1" Text="{Binding Town}" />
+              <Label Grid.Row="3" Grid.Column="0" Text="Language" VerticalOptions="Center" />
+              <Picker Grid.Row="3" Grid.Column="1" ItemsSource="{Binding LanguageList}" SelectedItem="{Binding SelectedLanguage}" />
+              <Label Grid.Row="4" Grid.Column="0" Text="Text to Speech" VerticalOptions="Center" />
+              <Switch Grid.Row="4" Grid.Column="1" HorizontalOptions="Start" IsToggled="{Binding TextToSpeech}" />
+              <Label Grid.Row="5" Grid.Column="0" Text="Record UDP" VerticalOptions="Center" />
+              <Switch Grid.Row="5" Grid.Column="1" HorizontalOptions="Start" IsToggled="{Binding RecordRcvdUdpPackets}" />
+            </Grid>
+          </VerticalStackLayout>
+        </Border>
+
+        <!-- DMR -->
+        <Border Stroke="Gray" StrokeThickness="1" Padding="12" StrokeShape="RoundRectangle 6">
+          <VerticalStackLayout Spacing="8">
+            <Label Text="DMR" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+              <Label Grid.Row="0" Grid.Column="0" Text="Password" VerticalOptions="Center" />
+              <Grid Grid.Row="0" Grid.Column="1" ColumnDefinitions="*,Auto" ColumnSpacing="4">
+                <Entry Grid.Column="0" Text="{Binding Password}" IsPassword="{Binding IsPasswordHidden}" />
+                <Button Grid.Column="1" Text="{Binding PasswordToggleText}" Command="{Binding TogglePasswordVisibilityCommand}"
+                        BackgroundColor="Transparent" TextColor="Gray" FontSize="20" Padding="8,0" WidthRequest="48" />
+              </Grid>
+              <Label Grid.Row="1" Grid.Column="0" Text="My DMRID" VerticalOptions="Center" />
+              <Entry Grid.Row="1" Grid.Column="1" Text="{Binding MyDmrId}" Keyboard="Numeric" />
+              <Label Grid.Row="2" Grid.Column="0" Text="ESSID" VerticalOptions="Center" />
+              <Entry Grid.Row="2" Grid.Column="1" Text="{Binding Essid}" Keyboard="Numeric" />
+              <Label Grid.Row="3" Grid.Column="0" Text="Protocol" VerticalOptions="Center" />
+              <Picker Grid.Row="3" Grid.Column="1" ItemsSource="{Binding DmrProtocolList}" SelectedItem="{Binding SelectedDmrProtocol}" />
+              <Label Grid.Row="4" Grid.Column="0" Text="BM Server1 (Homebrew)" VerticalOptions="Center" />
+              <Grid Grid.Row="4" Grid.Column="1" ColumnDefinitions="*,90" ColumnSpacing="8">
+                <Entry Grid.Column="0" Text="{Binding BmServerAddr1}" Keyboard="Url" />
+                <Entry Grid.Column="1" Text="{Binding BmServerPort1}" Keyboard="Numeric" />
+              </Grid>
+              <Label Grid.Row="5" Grid.Column="0" Text="BM Master" VerticalOptions="Center" />
+              <Picker Grid.Row="5" Grid.Column="1" ItemsSource="{Binding DmrMasterList}" SelectedItem="{Binding SelectedDmrMaster}" />
+              <Label Grid.Row="6" Grid.Column="0" Text="Time Slot" VerticalOptions="Center" />
+              <Picker Grid.Row="6" Grid.Column="1" ItemsSource="{Binding TimeSlotList}" SelectedItem="{Binding SelectedTimeSlot}" />
+              <Label Grid.Row="7" Grid.Column="0" Text="Color Code" VerticalOptions="Center" />
+              <Picker Grid.Row="7" Grid.Column="1" ItemsSource="{Binding ColorCodeList}" SelectedItem="{Binding SelectedColorCode}" />
+            </Grid>
+          </VerticalStackLayout>
+        </Border>
+
+        <!-- NXDN -->
+        <Border Stroke="Gray" StrokeThickness="1" Padding="12" StrokeShape="RoundRectangle 6">
+          <VerticalStackLayout Spacing="8">
+            <Label Text="NXDN" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto" RowSpacing="6" ColumnSpacing="8">
+              <Label Grid.Row="0" Grid.Column="0" Text="NXDN Id" VerticalOptions="Center" />
+              <Entry Grid.Row="0" Grid.Column="1" Text="{Binding NxdnId}" Keyboard="Numeric" />
+            </Grid>
+          </VerticalStackLayout>
+        </Border>
+
+        <!-- FCS -->
+        <Border Stroke="Gray" StrokeThickness="1" Padding="12" StrokeShape="RoundRectangle 6">
+          <VerticalStackLayout Spacing="8">
+            <Label Text="FCS" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+              <Label Grid.Row="0" Grid.Column="0" Text="Master" VerticalOptions="Center" />
+              <Picker Grid.Row="0" Grid.Column="1" ItemsSource="{Binding FcsMasterList}" SelectedItem="{Binding SelectedFcsMaster}" />
+              <Label Grid.Row="1" Grid.Column="0" Text="Port" VerticalOptions="Center" />
+              <Entry Grid.Row="1" Grid.Column="1" Text="{Binding FcsPort}" Keyboard="Numeric" />
+            </Grid>
+          </VerticalStackLayout>
+        </Border>
+
+        <!-- AMBE -->
+        <Border Stroke="Gray" StrokeThickness="1" Padding="12" StrokeShape="RoundRectangle 6">
+          <VerticalStackLayout Spacing="8">
+            <Label Text="AMBE" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+              <RadioButton Grid.Row="0" Grid.Column="0" Content="Stick" GroupName="ambe" IsChecked="{Binding IsStick}" />
+              <Label Grid.Row="0" Grid.Column="1" Text="USB-Stick (OTG)" VerticalOptions="Center" />
+              <RadioButton Grid.Row="1" Grid.Column="0" Content="Server" GroupName="ambe" IsChecked="{Binding IsServer}" />
+              <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,90" ColumnSpacing="8" IsEnabled="{Binding IsServer}">
+                <Entry Grid.Column="0" Text="{Binding AmbeServerAddr}" Keyboard="Url" />
+                <Entry Grid.Column="1" Text="{Binding AmbeServerPort}" Keyboard="Numeric" />
+              </Grid>
+              <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="Hinweis: Der AMBE-Server-Betrieb ist unter Android noch nicht verfügbar, es wird der USB-Stick benutzt." FontSize="12" TextColor="Gray" />
+            </Grid>
+          </VerticalStackLayout>
+        </Border>
+      </VerticalStackLayout>
+    </ScrollView>
+
+    <!-- Buttons -->
+    <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12" Padding="16,8">
+      <Button Grid.Column="0" Text="Import…" Clicked="OnImportClicked" />
+      <Button Grid.Column="1" Text="Discard" Clicked="OnDiscardClicked" />
+      <Button Grid.Column="2" Text="Apply" Clicked="OnApplyClicked" />
+    </Grid>
+
+  </Grid>
+</ContentPage>
