@@ -37,7 +37,8 @@ public partial class MainPage : ContentPage
         // ist aber als gesperrt gekennzeichnet und erklärt beim Antippen, warum.
         string settingsItem = ViewModel.IsSettingsEnabled ? "Settings" : "Settings (locked)";
         string talkgroupsItem = ViewModel.IsSettingsEnabled ? "Talkgroups…" : "Talkgroups (locked)";
-        string action = await DisplayActionSheet("Menu", "Cancel", null, settingsItem, talkgroupsItem, "Help", "AMBE-Test", "Audio-Test", "Export Log", "Exit");
+        string logItem = ViewModel.IsSettingsEnabled ? "Log management…" : "Log management (locked)";
+        string action = await DisplayActionSheet("Menu", "Cancel", null, settingsItem, talkgroupsItem, logItem, "Help", "AMBE-Test", "Audio-Test", "Exit");
 
         // async void: eine unbehandelte Exception würde hier die ganze App beenden -> abfangen und anzeigen
         try
@@ -65,8 +66,11 @@ public partial class MainPage : ContentPage
                 case "Audio-Test":
                     await RunAudioTestAsync();
                     break;
-                case "Export Log":
-                    await ExportLogAsync();
+                case "Log management…":
+                    await Navigation.PushAsync(new LogManagementPage());
+                    break;
+                case "Log management (locked)":
+                    await DisplayAlert("Log management", "Log management is locked while connected. Please disconnect first.", "OK");
                     break;
                 case "Exit":
                     // TODO: App beenden
@@ -190,32 +194,5 @@ public partial class MainPage : ContentPage
 #else
         await DisplayAlert("Audio-Test", "Available on Android only.", "OK");
 #endif
-    }
-
-    private async Task ExportLogAsync()
-    {
-        var logDir = Path.Combine(FileSystem.AppDataDirectory, "logs");
-
-        if (!Directory.Exists(logDir))
-        {
-            await DisplayAlert("Export Log", "No log files found.", "OK");
-            return;
-        }
-
-        var latestLog = Directory.GetFiles(logDir, "*.log")
-            .OrderByDescending(File.GetLastWriteTime)
-            .FirstOrDefault();
-
-        if (latestLog == null)
-        {
-            await DisplayAlert("Export Log", "No log files found.", "OK");
-            return;
-        }
-
-        await Share.Default.RequestAsync(new ShareFileRequest
-        {
-            Title = "Share log file",
-            File = new ShareFile(latestLog)
-        });
     }
 }

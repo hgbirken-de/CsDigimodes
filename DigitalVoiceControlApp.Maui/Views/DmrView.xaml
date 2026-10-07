@@ -7,9 +7,9 @@
 
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8" Padding="12,8">
 
-        <!-- Gruppierter Block: CALL/TA und SRC/DST -->
+        <!-- Gruppierter Block: CALL/TA, SRC/DST und RPT (unter SRC) -->
         <Border Grid.Row="0" Stroke="Gray" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="10">
-            <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="6">
+            <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
 
                 <Label Grid.Row="0" Grid.Column="0" Text="CALL" VerticalOptions="Center" />
                 <Label Grid.Row="0" Grid.Column="1" Text="{Binding Callsign}" FontAttributes="Bold" VerticalOptions="Center" />
@@ -20,6 +20,9 @@
                 <Label Grid.Row="1" Grid.Column="1" Text="{Binding SrcId}" VerticalOptions="Center" />
                 <Label Grid.Row="1" Grid.Column="2" Text="DST" VerticalOptions="Center" />
                 <Label Grid.Row="1" Grid.Column="3" Text="{Binding DstId}" VerticalOptions="Center" />
+
+                <Label Grid.Row="2" Grid.Column="0" Text="RPT" VerticalOptions="Center" />
+                <Label Grid.Row="2" Grid.Column="1" Text="{Binding RptId}" VerticalOptions="Center" />
 
             </Grid>
         </Border>

@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="DigitalVoiceControlApp.Maui.LogManagementPage"
+             Title="Log management">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="14">
+
+            <Border Stroke="Gray" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="12">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Log files" FontAttributes="Bold" FontSize="16" />
+                    <Label x:Name="InfoLabel" />
+
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                        <Label Grid.Column="0" Text="Log level" VerticalOptions="Center" />
+                        <Picker x:Name="LevelPicker" Grid.Column="1" SelectedIndexChanged="OnLevelChanged" />
+                    </Grid>
+
+                    <Label FontSize="12"
+                           TextColor="Gray"
+                           Text="Error, Warning and Info are saved. Debug is active for this session only and returns to the saved level at the next start. Debug logging writes a lot of data (roughly 12 MB per hour of reception)." />
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Export logs (zip)" Clicked="OnExportClicked" />
+            <Button Text="Delete logs" Clicked="OnDeleteClicked" />
+
+            <Label FontSize="12"
+                   TextColor="Gray"
+                   Text="The logs contain your callsign, DMR ID, server names and the local IP address. Please review them before you share them publicly. Size is limited automatically: one file of up to 2 MB plus five archive files." />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
