@@ -5,10 +5,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:DigitalVoiceControlApp.Maui"
     Shell.FlyoutBehavior="Disabled"
-    Title="DigitalVoiceControlApp.Maui">
+    Title=".Net Digimodes">
 
     <ShellContent
-        Title="Home"
+        Title=".Net Digimodes"
         ContentTemplate="{DataTemplate local:MainPage}"
         Route="MainPage" />
 

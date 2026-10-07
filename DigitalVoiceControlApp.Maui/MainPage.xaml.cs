@@ -1,4 +1,5 @@
-﻿using DigitalVoiceControlApp.Maui.ViewModels;
+﻿using DigitalVoiceControlApp.Maui.Config;
+using DigitalVoiceControlApp.Maui.ViewModels;
 using Maui.AmbeSupport;
 using Maui.AudioSupport;
 using NLog;
@@ -24,12 +25,19 @@ public partial class MainPage : ContentPage
         ViewModel.ShowAlertRequested += async (title, message) => await DisplayAlert(title, message, "OK");
     }
 
+    /// <summary>Slider losgelassen: Lautstärke in die Einstellungsdatei schreiben (beim Ziehen nur im Speicher).</summary>
+    private void OnRxVolumeDragCompleted(object? sender, EventArgs e) => UserSettings.Save();
+
+    /// <summary>Slider losgelassen: Mikrofon-Gain in die Einstellungsdatei schreiben.</summary>
+    private void OnMicGainDragCompleted(object? sender, EventArgs e) => UserSettings.Save();
+
     private async void OnMenuButtonClicked(object sender, EventArgs e)
     {
         // Ein Action-Sheet kennt keine deaktivierten Einträge: Während der Verbindung bleibt "Settings" sichtbar,
         // ist aber als gesperrt gekennzeichnet und erklärt beim Antippen, warum.
-        string settingsItem = ViewModel.IsSettingsEnabled ? "Settings" : "Settings (gesperrt)";
-        string action = await DisplayActionSheet("Menu", "Cancel", null, settingsItem, "Help", "AMBE-Test", "Audio-Test", "Export Log", "Exit");
+        string settingsItem = ViewModel.IsSettingsEnabled ? "Settings" : "Settings (locked)";
+        string talkgroupsItem = ViewModel.IsSettingsEnabled ? "Talkgroups…" : "Talkgroups (locked)";
+        string action = await DisplayActionSheet("Menu", "Cancel", null, settingsItem, talkgroupsItem, "Help", "AMBE-Test", "Audio-Test", "Export Log", "Exit");
 
         // async void: eine unbehandelte Exception würde hier die ganze App beenden -> abfangen und anzeigen
         try
@@ -39,8 +47,14 @@ public partial class MainPage : ContentPage
                 case "Settings":
                     await Navigation.PushAsync(new SettingsPage());
                     break;
-                case "Settings (gesperrt)":
-                    await DisplayAlert("Settings", "Während der Verbindung sind die Settings gesperrt. Bitte zuerst trennen.", "OK");
+                case "Settings (locked)":
+                    await DisplayAlert("Settings", "The settings are locked while connected. Please disconnect first.", "OK");
+                    break;
+                case "Talkgroups…":
+                    await Navigation.PushAsync(new TalkgroupEditorPage(ViewModel.ReloadTalkgroups));
+                    break;
+                case "Talkgroups (locked)":
+                    await DisplayAlert("Talkgroups", "The list is locked while connected. Please disconnect first.", "OK");
                     break;
                 case "Help":
                     // TODO: Help/About anzeigen
@@ -62,7 +76,7 @@ public partial class MainPage : ContentPage
         catch (Exception ex)
         {
             Log.Error(ex, $"Menu action '{action}' failed.");
-            await DisplayAlert("Fehler", $"{ex.GetType().Name}: {ex.Message}", "OK");
+            await DisplayAlert("Error", $"{ex.GetType().Name}: {ex.Message}", "OK");
         }
     }
 
@@ -78,7 +92,7 @@ public partial class MainPage : ContentPage
         var activity = Platform.CurrentActivity;
         if (activity == null)
         {
-            await DisplayAlert("AMBE-Test", "Keine Activity verfügbar.", "OK");
+            await DisplayAlert("AMBE-Test", "No activity available.", "OK");
             return;
         }
 
@@ -86,13 +100,13 @@ public partial class MainPage : ContentPage
         var usbManager = (UsbManager)activity.GetSystemService(Context.UsbService)!;
         var devices = usbManager.DeviceList?.Values.ToList() ?? [];
 
-        Log.Info($"USB-Suche: {devices.Count} Gerät(e) gefunden.");
+        Log.Info($"USB search: {devices.Count} device(s) found.");
 
         var deviceLines = new List<string>();
         foreach (var device in devices)
         {
             bool isAmbe = device.VendorId == AmbeUsb.FtdiVendorId;
-            string marker = isAmbe ? "✓ AMBE-Stick (FTDI)" : "?";
+            string marker = isAmbe ? "✓ AMBE stick (FTDI)" : "?";
             string line = $"{marker}  {device.ProductName ?? device.DeviceName}  " +
                           $"VID=0x{device.VendorId:X4} PID=0x{device.ProductId:X4}";
             deviceLines.Add(line);
@@ -100,13 +114,13 @@ public partial class MainPage : ContentPage
         }
 
         string deviceSection = devices.Count == 0
-            ? "Keine USB-Geräte gefunden.\nOTG-Adapter und Stick eingesteckt?"
+            ? "No USB devices found.\nAre the OTG adapter and the stick plugged in?"
             : string.Join("\n", deviceLines);
 
         // Der Test greift auf den Stick zu, den der DMR-Client benutzt: nur im getrennten Zustand
         if (ViewModel.IsServerConnected)
         {
-            await DisplayAlert("AMBE-Test", $"{deviceSection}\n\nDer Stick wird gerade vom DMR-Client benutzt. Bitte zuerst trennen.", "OK");
+            await DisplayAlert("AMBE-Test", $"{deviceSection}\n\nThe stick is currently used by the DMR client. Please disconnect first.", "OK");
             return;
         }
 
@@ -135,7 +149,7 @@ public partial class MainPage : ContentPage
             ctrl.Close();
         }
 #else
-        await DisplayAlert("AMBE-Test", "Nur auf Android verfügbar.", "OK");
+        await DisplayAlert("AMBE-Test", "Available on Android only.", "OK");
 #endif
     }
 
@@ -148,7 +162,7 @@ public partial class MainPage : ContentPage
 #if ANDROID
         if (ViewModel.IsServerConnected)
         {
-            await DisplayAlert("Audio-Test", "Mikrofon und Lautsprecher werden gerade vom DMR-Client benutzt. Bitte zuerst trennen.", "OK");
+            await DisplayAlert("Audio-Test", "Microphone and speaker are currently used by the DMR client. Please disconnect first.", "OK");
             return;
         }
 
@@ -158,11 +172,11 @@ public partial class MainPage : ContentPage
             var status = await Permissions.RequestAsync<Permissions.Microphone>();
             if (status != PermissionStatus.Granted)
             {
-                await DisplayAlert("Audio-Test", "Mikrofon-Berechtigung wurde nicht erteilt.", "OK");
+                await DisplayAlert("Audio-Test", "Microphone permission was not granted.", "OK");
                 return;
             }
 
-            await DisplayAlert("Audio-Test", "Nach dem Tippen auf OK werden 3 Sekunden aufgenommen. Bitte sprechen. Danach wird die Aufnahme abgespielt.", "OK");
+            await DisplayAlert("Audio-Test", "After you tap OK, 3 seconds are recorded. Please speak. The recording is then played back.", "OK");
 
             string report = await Task.Run(() => AudioSelfTest.RunAsync(3));
             Log.Info(report);
@@ -171,10 +185,10 @@ public partial class MainPage : ContentPage
         catch (Exception ex)
         {
             Log.Error(ex, "Audio test failed.");
-            await DisplayAlert("Audio-Test", $"Fehler: {ex.GetType().Name}: {ex.Message}", "OK");
+            await DisplayAlert("Audio-Test", $"Error: {ex.GetType().Name}: {ex.Message}", "OK");
         }
 #else
-        await DisplayAlert("Audio-Test", "Nur auf Android verfügbar.", "OK");
+        await DisplayAlert("Audio-Test", "Available on Android only.", "OK");
 #endif
     }
 
@@ -184,7 +198,7 @@ public partial class MainPage : ContentPage
 
         if (!Directory.Exists(logDir))
         {
-            await DisplayAlert("Export Log", "Keine Logdateien vorhanden.", "OK");
+            await DisplayAlert("Export Log", "No log files found.", "OK");
             return;
         }
 
@@ -194,13 +208,13 @@ public partial class MainPage : ContentPage
 
         if (latestLog == null)
         {
-            await DisplayAlert("Export Log", "Keine Logdateien vorhanden.", "OK");
+            await DisplayAlert("Export Log", "No log files found.", "OK");
             return;
         }
 
         await Share.Default.RequestAsync(new ShareFileRequest
         {
-            Title = "Log-Datei teilen",
+            Title = "Share log file",
             File = new ShareFile(latestLog)
         });
     }

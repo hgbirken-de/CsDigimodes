@@ -40,14 +40,15 @@ public static class AppLifecycle
     }
 
     /// <summary>
-    /// Wartet, bis die App im Vordergrund ist (z.B. nachdem ein System-Dialog sie kurz pausiert hat).
+    /// Wartet (blockierend, nur auf einem Hintergrund-Thread aufrufen), bis die App im Vordergrund ist, z.B. nachdem ein
+    /// System-Dialog sie kurz pausiert hat.
     /// </summary>
     /// <returns>true, wenn die App innerhalb der Zeit im Vordergrund war.</returns>
-    public static async Task<bool> WaitForForegroundAsync(TimeSpan timeout)
+    public static bool WaitForForeground(TimeSpan timeout)
     {
         DateTime end = DateTime.UtcNow + timeout;
         while (!_inForeground && DateTime.UtcNow < end)
-            await Task.Delay(50);
+            Thread.Sleep(50);
         return _inForeground;
     }
 }

@@ -25,8 +25,50 @@ public class UserSettings
     private static readonly object _sync = new();
     private static UserSettings? _instance;
 
+    /// <summary>
+    /// Basisordner der App (Gegenstück zu <c>%APPDATA%\CsDigimodes</c> unter Windows): privat für diese App,
+    /// unter Android <c>/data/user/0/&lt;Paket&gt;/files</c>. Dort liegen auch UserSettings.yaml und logs.
+    /// </summary>
+    public static string HomeDir { get; } = FileSystem.AppDataDirectory;
+
     /// <summary>Pfad der Einstellungsdatei.</summary>
-    public static string FileName { get; } = Path.Combine(FileSystem.AppDataDirectory, "UserSettings.yaml");
+    public static string FileName { get; } = Path.Combine(HomeDir, "UserSettings.yaml");
+
+    /// <summary>Art der Dateien in einem Mode-Ordner (wie in der Desktop-App).</summary>
+    public enum FileType { Audio, Data }
+
+    private static readonly Dictionary<FileType, string> AppSpecificFolder = new() { [FileType.Audio] = "audio", [FileType.Data] = "Data" };
+
+    private static bool _foldersCreated;
+
+    /// <summary>
+    /// Legt die Ordnerstruktur wie unter Windows an (falls nicht vorhanden): <c>logs</c> und je Mode die Ordner
+    /// <c>audio</c> und <c>Data</c>.
+    /// </summary>
+    private static void EnsureFolders()
+    {
+        lock (_sync)
+        {
+            if (_foldersCreated)
+                return;
+
+            Directory.CreateDirectory(Path.Combine(HomeDir, "logs")); // das Logging schreibt hierhin
+            foreach (Mode mode in Enum.GetValues<Mode>())
+            {
+                foreach (string folder in AppSpecificFolder.Values)
+                    Directory.CreateDirectory(Path.Combine(HomeDir, mode.ToString(), folder));
+            }
+
+            _foldersCreated = true;
+        }
+    }
+
+    /// <summary>Liefert den Ordner für eine Dateiart eines Modes, z.B. <c>.../files/Dmr/Data</c> (legt die Struktur bei Bedarf an).</summary>
+    public static string Dir(Mode mode, FileType fileType)
+    {
+        EnsureFolders();
+        return Path.Combine(HomeDir, mode.ToString(), AppSpecificFolder[fileType]);
+    }
 
     public AmbeSettings Ambe { get; set; } = new();
     public CommonSettings Common { get; set; } = new();
@@ -90,7 +132,7 @@ public class UserSettings
         UserSettings imported;
         try
         {
-            imported = Deserialize(yamlText) ?? throw new FormatException("Die Datei enthält keine Einstellungen.");
+            imported = Deserialize(yamlText) ?? throw new FormatException("The file contains no settings.");
         }
         catch (FormatException)
         {
@@ -98,7 +140,7 @@ public class UserSettings
         }
         catch (Exception ex)
         {
-            throw new FormatException($"Die Datei ist kein gültiges Settings-YAML: {ex.Message}", ex);
+            throw new FormatException($"The file is not a valid settings YAML: {ex.Message}", ex);
         }
 
         imported.Normalize();
@@ -126,6 +168,8 @@ public class UserSettings
     {
         try
         {
+            EnsureFolders();
+
             if (!File.Exists(FileName))
             {
                 logger.Info("No settings file yet, using defaults.");
@@ -165,8 +209,9 @@ public class UserSettings
         Xrf ??= new();
         Ysf ??= new();
 
-        // Mikrofon-/Lautstärkewerte sind dB-Werte der Slider (-40..+30). Werte außerhalb (z.B. der Desktop-Vorgabewert 50,
-        // der nie über einen Slider gesetzt wurde) würden extrem laut/leise machen -> auf 0 dB (unverändert) zurücksetzen.
+        // Mikrofon-/Lautstärkewerte sind dB-Werte der Slider (-40..+30). Werte außerhalb (z.B. der Desktop-Vorgabewert 50)
+        // werden auf die Grenzen geklemmt. Das entspricht der Desktop-App: Dort setzt der Slider (Maximum 30) einen
+        // Wert von 50 auf 30 und schreibt ihn zurück, die Desktop-Wiedergabe läuft dann tatsächlich mit +30 dB.
         Common.MicGain = SanitizeGain(Common.MicGain);
         Common.RxVolume = SanitizeGain(Common.RxVolume);
         Dcs.MicGain = SanitizeGain(Dcs.MicGain);   Dcs.RxVolume = SanitizeGain(Dcs.RxVolume);
@@ -182,7 +227,7 @@ public class UserSettings
     public const double GainMinDb = -40;
     public const double GainMaxDb = 30;
 
-    private static double SanitizeGain(double db) => db is >= GainMinDb and <= GainMaxDb ? db : 0;
+    private static double SanitizeGain(double db) => double.IsNaN(db) ? 0 : Math.Clamp(db, GainMinDb, GainMaxDb);
 
     // ------------------------------------------------------------------
     // Validierung
@@ -193,7 +238,7 @@ public class UserSettings
     private static void CheckRange(List<string> errors, string name, double value, double min, double max)
     {
         if (value < min || value > max)
-            errors.Add($"{name} muss zwischen {min} und {max} liegen.");
+            errors.Add($"{name} must be between {min} and {max}.");
     }
 
     /// <summary>
@@ -207,46 +252,46 @@ public class UserSettings
 
         // Common
         if (string.IsNullOrWhiteSpace(Common.Callsign) || Common.Callsign.Contains(' '))
-            errors.Add("Rufzeichen fehlt oder enthält Leerzeichen.");
+            errors.Add("Callsign is missing or contains spaces.");
         if (!string.IsNullOrWhiteSpace(Common.Locator) && !LocatorPattern.IsMatch(Common.Locator.Trim()))
-            errors.Add("Locator ist ungültig (z.B. JO54 oder JO54OL).");
-        CheckRange(errors, "Mikrofon (Allgemein, dB)", Common.MicGain, GainMinDb, GainMaxDb);
-        CheckRange(errors, "Lautstärke (Allgemein, dB)", Common.RxVolume, GainMinDb, GainMaxDb);
+            errors.Add("Locator is invalid (e.g. JO54 or JO54OL).");
+        CheckRange(errors, "Microphone (general, dB)", Common.MicGain, GainMinDb, GainMaxDb);
+        CheckRange(errors, "Volume (general, dB)", Common.RxVolume, GainMinDb, GainMaxDb);
 
         // DMR
-        CheckRange(errors, "DMR-ID", Dmr.MyDmrId, 1, 9999999);
+        CheckRange(errors, "DMR ID", Dmr.MyDmrId, 1, 9999999);
         CheckRange(errors, "ESSID", Dmr.Essid, 0, 99);
         CheckRange(errors, "Color Code", Dmr.ColorCode, 1, 15);
         CheckRange(errors, "Timeslot", Dmr.TimeSlot, 1, 2);
-        CheckRange(errors, "BM-Server-Port", Dmr.BmServerPort1, 1025, 65535);
+        CheckRange(errors, "BM server port", Dmr.BmServerPort1, 1025, 65535);
         if (string.IsNullOrWhiteSpace(Dmr.BmServerAddr1))
-            errors.Add("BM-Server-Adresse fehlt.");
+            errors.Add("BM server address is missing.");
         if (string.IsNullOrWhiteSpace(Dmr.Master))
-            errors.Add("Es ist kein DMR-Master ausgewählt.");
+            errors.Add("No DMR master selected.");
         if (Dmr.LastTgInUse < 0)
-            errors.Add("Talkgroup darf nicht negativ sein.");
-        CheckRange(errors, "Mikrofon (DMR, dB)", Dmr.MicGain, GainMinDb, GainMaxDb);
-        CheckRange(errors, "Lautstärke (DMR, dB)", Dmr.RxVolume, GainMinDb, GainMaxDb);
+            errors.Add("Talkgroup must not be negative.");
+        CheckRange(errors, "Microphone (DMR, dB)", Dmr.MicGain, GainMinDb, GainMaxDb);
+        CheckRange(errors, "Volume (DMR, dB)", Dmr.RxVolume, GainMinDb, GainMaxDb);
 
         // NXDN
-        CheckRange(errors, "NXDN-ID", Nxdn.NxdnId, 1, 65535);
+        CheckRange(errors, "NXDN ID", Nxdn.NxdnId, 1, 65535);
 
         // FCS
-        CheckRange(errors, "FCS-Port", Fcs.Port, 1025, 65535);
+        CheckRange(errors, "FCS port", Fcs.Port, 1025, 65535);
         if (string.IsNullOrWhiteSpace(Fcs.Master))
-            errors.Add("Es ist kein FCS-Master ausgewählt.");
+            errors.Add("No FCS master selected.");
 
         // D-STAR / YSF-Ports
-        CheckRange(errors, "DCS-Port", Dcs.HostPort, 1025, 65535);
-        CheckRange(errors, "REF-Port", Ref.HostPort, 1025, 65535);
-        CheckRange(errors, "XRF-Port", Xrf.HostPort, 1025, 65535);
+        CheckRange(errors, "DCS port", Dcs.HostPort, 1025, 65535);
+        CheckRange(errors, "REF port", Ref.HostPort, 1025, 65535);
+        CheckRange(errors, "XRF port", Xrf.HostPort, 1025, 65535);
 
         // AMBE
         if (Ambe.ServiceType == AmbeServiceType.Server)
         {
             if (string.IsNullOrWhiteSpace(Ambe.ServerAddr))
-                errors.Add("AMBE-Server-Adresse fehlt.");
-            CheckRange(errors, "AMBE-Server-Port", Ambe.ServerPort, 1025, 65535);
+                errors.Add("AMBE server address is missing.");
+            CheckRange(errors, "AMBE server port", Ambe.ServerPort, 1025, 65535);
         }
 
         return errors;
@@ -261,9 +306,9 @@ public class UserSettings
         var errors = Validate();
 
         if (Common.Callsign.Equals("NOCALL", StringComparison.OrdinalIgnoreCase))
-            errors.Add("Rufzeichen ist noch auf NOCALL gesetzt.");
+            errors.Add("Callsign is still set to NOCALL.");
         if (string.IsNullOrWhiteSpace(Dmr.Password) || Dmr.Password == "unknown")
-            errors.Add("BrandMeister-Passwort ist nicht gesetzt.");
+            errors.Add("BrandMeister password is not set.");
 
         return errors;
     }

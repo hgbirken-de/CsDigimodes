@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="DigitalVoiceControlApp.Maui.TalkgroupEditorPage"
+             Title="Talkgroups">
+
+    <Grid RowDefinitions="Auto,*,Auto" Padding="12" RowSpacing="8">
+
+        <Label Grid.Row="0"
+               Text="Format: DMR-ID;Name;G (group) or P (private). Lines starting with # are comments. The list fills the talkgroup picker."
+               FontSize="12"
+               TextColor="Gray" />
+
+        <Editor x:Name="TextEditor"
+                Grid.Row="1"
+                FontFamily="monospace"
+                FontSize="13"
+                AutoSize="Disabled"
+                IsSpellCheckEnabled="False"
+                IsTextPredictionEnabled="False"
+                Keyboard="Plain" />
+
+        <Grid Grid.Row="2" ColumnDefinitions="*,*,*" RowDefinitions="Auto,Auto" ColumnSpacing="8" RowSpacing="8">
+            <Button Grid.Row="0" Grid.Column="0" Text="Save" Clicked="OnSaveClicked" />
+            <Button Grid.Row="0" Grid.Column="1" Text="Cancel" Clicked="OnCancelClicked" />
+            <Button Grid.Row="0" Grid.Column="2" Text="Default" Clicked="OnDefaultClicked" />
+            <Button Grid.Row="1" Grid.Column="0" Text="Export…" Clicked="OnExportClicked" />
+            <Button Grid.Row="1" Grid.Column="1" Text="Import…" Clicked="OnImportClicked" />
+        </Grid>
+
+    </Grid>
+</ContentPage>

@@ -145,26 +145,26 @@ public partial class SettingsViewModel : ObservableObject
 
         // DMR
         us.Dmr.Password = Password;
-        if (TryParse(MyDmrId, "DMR-ID", errors, out int dmrId)) us.Dmr.MyDmrId = dmrId;
+        if (TryParse(MyDmrId, "DMR ID", errors, out int dmrId)) us.Dmr.MyDmrId = dmrId;
         if (TryParse(Essid, "ESSID", errors, out int essidValue)) us.Dmr.Essid = essidValue;
         us.Dmr.Protocol = SelectedDmrProtocol;
         us.Dmr.BmServerAddr1 = BmServerAddr1.Trim();
-        if (TryParse(BmServerPort1, "BM-Server-Port", errors, out int bmPort)) us.Dmr.BmServerPort1 = bmPort;
+        if (TryParse(BmServerPort1, "BM server port", errors, out int bmPort)) us.Dmr.BmServerPort1 = bmPort;
         us.Dmr.Master = SelectedDmrMaster ?? "";
         us.Dmr.TimeSlot = SelectedTimeSlot;
         us.Dmr.ColorCode = SelectedColorCode;
 
         // NXDN
-        if (TryParse(NxdnId, "NXDN-ID", errors, out int nxdn)) us.Nxdn.NxdnId = nxdn;
+        if (TryParse(NxdnId, "NXDN ID", errors, out int nxdn)) us.Nxdn.NxdnId = nxdn;
 
         // FCS
         us.Fcs.Master = SelectedFcsMaster ?? "";
-        if (TryParse(FcsPort, "FCS-Port", errors, out int fcsPortValue)) us.Fcs.Port = fcsPortValue;
+        if (TryParse(FcsPort, "FCS port", errors, out int fcsPortValue)) us.Fcs.Port = fcsPortValue;
 
         // AMBE
         us.Ambe.ServiceType = AmbeServiceType;
         us.Ambe.ServerAddr = AmbeServerAddr.Trim();
-        if (TryParse(AmbeServerPort, "AMBE-Server-Port", errors, out int ambePort)) us.Ambe.ServerPort = ambePort;
+        if (TryParse(AmbeServerPort, "AMBE server port", errors, out int ambePort)) us.Ambe.ServerPort = ambePort;
 
         if (errors.Count == 0)
             errors.AddRange(us.Validate());
@@ -190,7 +190,7 @@ public partial class SettingsViewModel : ObservableObject
         if (int.TryParse(text.Trim(), out value))
             return true;
 
-        errors.Add($"{name}: Bitte eine ganze Zahl eingeben.");
+        errors.Add($"{name}: please enter a whole number.");
         return false;
     }
 }

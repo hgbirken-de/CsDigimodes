@@ -1,6 +1,7 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Hardware.Usb;
+using Android.OS;
 
 namespace Maui.AmbeSupport;
 
@@ -76,6 +77,52 @@ public static class AmbeUsb
     }
 
     /// <summary>
+    /// Blockierende Variante von <see cref="RequestPermissionAsync"/> für Code, der auf einem Hintergrund-Thread läuft
+    /// (kein async/await nötig). DARF NICHT auf dem UI-Thread aufgerufen werden: Die Antwort des System-Dialogs wird auf dem
+    /// UI-Thread zugestellt, ein Warten dort wäre ein Deadlock.
+    /// </summary>
+    /// <returns>true, wenn die Permission vorliegt bzw. erteilt wurde.</returns>
+    public static bool RequestPermission(Context context, UsbDevice device, TimeSpan? timeout = null)
+    {
+        if (Looper.MyLooper() == Looper.MainLooper)
+            throw new InvalidOperationException("RequestPermission() must not be called on the UI thread.");
+
+        var usbManager = (UsbManager)context.GetSystemService(Context.UsbService)!;
+        if (usbManager.HasPermission(device))
+            return true;
+
+        bool granted = false;
+        using var answered = new ManualResetEventSlim(false);
+        var receiver = new PermissionReceiver(g => { granted = g; answered.Set(); });
+        var filter = new IntentFilter(ActionUsbPermission);
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
+            context.RegisterReceiver(receiver, filter, ReceiverFlags.NotExported);
+        else
+            context.RegisterReceiver(receiver, filter);
+
+        try
+        {
+            var flags = OperatingSystem.IsAndroidVersionAtLeast(31)
+                ? PendingIntentFlags.Mutable
+                : PendingIntentFlags.UpdateCurrent;
+
+            var intent = new Intent(ActionUsbPermission);
+            intent.SetPackage(context.PackageName);
+
+            var pendingIntent = PendingIntent.GetBroadcast(context, 0, intent, flags);
+            usbManager.RequestPermission(device, pendingIntent);
+
+            return answered.Wait(timeout ?? TimeSpan.FromSeconds(60)) && granted;
+        }
+        finally
+        {
+            try { context.UnregisterReceiver(receiver); }
+            catch (Java.Lang.IllegalArgumentException) { /* war nicht (mehr) registriert */ }
+        }
+    }
+
+    /// <summary>
     /// Findet den Stick, holt die Permission ein und öffnet die Verbindung (FTDI-Init). Der Controller
     /// wird danach geöffnet zurückgegeben; <c>DmrClient2.Start()</c> darf trotzdem <c>Open()</c> aufrufen
     /// (idempotent).
@@ -84,10 +131,10 @@ public static class AmbeUsb
     {
         var device = FindDevice(context);
         if (device == null)
-            return (null, "Kein AMBE-Stick (FTDI, VID 0x0403) gefunden. OTG-Adapter und Stick eingesteckt?");
+            return (null, "No AMBE stick (FTDI, VID 0x0403) found. Are the OTG adapter and the stick plugged in?");
 
         if (!await RequestPermissionAsync(context, device))
-            return (null, "USB-Permission wurde nicht erteilt.");
+            return (null, "USB permission was not granted.");
 
         var controller = new Ambe3000UsbController(context, device);
         try
@@ -98,7 +145,7 @@ public static class AmbeUsb
         catch (Exception ex)
         {
             controller.Dispose();
-            return (null, $"Öffnen fehlgeschlagen: {ex.Message}");
+            return (null, $"Opening failed: {ex.Message}");
         }
     }
 

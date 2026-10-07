@@ -62,13 +62,13 @@ public static class AudioSelfTest
         }
 
         // ---- Auswertung ----
-        sb.AppendLine($"Aufnahme {seconds} s: {blocks.Count} Blöcke (erwartet etwa {seconds * 50}), verworfen {dropped}");
+        sb.AppendLine($"Recording {seconds} s: {blocks.Count} blocks (expected about {seconds * 50}), dropped {dropped}");
 
         List<long> ts;
         lock (gate) ts = new List<long>(stamps);
 
         if (ts.Count > 0)
-            sb.AppendLine($"Erster Block nach {Stopwatch.GetElapsedTime(t0, ts[0]).TotalMilliseconds:F0} ms");
+            sb.AppendLine($"First block after {Stopwatch.GetElapsedTime(t0, ts[0]).TotalMilliseconds:F0} ms");
 
         if (ts.Count > 1)
         {
@@ -80,11 +80,11 @@ public static class AudioSelfTest
                 min = Math.Min(min, ms);
                 max = Math.Max(max, ms);
             }
-            sb.AppendLine($"Block-Abstand: Mittel {sum / (ts.Count - 1):F1} ms, min {min:F1}, max {max:F1} (Soll 20 ms)");
+            sb.AppendLine($"Block interval: mean {sum / (ts.Count - 1):F1} ms, min {min:F1}, max {max:F1} (target 20 ms)");
         }
 
         int peak = ComputePeak(blocks);
-        sb.AppendLine($"Pegel: Spitze {peak} von 32767{(peak == 0 ? " (MIKROFON STUMM?)" : "")}");
+        sb.AppendLine($"Level: peak {peak} of 32767{(peak == 0 ? " (MICROPHONE MUTED?)" : "")}");
 
         // ---- Wiedergabe in Echtzeit ----
         if (blocks.Count > 0)
@@ -99,10 +99,10 @@ public static class AudioSelfTest
                     await Task.Delay((int)wait);
             }
             await Task.Delay(400); // Rest ausspielen lassen
-            sb.AppendLine("Wiedergabe: fertig");
+            sb.AppendLine("Playback: done");
         }
 
-        sb.AppendLine(blocks.Count >= seconds * 45 && dropped == 0 && peak > 0 ? "ERGEBNIS: OK" : "ERGEBNIS: PRÜFEN");
+        sb.AppendLine(blocks.Count >= seconds * 45 && dropped == 0 && peak > 0 ? "RESULT: OK" : "RESULT: CHECK");
         return sb.ToString();
     }
 }

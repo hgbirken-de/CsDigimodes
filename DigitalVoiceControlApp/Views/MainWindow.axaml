@@ -7,7 +7,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="DigitalVoiceControlApp.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
-        Title="CsDigimodes"
+        Title=".Net Digimodes"
         Background="{DynamicResource AppBackgroundBrush}"
         SizeToContent="WidthAndHeight"
         CanResize="True" >

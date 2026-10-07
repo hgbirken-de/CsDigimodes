@@ -42,7 +42,7 @@ public static class AmbeSelfTest
                 if (ctrl.SendReceivePacket(packet) != null)
                     initOk++;
             }
-            sb.AppendLine($"Init: {initOk}/{init.Length} Antworten");
+            sb.AppendLine($"Init: {initOk}/{init.Length} responses");
             ok &= initOk == init.Length;
 
             // 2) Encode: 160 Samples Stille
@@ -51,7 +51,7 @@ public static class AmbeSelfTest
 
             byte[]? ambe = ctrl.SendReceivePacket(speech);
             bool encodeOk = AmbeHelper.IsAmbePacket(ambe) && ambe!.Length == 15;
-            sb.AppendLine($"Encode: {(encodeOk ? "OK" : "FEHLER")} (Antwort: {ambe?.Length.ToString() ?? "null"} Bytes, erwartet 15)");
+            sb.AppendLine($"Encode: {(encodeOk ? "OK" : "ERROR")} (response: {ambe?.Length.ToString() ?? "null"} bytes, expected 15)");
             ok &= encodeOk;
 
             // 3) Decode: Antwort ist 326 Bytes lang, also mehrere USB-Pakete -> testet das Zusammensetzen
@@ -62,11 +62,11 @@ public static class AmbeSelfTest
                 Buffer.BlockCopy(ambe!, 6, channel, 6, 9);
                 byte[]? pcm = ctrl.SendReceivePacket(channel);
                 decodeOk = AmbeHelper.IsSpeechPacket(pcm) && pcm!.Length == 326;
-                sb.AppendLine($"Decode: {(decodeOk ? "OK" : "FEHLER")} (Antwort: {pcm?.Length.ToString() ?? "null"} Bytes, erwartet 326)");
+                sb.AppendLine($"Decode: {(decodeOk ? "OK" : "ERROR")} (response: {pcm?.Length.ToString() ?? "null"} bytes, expected 326)");
             }
             else
             {
-                sb.AppendLine("Decode: übersprungen (Encode fehlgeschlagen)");
+                sb.AppendLine("Decode: skipped (encode failed)");
             }
             ok &= decodeOk;
 
@@ -76,19 +76,19 @@ public static class AmbeSelfTest
                 (double avg, double max, int fails) encode = Measure(rounds, () => AmbeHelper.IsAmbePacket(ctrl.SendReceivePacket(speech)));
                 (double avg, double max, int fails) decode = Measure(rounds, () => AmbeHelper.IsSpeechPacket(ctrl.SendReceivePacket(channel)));
 
-                sb.AppendLine($"Encode {rounds}x: Mittel {encode.avg:F1} ms, max {encode.max:F1} ms, Fehler {encode.fails}");
-                sb.AppendLine($"Decode {rounds}x: Mittel {decode.avg:F1} ms, max {decode.max:F1} ms, Fehler {decode.fails}");
-                sb.AppendLine("(Soll: Mittel unter 20 ms; Windows: ca. 16 ms)");
+                sb.AppendLine($"Encode {rounds}x: mean {encode.avg:F1} ms, max {encode.max:F1} ms, errors {encode.fails}");
+                sb.AppendLine($"Decode {rounds}x: mean {decode.avg:F1} ms, max {decode.max:F1} ms, errors {decode.fails}");
+                sb.AppendLine("(Target: mean below 20 ms; Windows: approx. 16 ms)");
                 ok &= encode.fails == 0 && decode.fails == 0;
             }
         }
         catch (Exception ex)
         {
-            sb.AppendLine($"FEHLER: {ex.GetType().Name}: {ex.Message}");
+            sb.AppendLine($"ERROR: {ex.GetType().Name}: {ex.Message}");
             ok = false;
         }
 
-        sb.AppendLine(ok ? "ERGEBNIS: OK" : "ERGEBNIS: FEHLER");
+        sb.AppendLine(ok ? "RESULT: OK" : "RESULT: ERROR");
         return sb.ToString();
     }
 

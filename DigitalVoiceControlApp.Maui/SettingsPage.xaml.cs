@@ -26,12 +26,12 @@ public partial class SettingsPage : ContentPage
             if (_viewModel.TrySave(out List<string> errors))
                 await Navigation.PopAsync();
             else
-                await DisplayAlert("Eingaben prüfen", string.Join("\n", errors), "OK");
+                await DisplayAlert("Check your input", string.Join("\n", errors), "OK");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Saving settings failed.");
-            await DisplayAlert("Fehler", $"{ex.GetType().Name}: {ex.Message}", "OK");
+            await DisplayAlert("Error", $"{ex.GetType().Name}: {ex.Message}", "OK");
         }
     }
 
@@ -44,14 +44,14 @@ public partial class SettingsPage : ContentPage
     {
         try
         {
-            bool proceed = await DisplayAlert("Einstellungen importieren",
-                "Alle aktuellen Einstellungen werden durch den Inhalt der gewählten Datei ersetzt und sofort gespeichert " +
-                "(z.B. die UserSettings.yaml vom PC). Dieser Schritt lässt sich mit \"Discard\" nicht rückgängig machen. Fortfahren?",
-                "Datei wählen", "Abbrechen");
+            bool proceed = await DisplayAlert("Import settings",
+                "All current settings will be replaced by the contents of the selected file and saved immediately " +
+                "(e.g. the UserSettings.yaml from the PC). \"Discard\" cannot undo this step. Continue?",
+                "Choose file", "Cancel");
             if (!proceed)
                 return;
 
-            var file = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "UserSettings.yaml auswählen" });
+            var file = await FilePicker.Default.PickAsync(new PickOptions { PickerTitle = "Select UserSettings.yaml" });
             if (file == null)
                 return; // abgebrochen
 
@@ -60,12 +60,12 @@ public partial class SettingsPage : ContentPage
             string yaml = await reader.ReadToEndAsync();
 
             _viewModel.Import(yaml);
-            await DisplayAlert("Import", "Die Einstellungen wurden übernommen und gespeichert.", "OK");
+            await DisplayAlert("Import", "The settings were imported and saved.", "OK");
         }
         catch (Exception ex)
         {
             Log.Error(ex, "Importing settings failed.");
-            await DisplayAlert("Import fehlgeschlagen", ex.Message, "OK");
+            await DisplayAlert("Import failed", ex.Message, "OK");
         }
     }
 }
