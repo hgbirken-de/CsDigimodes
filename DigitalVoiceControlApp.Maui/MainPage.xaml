@@ -99,7 +99,12 @@
             <views:DmrView BindingContext="{Binding Dmr}" />
         </Grid>
 
-        <!-- Unten: PTT. Einmal tippen = senden, nochmal tippen = Ende (nur im verbundenen DMR-Mode bedienbar) -->
+        <!-- Mitte: die NXDN-Ansicht (nur im NXDN-Mode), im selben Bereich wie die DMR-Ansicht -->
+        <Grid Grid.Row="3" IsVisible="{Binding IsNxdnViewVisible}">
+            <views:NxdnView BindingContext="{Binding Nxdn}" />
+        </Grid>
+
+        <!-- Unten: PTT. Einmal tippen = senden, nochmal tippen = Ende (nur verbunden im DMR- und NXDN-Mode bedienbar) -->
         <Button Grid.Row="4"
                 x:Name="PttButton"
                 Text="{Binding PttText}"

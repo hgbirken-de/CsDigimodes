@@ -1,6 +1,7 @@
 ﻿using DigitalVoice.AmbeSupport;
 using DigitalVoice.Common;
 using DigitalVoice.Dmr;
+using DigitalVoice.Nxdn;
 using NLog;
 using System.Text.RegularExpressions;
 using YamlDotNet.Serialization;
@@ -309,6 +310,24 @@ public class UserSettings
             errors.Add("Callsign is still set to NOCALL.");
         if (string.IsNullOrWhiteSpace(Dmr.Password) || Dmr.Password == "unknown")
             errors.Add("BrandMeister password is not set.");
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Wie <see cref="Validate"/>, zusätzlich die Angaben, ohne die ein NXDN-Verbindungsaufbau keinen Sinn hat: echtes
+    /// Rufzeichen (nicht NOCALL, höchstens 10 Zeichen wie in <c>NxdnClientConfig.Validate()</c>) und ein bekannter Reflektor.
+    /// </summary>
+    public List<string> ValidateForNxdn()
+    {
+        var errors = Validate();
+
+        if (Common.Callsign.Equals("NOCALL", StringComparison.OrdinalIgnoreCase))
+            errors.Add("Callsign is still set to NOCALL.");
+        if (Common.Callsign.Length > 10)
+            errors.Add("Callsign must not be longer than 10 characters.");
+        if (!NxdnHosts.TryGetHostInfo(Nxdn.LastReflectorId, out _))
+            errors.Add($"NXDN reflector {Nxdn.LastReflectorId} is unknown. Please select one in the list.");
 
         return errors;
     }

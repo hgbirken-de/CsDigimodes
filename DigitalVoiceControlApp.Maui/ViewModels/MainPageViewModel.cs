@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using DigitalVoice.Common;
 using DigitalVoice.Dmr;
+using DigitalVoice.Nxdn;
 using DigitalVoiceControlApp.Maui.Config;
 using DigitalVoiceControlApp.Maui.Services;
 using NLog;
@@ -18,7 +19,7 @@ namespace DigitalVoiceControlApp.Maui.ViewModels;
 /// <summary>
 /// ViewModel für die Hauptseite (Gegenstück zum Avalonia-<c>MainViewModel</c>): Mode-Auswahl, Connect/Disconnect,
 /// Start/Stop der Clients (<see cref="StartStopDmr"/> entspricht <c>StartStopDmr(bool)</c> der Desktop-App), RX-/MIC-Gain,
-/// PTT. Bisher ist nur DMR angebunden.
+/// PTT. Bisher sind DMR und NXDN angebunden.
 /// <para>
 /// Ohne async/await: Alles, was blockiert (USB-Dialog, DNS, Chip-Init, Stop), läuft synchron auf einem eigenen Thread, nie auf
 /// dem UI-Thread. Änderungen an der Oberfläche werden mit <c>MainThread.BeginInvokeOnMainThread</c> übergeben. Die
@@ -33,6 +34,7 @@ public partial class MainPageViewModel : ObservableObject
 
     DmrClient1? _dmrClient1;
     DmrClient2? _dmrClient2;
+    NxdnClient? _nxdnClient;
 
 #if ANDROID
     Ambe3000UsbController? _ambeController;
@@ -40,18 +42,21 @@ public partial class MainPageViewModel : ObservableObject
     AndroidMicrophoneReader? _microphoneReader;
 #endif
 
-    // Start und Stop laufen nacheinander; ein Stop während des Starts beendet den Start sofort nach dem Verbinden.
-    readonly object _dmrLock = new();
-    volatile bool _dmrStopRequested;
+    // Start und Stop laufen nacheinander (für alle Modes); ein Stop während des Starts beendet den Start sofort nach dem Verbinden.
+    readonly object _clientLock = new();
+    volatile bool _stopRequested;
 
     /// <summary>true, sobald ein Client angelegt ist (Start läuft oder Client läuft).</summary>
-    bool IsClientActive => _dmrClient1 != null || _dmrClient2 != null;
+    bool IsClientActive => _dmrClient1 != null || _dmrClient2 != null || _nxdnClient != null;
 
     /// <summary>Ergebnis eines Startversuchs (Success = Client läuft, Cancelled = durch Pause abgebrochen, ohne Meldung).</summary>
     private sealed record StartResult(bool Success, string? Error = null, bool Cancelled = false);
 
     /// <summary>Die DMR-Ansicht (Rufzeichen, Quelle, Ziel, Last Heard). Der Client meldet seine Daten dorthin.</summary>
     public DmrViewModel Dmr { get; } = new();
+
+    /// <summary>Die NXDN-Ansicht (Rufzeichen, Quelle, Ziel, Gateway, Last Heard).</summary>
+    public NxdnViewModel Nxdn { get; } = new();
 
     /// <summary>true, solange ein Connect/Disconnect auf seinem Thread läuft (der Knopf ist dann gesperrt).</summary>
     [ObservableProperty]
@@ -67,6 +72,7 @@ public partial class MainPageViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsSettingsEnabled))]
     [NotifyPropertyChangedFor(nameof(IsPttEnabled))]
     [NotifyPropertyChangedFor(nameof(PttBackgroundColor))]
+    [NotifyPropertyChangedFor(nameof(IsLinkTargetPickerEnabled))]
     [NotifyPropertyChangedFor(nameof(StatusText))]
     private bool isServerConnected;
 
@@ -87,8 +93,10 @@ public partial class MainPageViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(SelectedModeName))]
     [NotifyPropertyChangedFor(nameof(ConnectionTooltip))]
     [NotifyPropertyChangedFor(nameof(IsDmrViewVisible))]
+    [NotifyPropertyChangedFor(nameof(IsNxdnViewVisible))]
     [NotifyPropertyChangedFor(nameof(IsPttEnabled))]
     [NotifyPropertyChangedFor(nameof(PttBackgroundColor))]
+    [NotifyPropertyChangedFor(nameof(IsLinkTargetPickerEnabled))]
     [NotifyPropertyChangedFor(nameof(StatusText))]
     private Mode selectedMode;
 
@@ -107,7 +115,7 @@ public partial class MainPageViewModel : ObservableObject
     {
         UserSettings.Instance().Common.LastMode = value;
         UserSettings.Save();
-        ConnectCommand.NotifyCanExecuteChanged(); // Connect ist nur für DMR freigegeben
+        ConnectCommand.NotifyCanExecuteChanged(); // Connect ist nur für DMR und NXDN freigegeben
 
         RxVolume = GetRxVolume(value); // die für diesen Mode gemerkten Werte
         MicGain = GetMicGain(value);
@@ -118,14 +126,20 @@ public partial class MainPageViewModel : ObservableObject
     /// <summary>Die DMR-Ansicht wird nur im DMR-Mode gezeigt.</summary>
     public bool IsDmrViewVisible => SelectedMode == Mode.Dmr;
 
+    /// <summary>Die NXDN-Ansicht wird nur im NXDN-Mode gezeigt.</summary>
+    public bool IsNxdnViewVisible => SelectedMode == Mode.Nxdn;
+
     /// <summary>Während der Verbindung ist der Mode gesperrt (wie in der Desktop-App).</summary>
     public bool IsModePickerEnabled => !IsServerConnected;
 
     /// <summary>Während der Verbindung sind die Settings gesperrt (wie in der Desktop-App).</summary>
     public bool IsSettingsEnabled => !IsServerConnected;
 
-    /// <summary>Verbinden ist derzeit nur für DMR möglich; Trennen immer, solange verbunden. Während Connect/Disconnect läuft: gesperrt.</summary>
-    private bool CanConnect() => !IsBusy && (IsServerConnected || SelectedMode == Mode.Dmr);
+    /// <summary>Die Modes, die auf Android schon angebunden sind.</summary>
+    private static bool IsSupportedMode(Mode mode) => mode is Mode.Dmr or Mode.Nxdn;
+
+    /// <summary>Verbinden ist derzeit für DMR und NXDN möglich; Trennen immer, solange verbunden. Während Connect/Disconnect läuft: gesperrt.</summary>
+    private bool CanConnect() => !IsBusy && (IsServerConnected || IsSupportedMode(SelectedMode));
 
     partial void OnIsServerConnectedChanged(bool value)
     {
@@ -138,8 +152,8 @@ public partial class MainPageViewModel : ObservableObject
     /// <summary>Statuszeile, die auch erklärt, warum Connect gesperrt ist.</summary>
     public string StatusText =>
         IsServerConnected ? $"{ToName(SelectedMode)}: connected"
-        : SelectedMode == Mode.Dmr ? "DMR: ready to connect"
-        : $"{ToName(SelectedMode)}: not yet available on Android (DMR only for now)";
+        : IsSupportedMode(SelectedMode) ? $"{ToName(SelectedMode)}: ready to connect"
+        : $"{ToName(SelectedMode)}: not yet available on Android (DMR and NXDN only for now)";
 
     // TODO: Dateinamen anpassen, sobald die tatsächlichen Icon-Dateinamen im Projekt feststehen
     // (Resources/Images/, Kleinschreibung, z.B. connect_16x.png / disconnect_16x.png).
@@ -147,8 +161,8 @@ public partial class MainPageViewModel : ObservableObject
 
     public string ConnectionTooltip =>
         IsServerConnected ? "Disconnect from Server"
-        : SelectedMode == Mode.Dmr ? "Connect to Server"
-        : "Connect is currently available for DMR only";
+        : IsSupportedMode(SelectedMode) ? "Connect to Server"
+        : "Connect is currently available for DMR and NXDN only";
 
     public Color ConnectionBackgroundColor => IsServerConnected ? Colors.Red : Colors.Transparent;
 
@@ -159,8 +173,9 @@ public partial class MainPageViewModel : ObservableObject
 
     // ---- Talkgroup-/Reflektor-Auswahl ------------------------------------------------------------
 
-    // Anzeigename -> Ziel (nur DMR; die anderen Modes folgen)
+    // Anzeigename -> Ziel (DMR: Talkgroup und Typ, NXDN: Reflektor-ID; die anderen Modes folgen)
     private readonly Dictionary<string, (int DmrId, Flco Flco)> _dmrLinkTargets = [];
+    private readonly Dictionary<string, int> _nxdnLinkTargets = [];
 
     /// <summary>Die Einträge des Pickers (im DMR-Mode die Talkgroups aus <c>DmrTalkGroups.csv</c>).</summary>
     [ObservableProperty]
@@ -171,7 +186,9 @@ public partial class MainPageViewModel : ObservableObject
     [ObservableProperty]
     private string linkTargetTitle = "Talkgroup";
 
-    public bool IsLinkTargetPickerEnabled => LinkTargetNames.Count > 0 && !IsPttActive; // beim Senden gesperrt
+    // Beim Senden gesperrt. Bei NXDN ist der Reflektor die Verbindung selbst: Er lässt sich nur im getrennten Zustand wechseln.
+    public bool IsLinkTargetPickerEnabled =>
+        LinkTargetNames.Count > 0 && !IsPttActive && !(SelectedMode == Mode.Nxdn && IsServerConnected);
 
     private string _selectedLinkTargetName = "";
 
@@ -190,7 +207,11 @@ public partial class MainPageViewModel : ObservableObject
             {
                 UserSettings.Instance().Dmr.LastTgInUse = target.DmrId; // beim nächsten Start wieder vorgewählt
                 UserSettings.Save();
-                // TODO: beim Senden SetTxDst(target.DmrId, target.Flco) am Client
+            }
+            else if (SelectedMode == Mode.Nxdn && _nxdnLinkTargets.TryGetValue(value, out int reflectorId))
+            {
+                UserSettings.Instance().Nxdn.LastReflectorId = reflectorId; // beim nächsten Verbinden wieder vorgewählt
+                UserSettings.Save();
             }
         }
     }
@@ -209,6 +230,7 @@ public partial class MainPageViewModel : ObservableObject
     private void UpdateLinkTargets(Mode mode)
     {
         _dmrLinkTargets.Clear();
+        _nxdnLinkTargets.Clear();
         List<string> names = [];
         string selected = "";
 
@@ -223,6 +245,18 @@ public partial class MainPageViewModel : ObservableObject
 
             int last = UserSettings.Instance().Dmr.LastTgInUse;
             selected = names.FirstOrDefault(n => _dmrLinkTargets[n].DmrId == last) ?? "";
+        }
+        else if (mode == Mode.Nxdn)
+        {
+            foreach (var kvp in NxdnHosts.All)
+            {
+                string name = $"{kvp.Key} - {kvp.Value.Host}"; // wie in der Desktop-App
+                _nxdnLinkTargets[name] = kvp.Key;
+                names.Add(name);
+            }
+
+            int last = UserSettings.Instance().Nxdn.LastReflectorId;
+            selected = names.FirstOrDefault(n => _nxdnLinkTargets[n] == last) ?? "";
         }
 
         LinkTargetTitle = mode == Mode.Dmr ? "Talkgroup" : "Reflector";
@@ -332,8 +366,8 @@ public partial class MainPageViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(PttBackgroundColor))]
     private bool isMicrophoneAllowed;
 
-    /// <summary>PTT ist nur im verbundenen DMR-Mode mit Mikrofon-Berechtigung bedienbar.</summary>
-    public bool IsPttEnabled => IsServerConnected && SelectedMode == Mode.Dmr && IsMicrophoneAllowed;
+    /// <summary>PTT ist nur verbunden (DMR oder NXDN) und mit Mikrofon-Berechtigung bedienbar.</summary>
+    public bool IsPttEnabled => IsServerConnected && IsSupportedMode(SelectedMode) && IsMicrophoneAllowed;
 
     /// <summary>true, solange gesendet wird (PTT ausgelöst).</summary>
     [ObservableProperty]
@@ -374,14 +408,18 @@ public partial class MainPageViewModel : ObservableObject
             if (!IsPttEnabled)
                 return;
 
-            if (!_dmrLinkTargets.TryGetValue(SelectedLinkTargetName, out var target))
+            // Nur DMR hat ein wählbares Sendeziel (Talkgroup); bei NXDN ist das Ziel der verbundene Reflektor
+            if (SelectedMode == Mode.Dmr)
             {
-                ShowAlert("PTT", "Please select a talkgroup first.");
-                return;
-            }
+                if (!_dmrLinkTargets.TryGetValue(SelectedLinkTargetName, out var target))
+                {
+                    ShowAlert("PTT", "Please select a talkgroup first.");
+                    return;
+                }
 
-            dmrId = target.DmrId;
-            flco = target.Flco;
+                dmrId = target.DmrId;
+                flco = target.Flco;
+            }
         }
 
         IsPttActive = on; // sofort sichtbar (rot/blau)
@@ -390,7 +428,9 @@ public partial class MainPageViewModel : ObservableObject
         else
             StopTxTimeout();
 
-        Log.Info(on ? $"PTT on, destination {dmrId} ({flco})" : "PTT off");
+        Log.Info(!on ? "PTT off"
+            : SelectedMode == Mode.Dmr ? $"PTT on, destination {dmrId} ({flco})"
+            : $"PTT on ({ToName(SelectedMode)})");
         _pttQueue.Add(new PttCommand(on, dmrId, flco));
     }
 
@@ -445,12 +485,13 @@ public partial class MainPageViewModel : ObservableObject
     /// </summary>
     private void ApplyPtt(PttCommand command)
     {
-        lock (_dmrLock)
+        lock (_clientLock)
         {
             DmrClient1? client1 = _dmrClient1;
             DmrClient2? client2 = _dmrClient2;
+            NxdnClient? nxdn = _nxdnClient;
 
-            if (client1 == null && client2 == null)
+            if (client1 == null && client2 == null && nxdn == null)
             {
                 if (command.On)
                     SetPttUi(false); // der Client wurde inzwischen gestoppt (Pause, Trennen)
@@ -467,6 +508,7 @@ public partial class MainPageViewModel : ObservableObject
 
                 client1?.StartStopTransmit(command.On);
                 client2?.StartStopTransmit(command.On);
+                nxdn?.StartStopTransmit(command.On);
             }
             catch (Exception ex)
             {
@@ -477,6 +519,7 @@ public partial class MainPageViewModel : ObservableObject
                 {
                     TryRun(() => client1?.StartStopTransmit(false), "DmrClient1.StartStopTransmit(false)");
                     TryRun(() => client2?.StartStopTransmit(false), "DmrClient2.StartStopTransmit(false)");
+                    TryRun(() => nxdn?.StartStopTransmit(false), "NxdnClient.StartStopTransmit(false)");
                 }
 
                 SetPttUi(false);
@@ -538,7 +581,7 @@ public partial class MainPageViewModel : ObservableObject
                 if (connect)
                     Connect();
                 else
-                    Disconnect("Benutzer");
+                    Disconnect("user");
             }
             catch (Exception ex)
             {
@@ -561,6 +604,9 @@ public partial class MainPageViewModel : ObservableObject
         {
             case Mode.Dmr:
                 result = StartStopDmr(true);
+                break;
+            case Mode.Nxdn:
+                result = StartStopNxdn(true);
                 break;
             default:
                 return; // CanConnect() sperrt alle anderen Modes bereits, hier nur als Sicherheitsnetz
@@ -588,6 +634,9 @@ public partial class MainPageViewModel : ObservableObject
             case Mode.Dmr:
                 StartStopDmr(false, reason);
                 break;
+            case Mode.Nxdn:
+                StartStopNxdn(false, reason);
+                break;
         }
 
         Log.Info($"Disconnected ({reason}).");
@@ -607,7 +656,7 @@ public partial class MainPageViewModel : ObservableObject
         {
             try
             {
-                Disconnect("App im Hintergrund");
+                Disconnect("app in the background");
             }
             catch (Exception ex)
             {
@@ -625,58 +674,67 @@ public partial class MainPageViewModel : ObservableObject
     /// </summary>
     /// <param name="arg">true = starten, false = stoppen.</param>
     /// <param name="reason">Grund des Stopps (nur fürs Log).</param>
-    private StartResult StartStopDmr(bool arg, string reason = "")
+    private StartResult StartStopDmr(bool arg, string reason = "") => StartStopClient("DMR", StartDmrCore, arg, reason);
+
+    /// <summary>
+    /// Startet bzw. stoppt den NXDN-Client (Gegenstück zu <c>StartStopNxdn(bool)</c> in der Avalonia-MainViewModel).
+    /// Gleiche Regeln wie <see cref="StartStopDmr"/>.
+    /// </summary>
+    private StartResult StartStopNxdn(bool arg, string reason = "") => StartStopClient("NXDN", StartNxdnCore, arg, reason);
+
+    /// <summary>Gemeinsamer Ablauf für Start und Stop der Clients (Sperre, Abbruch, Aufräumen, Zustand der Oberfläche).</summary>
+    private StartResult StartStopClient(string name, Func<StartResult> startCore, bool arg, string reason)
     {
-        Log.Debug($"arg = {arg}");
+        Log.Debug($"{name}: arg = {arg}");
 
         if (!arg)
         {   // S T O P: kann jederzeit kommen, auch während der Start noch läuft (wartet dann auf die Sperre)
-            _dmrStopRequested = true;
-            lock (_dmrLock)
+            _stopRequested = true;
+            lock (_clientLock)
             {
-                StopDmrCore(reason);
+                StopClientsCore(reason);
                 SetConnectedUi(false);
             }
             return new StartResult(true);
         }
 
         // S T A R T
-        lock (_dmrLock)
+        lock (_clientLock)
         {
             if (IsClientActive)
-                return new StartResult(false, "DMR is already running.");
+                return new StartResult(false, $"{name} is already running.");
 
-            _dmrStopRequested = false;
+            _stopRequested = false;
 
             StartResult result;
             try
             {
-                result = StartDmrCore();
+                result = startCore();
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Starting the DMR client failed.");
+                Log.Error(ex, $"Starting the {name} client failed.");
                 result = new StartResult(false, $"{ex.GetType().Name}: {ex.Message}");
             }
 
             if (result.Success)
                 SetConnectedUi(true);
             else
-                StopDmrCore("Start failed or was cancelled"); // räumt auch teilweise Angelegtes auf
+                StopClientsCore("Start failed or was cancelled"); // räumt auch teilweise Angelegtes auf
 
             return result;
         }
     }
 
-    private StartResult StartDmrCore()
-    {
 #if ANDROID
-        UserSettings us = UserSettings.Instance();
-
-        List<string> errors = us.ValidateForDmr();
-        if (errors.Count > 0)
-            return new StartResult(false, "Please check the settings:\n" + string.Join("\n", errors));
-
+    /// <summary>
+    /// Gemeinsamer Teil des Starts für alle Modes: AMBE-Stick finden, USB- und Mikrofon-Berechtigung einholen, auf die Rückkehr
+    /// in den Vordergrund warten und die Hardware-Objekte (Chip, Wiedergabe, Mikrofon) anlegen. Der Chip wird erst vom Client
+    /// geöffnet.
+    /// </summary>
+    /// <returns><c>null</c>, wenn alles bereit ist, sonst das Ergebnis, mit dem der Start abgebrochen wird.</returns>
+    private StartResult? PrepareHardware()
+    {
         Context? context = Platform.CurrentActivity;
         if (context == null)
             return new StartResult(false, "No activity available.");
@@ -702,7 +760,7 @@ public partial class MainPageViewModel : ObservableObject
         }
 
         // Nach den Dialogen muss die App wieder im Vordergrund sein. Sonst (Home/Übersicht gedrückt) nicht verbinden.
-        if (!AppLifecycle.WaitForForeground(TimeSpan.FromSeconds(2)) || _dmrStopRequested)
+        if (!AppLifecycle.WaitForForeground(TimeSpan.FromSeconds(2)) || _stopRequested)
             return new StartResult(false, Cancelled: true);
 
         // 2) Hardware-Objekte (der Chip wird erst von Client.Start() geöffnet)
@@ -710,7 +768,24 @@ public partial class MainPageViewModel : ObservableObject
         _audioPlayer = new AndroidAudioPlayer { GainDb = (float)RxVolume };
         _microphoneReader = new AndroidMicrophoneReader { GainDb = (float)MicGain }; // für TX später; wird hier nicht gestartet
 
-        // 3) Client-Konfiguration (wie StartStopDmr in der Avalonia-App)
+        return null;
+    }
+#endif
+
+    private StartResult StartDmrCore()
+    {
+#if ANDROID
+        UserSettings us = UserSettings.Instance();
+
+        List<string> errors = us.ValidateForDmr();
+        if (errors.Count > 0)
+            return new StartResult(false, "Please check the settings:\n" + string.Join("\n", errors));
+
+        StartResult? failure = PrepareHardware();
+        if (failure != null)
+            return failure;
+
+        // Client-Konfiguration (wie StartStopDmr in der Avalonia-App)
         DmrClientConfig cfg = new()
         {
             AmbeController = _ambeController,
@@ -718,7 +793,7 @@ public partial class MainPageViewModel : ObservableObject
             Password = us.Dmr.Password,
             MyDmrId = us.Dmr.MyDmrId,
             EssId = us.Dmr.Essid,
-            Flco = Flco.GROUP,            // nur für TX relevant; die Talkgroup-Auswahl kommt später
+            Flco = Flco.GROUP,            // wird beim Senden mit SetTxDst überschrieben
             ColorCode = us.Dmr.ColorCode,
             TimeSlot = us.Dmr.TimeSlot,
             RecordAudio = false,
@@ -747,7 +822,7 @@ public partial class MainPageViewModel : ObservableObject
                 start = _dmrClient2.Start;
                 break;
             default:
-                return new StartResult(false, $"Unbekanntes DMR-Protokoll: {us.Dmr.Protocol}");
+                return new StartResult(false, $"Unknown DMR protocol: {us.Dmr.Protocol}");
         }
 
         // 4) Start blockiert (DNS, Chip-Init, Login senden): läuft hier auf dem Connect-Thread
@@ -756,7 +831,7 @@ public partial class MainPageViewModel : ObservableObject
         start();
 
         // Während des Starts kam ein Stopp (z.B. Home gedrückt): sofort wieder beenden
-        if (_dmrStopRequested)
+        if (_stopRequested)
             return new StartResult(false, Cancelled: true);
 
         return new StartResult(true);
@@ -765,12 +840,66 @@ public partial class MainPageViewModel : ObservableObject
 #endif
     }
 
-    private void StopDmrCore(string reason)
+    private StartResult StartNxdnCore()
+    {
+#if ANDROID
+        UserSettings us = UserSettings.Instance();
+
+        List<string> errors = us.ValidateForNxdn();
+        if (errors.Count > 0)
+            return new StartResult(false, "Please check the settings:\n" + string.Join("\n", errors));
+
+        StartResult? failure = PrepareHardware();
+        if (failure != null)
+            return failure;
+
+        // Reflektor aus den Einstellungen (wird im Picker gewählt und dort gemerkt)
+        int reflectorId = us.Nxdn.LastReflectorId;
+        (string host, int port) = NxdnHosts.GetHostInfo(reflectorId);
+        if (string.IsNullOrEmpty(host))
+            return new StartResult(false, $"NXDN reflector {reflectorId} is unknown.");
+
+        // Client-Konfiguration (wie StartStopNxdn in der Avalonia-App)
+        NxdnClientConfig cfg = new()
+        {
+            AmbeController = _ambeController,
+            NxdnReflectorAddr = host,
+            NxdnReflectorPort = port,
+            NxdnReflectorId = reflectorId,
+            Callsign = us.Common.Callsign,
+            MyNxdnId = us.Nxdn.NxdnId,
+            AudioPlayer = _audioPlayer,
+            MicrophoneReader = _microphoneReader,
+            RecordAudio = false,
+            RecordRxPackets = false,
+            SimulationMode = false,
+        };
+
+        _nxdnClient = new NxdnClient(cfg) { ExternalNxdnDataConsumer = Nxdn.ConsumeNxdnData };
+
+        // Start blockiert (DNS, Chip-Init, Anmeldung): läuft hier auf dem Connect-Thread
+        Log.Info($"Starting NXDN, callsign={cfg.Callsign}, id={cfg.MyNxdnId}, reflector={reflectorId} ({host}:{port}), " +
+                 $"rxVolume={RxVolume:F1} dB, micGain={MicGain:F1} dB");
+        _nxdnClient.StartClient();
+
+        // Während des Starts kam ein Stopp (z.B. Home gedrückt): sofort wieder beenden
+        if (_stopRequested)
+            return new StartResult(false, Cancelled: true);
+
+        return new StartResult(true);
+#else
+        return new StartResult(false, "Available on Android only.");
+#endif
+    }
+
+    private void StopClientsCore(string reason)
     {
         DmrClient1? client1 = _dmrClient1;
         DmrClient2? client2 = _dmrClient2;
+        NxdnClient? nxdn = _nxdnClient;
         _dmrClient1 = null;
         _dmrClient2 = null;
+        _nxdnClient = null;
 
 #if ANDROID
         Ambe3000UsbController? ambe = _ambeController;
@@ -780,25 +909,26 @@ public partial class MainPageViewModel : ObservableObject
         _audioPlayer = null;
         _microphoneReader = null;
 
-        if (client1 == null && client2 == null && ambe == null && player == null && mic == null)
+        if (client1 == null && client2 == null && nxdn == null && ambe == null && player == null && mic == null)
             return; // nichts zu tun
 #else
-        if (client1 == null && client2 == null)
+        if (client1 == null && client2 == null && nxdn == null)
             return;
 #endif
 
-        Log.Info($"Stopping DMR: {reason}");
+        Log.Info($"Stopping the client: {reason}");
 
-        // Client.Stop() zuerst: stoppt Timer und TX, sendet RPTCL und schließt den Chip. Danach Audio und USB freigeben.
+        // Client.Stop() zuerst: stoppt Timer und TX, meldet sich ab und schließt den Chip. Danach Audio und USB freigeben.
         TryRun(() => client1?.Stop(), "DmrClient1.Stop()");
         TryRun(() => client2?.Stop(), "DmrClient2.Stop()");
+        TryRun(() => nxdn?.StopClient(), "NxdnClient.StopClient()");
 #if ANDROID
         TryRun(() => mic?.Dispose(), "microphone dispose");
         TryRun(() => player?.Dispose(), "audio player dispose");
         TryRun(() => ambe?.Dispose(), "AMBE controller dispose"); // Close() ist idempotent
 #endif
 
-        Log.Info("DMR stopped.");
+        Log.Info("Client stopped.");
     }
 
 #if ANDROID
@@ -841,6 +971,7 @@ public partial class MainPageViewModel : ObservableObject
                 IsPttActive = false; // eine beim Trennen noch aktive Übertragung gilt als beendet
                 StopTxTimeout();
                 Dmr.Clear();
+                Nxdn.Clear();
             }
         });
     }
