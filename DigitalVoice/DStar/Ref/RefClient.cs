@@ -321,7 +321,7 @@ public class RefClient
                     {
                         IPEndPoint remoteEp = new(IPAddress.Any, _cfg.RefPort);
                         packet = _udpClient!.Receive(ref remoteEp);
-                        if (_cfg.RecordRefPackets)
+                        if (_cfg.RecordRcvdUdpPackets)
                             _packetRecorder?.WritePacket(packet);
                     }
 
@@ -520,37 +520,30 @@ public class RefClient
 
         InitDV3000();
 
-        if (_cfg.SimulationMode && _cfg.RecordRefPackets)
-        {
-            _cfg.RecordRefPackets = false; // never record test data
-            logger.Warn($"Set {nameof(_cfg.RecordRefPackets)}={_cfg.RecordRefPackets}, reason: simulation mode is active.");
-        }
-
-        string dataDir = "data";
-        if (!Directory.Exists(dataDir))
-        {
-            Directory.CreateDirectory(dataDir);
-        }
-
-        // Setup packet recorder if need
-        if (_cfg.RecordRefPackets)
-        {
-            string packetFile = Path.Combine("data", $"ref_udp_packets_{DateTime.Now:yyyyMMddHHmmss}.bin");
-            _packetRecorder = new PacketRecorder(packetFile, FileMode.Create, FileAccess.Write);
-        }
-
         // Setup for simulation mode if needed
         if (_cfg.SimulationMode)
         {
-            ArgumentException.ThrowIfNullOrEmpty(_cfg.SimulationFile, nameof(_cfg.SimulationFile));
-            _packetRecorder = new PacketRecorder(_cfg.SimulationFile, FileMode.Open, FileAccess.Read);
+            _packetRecorder = new PacketRecorder(_cfg.SimulationFile!, FileMode.Open, FileAccess.Read);
             logger.Debug($"Simulation mode, input file: {_cfg.SimulationFile}");
+        }
+
+        if (_cfg.SimulationMode && _cfg.RecordRcvdUdpPackets)
+        {
+            _cfg.RecordRcvdUdpPackets = false; // never record test data
+            logger.Warn($"Set {nameof(_cfg.RecordRcvdUdpPackets)}={_cfg.RecordRcvdUdpPackets}, reason: simulation mode is active.");
+        }
+
+        // Setup packet recorder if need
+        if (_cfg.RecordRcvdUdpPackets)
+        {
+            _packetRecorder = new PacketRecorder(_cfg.RecordRcvdUdpPacketsFile!, FileMode.Create, FileAccess.Write);
         }
 
         _clientState.RxPingCnt = 0;
         _clientState.IsRunning = true;
         _udpPacketReaderThread = new Thread(ReadUdpPackets) { IsBackground = true };
         _udpPacketReaderThread.Start();
+
         SendConnect();
     }
 

@@ -23,6 +23,45 @@ public partial class MainPage : ContentPage
 
         BindingContext = new MainPageViewModel();
         ViewModel.ShowAlertRequested += async (title, message) => await DisplayAlert(title, message, "OK");
+
+        // Talkgroup/Reflektor: Der Knopf zeigt den aktuellen Eintrag und öffnet die Auswahlseite (mit Suchfeld). Ändert sich die
+        // Liste (Moduswechsel, Talkgroup-Editor), aktualisiert die Seite den Text des Knopfes.
+        ViewModel.LinkTargetsChanged += UpdateLinkTargetButton;
+        UpdateLinkTargetButton();
+    }
+
+    /// <summary>Zeigt den gewählten Eintrag auf dem Knopf, solange nichts gewählt ist die Überschrift (Talkgroup/Reflector).</summary>
+    private void UpdateLinkTargetButton()
+    {
+        LinkTargetButton.Text = string.IsNullOrEmpty(ViewModel.SelectedLinkTargetName)
+            ? ViewModel.LinkTargetTitle
+            : ViewModel.SelectedLinkTargetName;
+        Log.Debug($"Link target button: '{LinkTargetButton.Text}' ({ViewModel.LinkTargetNames.Count} entries)");
+    }
+
+    /// <summary>Öffnet die Auswahlseite für Talkgroup bzw. Reflektor.</summary>
+    private async void OnLinkTargetClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            if (ViewModel.LinkTargetNames.Count == 0)
+                return;
+
+            await Navigation.PushAsync(new SelectionPage(
+                $"Select {ViewModel.LinkTargetTitle.ToLowerInvariant()}",
+                ViewModel.LinkTargetNames,
+                ViewModel.SelectedLinkTargetName,
+                name =>
+                {
+                    ViewModel.SelectedLinkTargetName = name; // speichert die Auswahl in den Einstellungen
+                    UpdateLinkTargetButton();
+                }));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Opening the selection page failed.");
+            await DisplayAlert("Error", $"{ex.GetType().Name}: {ex.Message}", "OK");
+        }
     }
 
     /// <summary>Slider losgelassen: Lautstärke in die Einstellungsdatei schreiben (beim Ziehen nur im Speicher).</summary>
@@ -30,6 +69,52 @@ public partial class MainPage : ContentPage
 
     /// <summary>Slider losgelassen: Mikrofon-Gain in die Einstellungsdatei schreiben.</summary>
     private void OnMicGainDragCompleted(object? sender, EventArgs e) => UserSettings.Save();
+
+    /// <summary>Mode wählen: eine Auswahlliste (Dialog), der aktuelle Mode ist mit einem Haken markiert.</summary>
+    private async void OnModeClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            string? name = await ChooseFromListAsync("Select mode", ViewModel.ModeNames, ViewModel.SelectedModeName);
+            if (name != null)
+                ViewModel.SelectedModeName = name;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Selecting the mode failed.");
+        }
+    }
+
+    /// <summary>D-STAR-Modul (A bis Z) wählen: eine Auswahlliste (Dialog), das aktuelle Modul ist mit einem Haken markiert.</summary>
+    private async void OnModuleClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            string? name = await ChooseFromListAsync("Select module", ViewModel.ModuleNames, ViewModel.SelectedModule);
+            if (name != null)
+                ViewModel.SelectedModule = name;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Selecting the module failed.");
+        }
+    }
+
+    /// <summary>
+    /// Zeigt eine kurze Auswahlliste als Dialog (für Listen ohne Suchbedarf: Mode, Modul). Der aktuelle Eintrag trägt einen
+    /// Haken. Gibt den gewählten Eintrag zurück oder <c>null</c>, wenn abgebrochen wurde.
+    /// </summary>
+    private async Task<string?> ChooseFromListAsync(string title, IReadOnlyList<string> items, string current)
+    {
+        const string tick = "\u2713 ";
+        string[] buttons = items.Select(i => i == current ? tick + i : i).ToArray();
+
+        string? result = await DisplayActionSheet(title, "Cancel", null, buttons);
+        if (string.IsNullOrEmpty(result) || result == "Cancel")
+            return null;
+
+        return result.StartsWith(tick, StringComparison.Ordinal) ? result[tick.Length..] : result;
+    }
 
     private async void OnMenuButtonClicked(object sender, EventArgs e)
     {
@@ -93,6 +178,13 @@ public partial class MainPage : ContentPage
     private async Task RunAmbeTestAsync()
     {
 #if ANDROID
+        // Der Test arbeitet mit dem USB-Stick; mit einem AMBE-Server gibt es hier nichts zu prüfen
+        if (Config.UserSettings.Instance().Ambe.ServiceType == global::DigitalVoice.AmbeSupport.AmbeServiceType.Server)
+        {
+            await DisplayAlert("AMBE-Test", "The AMBE test works with the USB stick. Switch AMBE to \"Stick\" in the settings to run it.", "OK");
+            return;
+        }
+
         var activity = Platform.CurrentActivity;
         if (activity == null)
         {

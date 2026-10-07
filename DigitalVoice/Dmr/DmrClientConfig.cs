@@ -38,9 +38,8 @@ public record DmrClientConfig
 
     // Recorder
     public bool RecordAudio { get; set; } = false;
-    public string? RecordAudioFile { get; set; }
-    public bool RecordDmrPackets { get; set; } = false;
-    public string? RecordDmrPacketsFile { get; set; }
+    public bool RecordRcvdUdpPackets { get; set; } = false;
+    public string? RecordRcvdUdpPacketsFile { get; set; }
 
 
     // Simulation Mode
@@ -75,37 +74,38 @@ public record DmrClientConfig
             logger.Error($"Invalid {nameof(EssId)}: {EssId}");
             nError++;
         }
+        
         if (ColorCode < 1 || ColorCode > 15)
         {
             logger.Error($"Invalid {nameof(ColorCode)}: {ColorCode}");
             nError++;
         }
+        
         if (TimeSlot < 1 || TimeSlot > 2)
         {
             logger.Error($"Invalid {nameof(TimeSlot)}: {TimeSlot}");
             nError++;
         }
+        
         if (SimulationMode && string.IsNullOrEmpty(SimulationModeFile))
         {
             logger.Error("Simulation mode activated but no simulation file defined.");
             nError++;
         }
-        if (SimulationMode && RecordDmrPackets)
+        
+        if (SimulationMode && RecordRcvdUdpPackets)
         {
             logger.Warn("RX packets recording disabled, reason: simulation mode is activated.");
-            RecordDmrPackets = false;
+            RecordRcvdUdpPackets = false;
         }
-        if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
-        {
-            logger.Error("Audio recording activated but no audio output file defined.");
-            nError++;
-        }
+
         if (RecordAudio && WavPcmRecorder == null)
         {
             logger.Error("Audio recording activated but no Wave File Writer configured.");
             nError++;
         }
-        if (RecordDmrPackets && string.IsNullOrEmpty(RecordDmrPacketsFile))
+
+        if (RecordRcvdUdpPackets && string.IsNullOrEmpty(RecordRcvdUdpPacketsFile))
         {
             logger.Error("RX packet recording activated, but no recording file defined.");
             nError++;

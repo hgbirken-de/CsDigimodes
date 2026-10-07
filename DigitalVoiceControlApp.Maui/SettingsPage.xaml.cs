@@ -19,6 +19,21 @@ public partial class SettingsPage : ContentPage
         BindingContext = _viewModel;
     }
 
+    /// <summary>DMR-Master wählen (Auswahlseite mit Suchfeld; die Liste hat rund 1200 Einträge).</summary>
+    private async void OnDmrMasterClicked(object? sender, EventArgs e)
+    {
+        try
+        {
+            await Navigation.PushAsync(new SelectionPage("Select DMR master", _viewModel.DmrMasterList,
+                _viewModel.SelectedDmrMaster, name => _viewModel.SelectedDmrMaster = name));
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Opening the selection page failed.");
+            await DisplayAlert("Error", $"{ex.GetType().Name}: {ex.Message}", "OK");
+        }
+    }
+
     private async void OnApplyClicked(object? sender, EventArgs e)
     {
         try

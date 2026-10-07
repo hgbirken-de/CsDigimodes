@@ -29,7 +29,6 @@ public record YsfClientConfig
 
     // Recorder
     public bool RecordAudio { get; set; } = false;
-    public string? RecordAudioFile { get; set; }
     public bool RecordYsfPackets { get; set; } = false;
     public string? RecordYsfPacketsFile { get; set; }
 
@@ -56,30 +55,33 @@ public record YsfClientConfig
     /// <exception cref="ArgumentException">Thrown when one or more errors are detected in the configuration.</exception>
     public void Validate()
     {
-        int nError = 0;
+        int errCnt = 0;
         if (SimulationMode && string.IsNullOrEmpty(SimulationFile))
         {
             logger.Error("Simulation mode activated but no simulation file defined.");
-            nError++;
+            errCnt++;
         }
+
         if (SimulationMode && RecordYsfPackets)
         {
             logger.Warn("Ysf packet recording disabled, reason: simulation mode is activated.");
             RecordYsfPackets = false;
         }
-        if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
-        {
-            logger.Error("Audio recording activated but no audio output file defined.");
-            nError++;
-        }
+
         if (RecordYsfPackets && string.IsNullOrEmpty(RecordYsfPacketsFile))
         {
             logger.Error("Ysf packet recording activated, but no recording file defined.");
-            nError++;
+            errCnt++;
         }
 
-        if (nError > 0)
-            throw new ArgumentException($"The configuration has {nError} errors, see the log for details.");
+        if (RecordAudio && WavPcmRecorder == null)
+        {
+            logger.Error("Audio recording activated but no Wave File Writer configured.");
+            errCnt++;
+        }
+
+        if (errCnt > 0)
+            throw new ArgumentException($"The configuration has {errCnt} errors, see the log for details.");
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 ﻿using DigitalVoice.AmbeSupport;
 using DigitalVoice.Common;
 using DigitalVoice.Dmr;
+using DigitalVoice.Fusion;
 using DigitalVoice.Nxdn;
 using NLog;
 using System.Text.RegularExpressions;
@@ -146,9 +147,6 @@ public class UserSettings
 
         imported.Normalize();
 
-        // Unter Android gibt es (noch) nur den USB-Stick; ein "Server" aus der Desktop-Datei wäre hier unbenutzbar.
-        imported.Ambe.ServiceType = AmbeServiceType.Stick;
-
         Apply(imported);
         return imported;
     }
@@ -292,6 +290,8 @@ public class UserSettings
         {
             if (string.IsNullOrWhiteSpace(Ambe.ServerAddr))
                 errors.Add("AMBE server address is missing.");
+            else if (!System.Net.IPAddress.TryParse(Ambe.ServerAddr.Trim(), out _))
+                errors.Add("AMBE server address must be an IP address (a host name is not supported).");
             CheckRange(errors, "AMBE server port", Ambe.ServerPort, 1025, 65535);
         }
 
@@ -328,6 +328,91 @@ public class UserSettings
             errors.Add("Callsign must not be longer than 10 characters.");
         if (!NxdnHosts.TryGetHostInfo(Nxdn.LastReflectorId, out _))
             errors.Add($"NXDN reflector {Nxdn.LastReflectorId} is unknown. Please select one in the list.");
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Wie <see cref="Validate"/>, zusätzlich die Angaben, ohne die ein YSF-Verbindungsaufbau keinen Sinn hat. Die Grenzen
+    /// stammen aus dem YSFI-Paket des Clients (<c>SendYsfi</c>): Rufzeichen höchstens 10 Zeichen, Locator höchstens 6, Ort
+    /// höchstens 20, Hotspot-Typ höchstens 12 Zeichen, Frequenzen höchstens 9 Stellen.
+    /// </summary>
+    public List<string> ValidateForYsf()
+    {
+        var errors = Validate();
+
+        if (Common.Callsign.Equals("NOCALL", StringComparison.OrdinalIgnoreCase))
+            errors.Add("Callsign is still set to NOCALL.");
+        if (Common.Callsign.Length > 10)
+            errors.Add("Callsign must not be longer than 10 characters.");
+        if (!YsfHosts.TryGetHostInfo(Ysf.LastReflector ?? "", out _))
+            errors.Add($"YSF reflector '{Ysf.LastReflector}' is unknown. Please select one in the list.");
+        if ((Common.Locator ?? "").Length > 6)
+            errors.Add("For YSF the locator must not be longer than 6 characters.");
+        if ((Common.Town ?? "").Length > 20)
+            errors.Add("For YSF the town must not be longer than 20 characters.");
+        if ((Hotspot.Type ?? "").Length > 12)
+            errors.Add("For YSF the hotspot type must not be longer than 12 characters.");
+        CheckRange(errors, "Hotspot RX frequency", Hotspot.RxFrequency, 0, 999999999);
+        CheckRange(errors, "Hotspot TX frequency", Hotspot.TxFrequency, 0, 999999999);
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Wie <see cref="Validate"/>, zusätzlich die Angaben, ohne die ein FCS-Verbindungsaufbau keinen Sinn hat. Die Grenzen
+    /// stammen aus <c>FcsClientConfig</c>: Das Rufzeichen darf höchstens 6 Zeichen haben (sonst wirft der Setter), die
+    /// Reflektor-ID muss 8 Zeichen lang sein und in der Liste vorkommen (aus ihr ergibt sich auch der Server).
+    /// </summary>
+    public List<string> ValidateForFcs()
+    {
+        var errors = Validate();
+
+        if (Common.Callsign.Equals("NOCALL", StringComparison.OrdinalIgnoreCase))
+            errors.Add("Callsign is still set to NOCALL.");
+        if (Common.Callsign.Length > 6)
+            errors.Add("For FCS the callsign must not be longer than 6 characters.");
+
+        string reflectorId = Fcs.LastReflector ?? "";
+        if (reflectorId.Length != 8 || !FcsHosts.TryGetHostInfo(reflectorId, out _))
+            errors.Add($"FCS reflector '{reflectorId}' is unknown. Please select one in the list.");
+
+        return errors;
+    }
+
+    /// <summary>
+    /// Wie <see cref="Validate"/>, zusätzlich die Angaben, ohne die ein D-STAR-Verbindungsaufbau (DCS, REF, XRF) keinen Sinn
+    /// hat: Rufzeichen (nicht NOCALL, höchstens 8 Zeichen wie das D-STAR-Feld), ein gewählter Reflektor, ein Modul A bis Z
+    /// und eine Nachricht von höchstens 20 Zeichen. Ob der Reflektor in der Hostliste steht, prüft der Client-Aufbau.
+    /// </summary>
+    public List<string> ValidateForDStar(Mode mode)
+    {
+        var errors = Validate();
+        string name = mode.ToString().ToUpperInvariant();
+
+        string callsign = (Common.Callsign ?? "").Trim();
+        if (callsign.Equals("NOCALL", StringComparison.OrdinalIgnoreCase))
+            errors.Add("Callsign is still set to NOCALL.");
+        if (callsign.Length > 8)
+            errors.Add("For D-STAR the callsign must not be longer than 8 characters.");
+
+        (string reflector, char module, string message) = mode switch
+        {
+            Mode.Dcs => (Dcs.LastReflector, Dcs.LastModule, Dcs.UserMessage),
+            Mode.Ref => (Ref.LastReflector, Ref.LastModule, Ref.UserMessage),
+            Mode.Xrf => (Xrf.LastReflector, Xrf.LastModule, Xrf.UserMessage),
+            _ => ("", ' ', ""),
+        };
+
+        if (string.IsNullOrWhiteSpace(reflector))
+            errors.Add($"No {name} reflector selected.");
+
+        char upper = char.ToUpperInvariant(module);
+        if (upper < 'A' || upper > 'Z')
+            errors.Add($"Invalid {name} module '{module}'. Please select a module from A to Z.");
+
+        if ((message ?? "").Length > 20)
+            errors.Add($"The {name} user message must not be longer than 20 characters.");
 
         return errors;
     }

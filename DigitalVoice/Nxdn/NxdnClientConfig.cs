@@ -23,7 +23,6 @@ public class NxdnClientConfig
 
     // Recorder
     public bool RecordAudio { get; set; } = false;
-    public string? RecordAudioFile { get; set; }
     public bool RecordRxPackets { get; set; } = false;
     public string? RecordRxPacketsFile { get; set; }
 
@@ -41,45 +40,50 @@ public class NxdnClientConfig
 
     public void Validate()
     {
-        int nError = 0;
+        int errCnt = 0;
         if (AmbeController == null)
         {
             logger.Error($"No ANME Controller configured.");
-            nError++;
+            errCnt++;
         }
+
         if (string.IsNullOrEmpty(Callsign) || Callsign.Length > 10)
         {
             logger.Error("Missing/Invalid callsign.");
-            nError++;
+            errCnt++;
         }
+
         if (SimulationMode && string.IsNullOrEmpty(SimulationModeFile))
         {
             logger.Error("Simulation mode activated but no simulation file defined.");
-            nError++;
+            errCnt++;
         }
+
         if (SimulationMode && RecordRxPackets)
         {
             logger.Warn("RX packets recording disabled, reason: simulation mode is activated.");
             RecordRxPackets = false;
         }
-        if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
-        {
-            logger.Error("Audio recording activated but no audio output file defined.");
-            nError++;
-        }
+
         if (RecordAudio && WavPcmRecorder == null)
         {
             logger.Error("Audio recording activated but no Wave File Writer configured.");
-            nError++;
+            errCnt++;
+        }
+
+        if (RecordAudio && WavPcmRecorder == null)
+        {
+            logger.Error("Audio recording activated but no Wave File Writer configured.");
+            errCnt++;
         }
         if (RecordRxPackets && string.IsNullOrEmpty(RecordRxPacketsFile))
         {
             logger.Error("RX packet recording activated, but no recording file defined.");
-            nError++;
+            errCnt++;
         }
 
-        if (nError > 0)
-            throw new ArgumentException($"The configuration has {nError} errors, see the log for details.");
+        if (errCnt > 0)
+            throw new ArgumentException($"The configuration has {errCnt} errors, see the log for details.");
 
     }
 }

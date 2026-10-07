@@ -2,6 +2,7 @@
 using DigitalVoice.AmbeSupport;
 using DigitalVoice.AudioSupport;
 using NLog;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DigitalVoice.Fusion;
 
@@ -42,7 +43,6 @@ public record FcsClientConfig
 
     // Recorder
     public bool RecordAudio { get; set; } = false;
-    public string? RecordAudioFile { get; set; }
     public bool RecordFcsPackets { get; set; } = false;
     public string? RecordFcsPacketsFile { get; set; }
 
@@ -80,35 +80,39 @@ public record FcsClientConfig
     /// <exception cref="ArgumentException">Thrown when one or more errors are detected in the configuration.</exception>
     public void Validate()
     {
-        int errorCount = 0;
+        int errCnt = 0;
         if (AudioPlayer == null)
         {
             logger.Error("Missing AudioPlayer.");
-            errorCount++;
+            errCnt++;
         }
+
         if (SimulationMode && string.IsNullOrEmpty(SimulationFile))
         {
             logger.Error("Simulation mode activated but no simulation file defined.");
-            errorCount++;
+            errCnt++;
         }
+
         if (SimulationMode && RecordFcsPackets)
         {
             logger.Warn("Ysf packet recording disabled, reason: simulation mode is activated.");
             RecordFcsPackets = false;
         }
-        if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
-        {
-            logger.Error("Audio recording activated but no audio output file defined.");
-            errorCount++;
-        }
+
         if (RecordFcsPackets && string.IsNullOrEmpty(RecordFcsPacketsFile))
         {
             logger.Error("Ysf packet recording activated, but no recording file defined.");
-            errorCount++;
+            errCnt++;
         }
 
-        if (errorCount > 0)
-            throw new ArgumentException($"The configuration has {errorCount} errors, see the log for details.");
+        if (RecordAudio && WavPcmRecorder == null)
+        {
+            logger.Error("Audio recording activated but no Wave File Writer configured.");
+            errCnt++;
+        }
+
+        if (errCnt > 0)
+            throw new ArgumentException($"The configuration has {errCnt} errors, see the log for details.");
     }
 
     /// <summary>

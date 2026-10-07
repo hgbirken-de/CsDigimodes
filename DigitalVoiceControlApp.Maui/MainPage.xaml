@@ -18,34 +18,86 @@
                     HeightRequest="44"
                     Clicked="OnMenuButtonClicked" />
 
-            <!-- Mode-Auswahl: alle Werte aus Mode.cs; während der Verbindung gesperrt -->
-            <Picker x:Name="ModePicker"
+            <!-- Mode-Auswahl: alle Werte aus Mode.cs; während der Verbindung gesperrt. Der Knopf sieht aus wie der
+                 Reflektor-Knopf (umrandet) und öffnet eine Auswahlliste. -->
+            <Button x:Name="ModeButton"
                     Grid.Column="1"
-                    Title="Mode"
-                    ItemsSource="{Binding ModeNames}"
-                    SelectedItem="{Binding SelectedModeName}"
+                    Text="{Binding SelectedModeName}"
+                    Clicked="OnModeClicked"
                     IsEnabled="{Binding IsModePickerEnabled}"
+                    BackgroundColor="Transparent"
                     TextColor="Black"
-                    TitleColor="#555555"
-                    WidthRequest="90"
-                    VerticalOptions="Center" />
+                    BorderColor="#808080"
+                    BorderWidth="1"
+                    FontSize="14"
+                    Padding="4,0"
+                    WidthRequest="54"
+                    HeightRequest="44"
+                    VerticalOptions="Center">
+                <Button.Triggers>
+                    <DataTrigger TargetType="Button" Binding="{Binding IsModePickerEnabled}" Value="False">
+                        <Setter Property="Opacity" Value="0.5" />
+                    </DataTrigger>
+                </Button.Triggers>
+            </Button>
 
-            <!-- Talkgroup-/Reflektorauswahl: im DMR-Mode die Talkgroups aus DmrTalkGroups.csv -->
-            <Picker x:Name="TalkgroupPicker"
-                    Grid.Column="2"
-                    Title="{Binding LinkTargetTitle}"
-                    ItemsSource="{Binding LinkTargetNames}"
-                    SelectedItem="{Binding SelectedLinkTargetName}"
-                    IsEnabled="{Binding IsLinkTargetPickerEnabled}"
-                    TextColor="Black"
-                    TitleColor="#555555"
-                    VerticalOptions="Center" />
+            <!-- Reflektor und D-STAR-Modul in einer Zelle: Das Modul hat den Abstand als eigenen Rand, der entfällt mit ihm,
+                 wenn es ausgeblendet ist. So bekommt der Reflektor außerhalb von D-STAR die volle Breite. -->
+            <Grid Grid.Column="2" ColumnDefinitions="*,Auto" VerticalOptions="Center">
+                <!-- Talkgroup-/Reflektorauswahl: Der Knopf zeigt den aktuellen Eintrag und öffnet die Auswahlseite mit Suchfeld
+                     (im DMR-Mode die Talkgroups aus DmrTalkGroups.csv). Der Text wird in MainPage.xaml.cs gesetzt. -->
+                <Button x:Name="LinkTargetButton"
+                        Grid.Column="0"
+                        Clicked="OnLinkTargetClicked"
+                        IsEnabled="{Binding IsLinkTargetPickerEnabled}"
+                        BackgroundColor="Transparent"
+                        TextColor="Black"
+                        BorderColor="#808080"
+                        BorderWidth="1"
+                        FontSize="14"
+                        LineBreakMode="TailTruncation"
+                        Padding="10,0"
+                        HeightRequest="44"
+                        VerticalOptions="Center">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsLinkTargetPickerEnabled}" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+
+                <!-- D-STAR-Modul (A-Z), rechts vom Reflektor: nur in den Modes DCS, REF und XRF bedienbar, und nur im getrennten Zustand -->
+                <Button x:Name="ModuleButton"
+                        Grid.Column="1"
+                        Margin="8,0,0,0"
+                        Text="{Binding SelectedModule}"
+                        Clicked="OnModuleClicked"
+                        IsVisible="{Binding IsModulePickerVisible}"
+                        IsEnabled="{Binding IsModulePickerEnabled}"
+                        BackgroundColor="Transparent"
+                        TextColor="Black"
+                        BorderColor="#808080"
+                        BorderWidth="1"
+                        FontSize="14"
+                        Padding="4,0"
+                        WidthRequest="46"
+                        HeightRequest="44"
+                        VerticalOptions="Center">
+                    <Button.Triggers>
+                        <DataTrigger TargetType="Button" Binding="{Binding IsModulePickerEnabled}" Value="False">
+                            <Setter Property="Opacity" Value="0.5" />
+                        </DataTrigger>
+                    </Button.Triggers>
+                </Button>
+            </Grid>
 
             <!-- Connect/Disconnect: nur für DMR freigegeben (siehe MainPageViewModel.CanConnect) -->
             <Button x:Name="ConnectButton"
                     Grid.Column="3"
                     ImageSource="{Binding ConnectionIcon}"
                     BackgroundColor="{Binding ConnectionBackgroundColor}"
+                    BorderColor="#808080"
+                    BorderWidth="1"
                     SemanticProperties.Description="{Binding ConnectionTooltip}"
                     ToolTipProperties.Text="{Binding ConnectionTooltip}"
                     WidthRequest="44"
@@ -104,7 +156,17 @@
             <views:NxdnView BindingContext="{Binding Nxdn}" />
         </Grid>
 
-        <!-- Unten: PTT. Einmal tippen = senden, nochmal tippen = Ende (nur verbunden im DMR- und NXDN-Mode bedienbar) -->
+        <!-- Mitte: die Fusion-Ansicht (YSF, später FCS), im selben Bereich -->
+        <Grid Grid.Row="3" IsVisible="{Binding IsFusionViewVisible}">
+            <views:FusionView BindingContext="{Binding Fusion}" />
+        </Grid>
+
+        <!-- Mitte: die D-STAR-Ansicht (DCS, REF, XRF), im selben Bereich -->
+        <Grid Grid.Row="3" IsVisible="{Binding IsDStarViewVisible}">
+            <views:DStarView BindingContext="{Binding DStar}" />
+        </Grid>
+
+        <!-- Unten: PTT. Einmal tippen = senden, nochmal tippen = Ende (nur verbunden bedienbar) -->
         <Button Grid.Row="4"
                 x:Name="PttButton"
                 Text="{Binding PttText}"

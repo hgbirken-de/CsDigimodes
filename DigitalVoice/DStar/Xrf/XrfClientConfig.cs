@@ -29,15 +29,15 @@ public record XrfClientConfig
 
     public string Callsign { get; set; } = string.Empty;
 
-
     public bool RecordAudio { get; set; } = false;
 
-    public bool RecordRefPackets { get; set; } = false;
+    public bool RecordRcvdUdpPackets { get; set; } = false;
+    public string? RecordRcvdUdpPacketsFile { get; set; }
 
-    public string? SimulationFile { get; set; }
     public bool SimulationMode { get; set; } = false;
+    public string? SimulationFile { get; set; }
 
-    public string UserMessage { get; set; } = "CsDigimodes";
+    public string UserMessage { get; set; } = ".Net Digimodes";
 
 
     public void Validate()
@@ -60,26 +60,24 @@ public record XrfClientConfig
             logger.Error("Simulation mode activated but no simulation file defined.");
             errCnt++;
         }
-        if (SimulationMode && RecordRefPackets)
+
+        if (SimulationMode && RecordRcvdUdpPackets)
         {
             logger.Warn("RX packets recording disabled, reason: simulation mode is activated.");
-            RecordRefPackets = false;
+            RecordRcvdUdpPackets = false;
         }
-        //if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
-        //{
-        //    logger.Error("Audio recording activated but no audio output file defined.");
-        //    nError++;
-        //}
+
         if (RecordAudio && WavPcmRecorder == null)
         {
             logger.Error("Audio recording activated but no Wave File Writer configured.");
             errCnt++;
         }
-        //if (RecordRefPackets && string.IsNullOrEmpty(RecordRefPacketsFile))
-        //{
-        //    logger.Error("RX packet recording activated, but no recording file defined.");
-        //    errCnt++;
-        //}
+
+        if (RecordRcvdUdpPackets && string.IsNullOrEmpty(RecordRcvdUdpPacketsFile))
+        {
+            logger.Error("RX packet recording activated, but no recording file defined.");
+            errCnt++;
+        }
 
         if (errCnt > 0)
             throw new ArgumentException($"The configuration has {errCnt} errors, see the log for details.");

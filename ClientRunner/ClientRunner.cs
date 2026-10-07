@@ -120,16 +120,6 @@ class ClientRunner
         Console.WriteLine("Cleanup done. Bye!");
     }
 
-    static IAmbe3000RController CreateAmbeController(AmbeConfig cfg)
-    {
-        return cfg.AmbeServiceType switch
-        {
-            AmbeServiceType.Server => new AmbeUdpClient(cfg.ServerAddr, cfg.ServerPort),
-            AmbeServiceType.Stick => new Ambe3000RController(cfg.StickComport),
-            _ => throw new InvalidOperationException(),
-        };
-    }
-
    
     /// <summary>
     /// Run the DCS client.
@@ -178,10 +168,9 @@ class ClientRunner
             MyDmrId = 2622363,
             EssId = 15,
             RecordAudio = false,
-            RecordAudioFile = null,
             WavPcmRecorder = null,
-            RecordDmrPackets = false,
-            RecordDmrPacketsFile = Path.Combine("data", $"DmrClient1_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
+            RecordRcvdUdpPackets = false,
+            RecordRcvdUdpPacketsFile = Path.Combine("data", $"DmrClient1_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
             SimulationMode = true,
             AudioPlayer = new AudioPlayer(),
         };
@@ -232,7 +221,6 @@ class ClientRunner
             AudioPlayer = new AudioPlayer(),
 
             RecordAudio = false,
-            RecordAudioFile = Path.Combine("data", $"fcs_audio_{DateTime.Now:yyyyMMddHHmmss}.wav"),
 
             RecordFcsPackets = true,
             RecordFcsPacketsFile = Path.Combine("data", $"fcs_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
@@ -270,7 +258,6 @@ class ClientRunner
             AudioPlayer = new AudioPlayer(),
 
             RecordAudio = false,
-            RecordAudioFile = Path.Combine("data", $"nxdn_audio_{DateTime.Now:yyyyMMddHHmmss}.wav"),
 
             RecordRxPackets = true,
             RecordRxPacketsFile = Path.Combine("data", $"nxdn_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
@@ -302,7 +289,7 @@ class ClientRunner
             Module = 'C',
             Callsign = "DL1HGB",
             AudioPlayer = new AudioPlayer(),
-            RecordRefPackets = true,
+            RecordRcvdUdpPackets = true,
             SimulationFile = null,
             SimulationMode = false,
         };
@@ -354,7 +341,6 @@ class ClientRunner
             TxFrequency = 434300000,
 
             RecordAudio = true,
-            RecordAudioFile = Path.Combine("data", $"ysf_audio_{DateTime.Now:yyyyMMddHHmmss}.wav"),
             
             RecordYsfPackets = true,
             RecordYsfPacketsFile = Path.Combine("data", $"ysf_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
@@ -388,7 +374,7 @@ class ClientRunner
             Module = 'B',
             Callsign = "DL1HGB",
             AudioPlayer = new AudioPlayer(),
-            RecordRefPackets = true,
+            RecordRcvdUdpPackets = true,
             SimulationFile = null,
             SimulationMode = false,
         };

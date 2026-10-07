@@ -823,7 +823,7 @@ public class MainViewModel : ViewModelBase
                 ColorCode = us.Dmr.ColorCode,
                 TimeSlot = us.Dmr.TimeSlot,
                 RecordAudio = false,
-                RecordDmrPackets = us.Common.RecordRcvdUdpPackets,
+                RecordRcvdUdpPackets = us.Common.RecordRcvdUdpPackets,
                 MicrophoneReader = _microphoneReader,
                 AudioPlayer = _audioPlayer,
             };
@@ -833,7 +833,7 @@ public class MainViewModel : ViewModelBase
                 case DmrProtocol.Homebrew:
                     cfg.BmServerAddress = us.Dmr.BmServerAddr1;
                     cfg.BmServerPort = us.Dmr.BmServerPort1;
-                    cfg.RecordDmrPacketsFile = us.Common.RecordRcvdUdpPackets ? Path.Combine(UserSettings.Dir(Mode.Dmr, UserSettings.FileType.Data), $"DmrClient1_packets_{DateTime.Now:yyyyMMddHHmmss}.bin") : null;
+                    cfg.RecordRcvdUdpPacketsFile = us.Common.RecordRcvdUdpPackets ? Path.Combine(UserSettings.Dir(Mode.Dmr, UserSettings.FileType.Data), $"DmrClient1_packets_{DateTime.Now:yyyyMMddHHmmss}.bin") : null;
                    
                     _dmrClient1 = new(cfg) { ExternalDmrDataConsumer = DmrViewModel.ConsumeDmrData };
                     _dmrClient1.Start();
@@ -842,7 +842,7 @@ public class MainViewModel : ViewModelBase
                     (_, string Host, int Port, _) = DmrHosts.GetHostInfo(us.Dmr.Master);
                     cfg.BmServerAddress = Host;
                     cfg.BmServerPort = Port;
-                    cfg.RecordDmrPacketsFile = us.Common.RecordRcvdUdpPackets ? Path.Combine(UserSettings.Dir(Mode.Dmr, UserSettings.FileType.Data), $"DmrClient2_packets_{DateTime.Now:yyyyMMddHHmmss}.bin") : null;
+                    cfg.RecordRcvdUdpPacketsFile = us.Common.RecordRcvdUdpPackets ? Path.Combine(UserSettings.Dir(Mode.Dmr, UserSettings.FileType.Data), $"DmrClient2_packets_{DateTime.Now:yyyyMMddHHmmss}.bin") : null;
 
                     _dmrClient2 = new(cfg) { ExternalDmrDataConsumer = DmrViewModel.ConsumeDmrData };
                     _dmrClient2.Start();

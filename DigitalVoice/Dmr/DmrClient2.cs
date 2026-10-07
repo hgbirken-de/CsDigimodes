@@ -604,7 +604,7 @@ public sealed class DmrClient2
         if (_cfg.SimulationMode)
         {
             _packetReader = new PacketRecorder(_cfg.SimulationModeFile!, FileMode.Open, FileAccess.Read);
-            _cfg.RecordDmrPackets = false; // we never record a sim file
+            _cfg.RecordRcvdUdpPackets = false; // we never record a sim file
         }
         else
         {
@@ -635,9 +635,9 @@ public sealed class DmrClient2
             }
         }
 
-        if (_cfg.RecordDmrPackets && !string.IsNullOrEmpty(_cfg.RecordDmrPacketsFile))
+        if (_cfg.RecordRcvdUdpPackets && !string.IsNullOrEmpty(_cfg.RecordRcvdUdpPacketsFile))
         {
-            _packetRecorder = new PacketRecorder(_cfg.RecordDmrPacketsFile, FileMode.Create, FileAccess.Write);
+            _packetRecorder = new PacketRecorder(_cfg.RecordRcvdUdpPacketsFile, FileMode.Create, FileAccess.Write);
         }
 
         _isRunning = true;

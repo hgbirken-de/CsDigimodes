@@ -32,11 +32,10 @@ public record DcsClientConfig
     public bool RecordAudio { get; set; } = false;
 
     public bool RecordRcvdUdpPackets { get; set; } = false;
-
     public string? RecordRcvdUdpPacketsFile { get; set; }
 
-    public string? SimulationFile { get; set; }
     public bool SimulationMode { get; set; } = false;
+    public string? SimulationFile { get; set; }
 
     public string UserMessage { get; set; } = "CsDigimodes";
 
@@ -60,24 +59,22 @@ public record DcsClientConfig
             logger.Error("Simulation mode activated but no simulation file defined.");
             errCnt++;
         }
+
         if (SimulationMode && RecordRcvdUdpPackets)
         {
             logger.Warn("RX packets recording disabled, reason: simulation mode is activated.");
             RecordRcvdUdpPackets = false;
         }
-        //if (RecordAudio && string.IsNullOrEmpty(RecordAudioFile))
-        //{
-        //    logger.Error("Audio recording activated but no audio output file defined.");
-        //    nError++;
-        //}
-        if (RecordAudio && WavPcmRecorder == null)
-        {
-            logger.Error("Audio recording activated but no Wave File Writer configured.");
-            errCnt++;
-        }
+        
         if (RecordRcvdUdpPackets && string.IsNullOrEmpty(RecordRcvdUdpPacketsFile))
         {
             logger.Error("RX packet recording activated, but no recording file defined.");
+            errCnt++;
+        }
+
+        if (RecordAudio && WavPcmRecorder == null)
+        {
+            logger.Error("Audio recording activated but no Wave File Writer configured.");
             errCnt++;
         }
 

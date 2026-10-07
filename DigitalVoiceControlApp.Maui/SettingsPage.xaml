@@ -53,7 +53,7 @@
                 <Entry Grid.Column="1" Text="{Binding BmServerPort1}" Keyboard="Numeric" />
               </Grid>
               <Label Grid.Row="5" Grid.Column="0" Text="BM Master" VerticalOptions="Center" />
-              <Picker Grid.Row="5" Grid.Column="1" ItemsSource="{Binding DmrMasterList}" SelectedItem="{Binding SelectedDmrMaster}" />
+              <Button Grid.Row="5" Grid.Column="1" Text="{Binding SelectedDmrMaster, TargetNullValue='Select master…', FallbackValue='Select master…'}" Clicked="OnDmrMasterClicked" BackgroundColor="Transparent" BorderColor="Gray" BorderWidth="1" LineBreakMode="TailTruncation" TextColor="{AppThemeBinding Light=Black, Dark=White}" HeightRequest="44" Padding="10,0" />
               <Label Grid.Row="6" Grid.Column="0" Text="Time Slot" VerticalOptions="Center" />
               <Picker Grid.Row="6" Grid.Column="1" ItemsSource="{Binding TimeSlotList}" SelectedItem="{Binding SelectedTimeSlot}" />
               <Label Grid.Row="7" Grid.Column="0" Text="Color Code" VerticalOptions="Center" />
@@ -98,7 +98,7 @@
                 <Entry Grid.Column="0" Text="{Binding AmbeServerAddr}" Keyboard="Url" />
                 <Entry Grid.Column="1" Text="{Binding AmbeServerPort}" Keyboard="Numeric" />
               </Grid>
-              <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="Note: AMBE server operation is not yet available on Android; the USB stick is used." FontSize="12" TextColor="Gray" />
+              <Label Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="Server: enter the IP address of the AMBE server in your network (a host name is not supported). A fast, stable Wi-Fi connection is recommended." FontSize="12" TextColor="Gray" />
             </Grid>
           </VerticalStackLayout>
         </Border>
