@@ -220,6 +220,14 @@
                 </ToolTip.Tip>
               </ComboBox>
             </StackPanel>
+            <!-- Software Vocoder -->
+            <StackPanel Orientation="Horizontal" Spacing="10" >
+               <RadioButton Content="Software" GroupName="ambe" IsChecked="{Binding IsSoftware}" Width="90" >
+                <ToolTip.Tip>
+                  <TextBlock Text="Use Vocoder Software"/>
+                </ToolTip.Tip>
+              </RadioButton>
+            </StackPanel>
           </StackPanel>
         </HeaderedContentControl>
         

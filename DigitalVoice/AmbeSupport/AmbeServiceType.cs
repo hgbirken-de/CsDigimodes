@@ -3,5 +3,6 @@
 public enum AmbeServiceType
 {
     Server,
-    Stick
+    Stick,
+    Software
 }

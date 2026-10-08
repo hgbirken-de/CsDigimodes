@@ -251,6 +251,7 @@ internal class SettingsDialogModel : ViewModelBase
                 OnPropertyChanged(nameof(AmbeServiceType));
                 OnPropertyChanged(nameof(IsServer));
                 OnPropertyChanged(nameof(IsStick));
+                OnPropertyChanged(nameof(IsSoftware));
             }
         }
     }
@@ -261,6 +262,15 @@ internal class SettingsDialogModel : ViewModelBase
         set
         {
             if (value) AmbeServiceType = AmbeServiceType.Server;
+        }
+    }
+
+    public bool IsSoftware
+    {
+        get => AmbeServiceType == AmbeServiceType.Software;
+        set
+        {
+            if (value) AmbeServiceType = AmbeServiceType.Software;
         }
     }
 

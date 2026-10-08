@@ -207,7 +207,7 @@ public sealed class DmrClient2
                     string? aliasText = _taAssembler.AddFragment(lcData);
                     if (aliasText != null)
                     {
-                        logger.Info($"Talker Alias decoded: {aliasText}");
+                        logger.Debug($"Talker Alias decoded: {aliasText}");
                         _clientState.RxTalkerAlias = aliasText;
                     }
                 }

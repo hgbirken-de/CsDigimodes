@@ -33,13 +33,13 @@ class ClientRunner
     // AMBE Configuration
     static readonly AmbeConfig ambeConfig = new()
     {
-        AmbeServiceType = AmbeServiceType.Stick,
+        AmbeServiceType = AmbeServiceType.Software,
     };
 
     static void Main(string[] args)
     {
         DmrProtocol dmrProtocol = DmrProtocol.MmdvmHost;
-        Mode clientType = Mode.Nxdn;         // <====  S E L E C T  C L I E N T  H E R E
+        Mode clientType = Mode.Dmr;         // <====  S E L E C T  C L I E N T  H E R E
 
         AppDomain.CurrentDomain.ProcessExit += (sender, e) =>
         {
@@ -140,7 +140,7 @@ class ClientRunner
             Module = 'C',
             Callsign = "DL1HGB",
             AudioPlayer = new AudioPlayer(),
-            RecordRcvdUdpPackets = true,
+            RecordRcvdUdpPackets = false,
             //SimulationFile = "./data/DcsClient_packets_20250912100514.bin",
             SimulationFile = "C:/Users/hgbir/AppData/Roaming/CsDigimodes/Dcs/Data/Dcs_packets_20250919153621_gps.bin",
             SimulationMode = true,
@@ -222,7 +222,7 @@ class ClientRunner
 
             RecordAudio = false,
 
-            RecordFcsPackets = true,
+            RecordFcsPackets = false,
             RecordFcsPacketsFile = Path.Combine("data", $"fcs_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
 
             SimulationFile = simulationFile,
@@ -289,9 +289,9 @@ class ClientRunner
             Module = 'C',
             Callsign = "DL1HGB",
             AudioPlayer = new AudioPlayer(),
-            RecordRcvdUdpPackets = true,
+            RecordRcvdUdpPackets = false,
             SimulationFile = null,
-            SimulationMode = false,
+            SimulationMode = true,
         };
         refClient = new(cfg);
         refClient.Start();
@@ -340,9 +340,9 @@ class ClientRunner
             RxFrequency = 434300000,
             TxFrequency = 434300000,
 
-            RecordAudio = true,
+            RecordAudio = false,
             
-            RecordYsfPackets = true,
+            RecordYsfPackets = false,
             RecordYsfPacketsFile = Path.Combine("data", $"ysf_packets_{DateTime.Now:yyyyMMddHHmmss}.bin"),
 
             SimulationFile = simulationFile,
@@ -374,9 +374,9 @@ class ClientRunner
             Module = 'B',
             Callsign = "DL1HGB",
             AudioPlayer = new AudioPlayer(),
-            RecordRcvdUdpPackets = true,
+            RecordRcvdUdpPackets = false,
             SimulationFile = null,
-            SimulationMode = false,
+            SimulationMode = true,
         };
         xrfClient = new(cfg);
         xrfClient.Start();

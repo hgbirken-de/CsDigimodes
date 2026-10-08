@@ -94,7 +94,7 @@
               <RadioButton Grid.Row="0" Grid.Column="0" Content="Stick" GroupName="ambe" IsChecked="{Binding IsStick}" />
               <Label Grid.Row="0" Grid.Column="1" Text="USB stick (OTG)" VerticalOptions="Center" />
               <RadioButton Grid.Row="1" Grid.Column="0" Content="Server" GroupName="ambe" IsChecked="{Binding IsServer}" />
-              <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,90" ColumnSpacing="8" IsEnabled="{Binding IsServer}">
+              <Grid Grid.Row="1" Grid.Column="1" ColumnDefinitions="*,60" ColumnSpacing="8" IsEnabled="{Binding IsServer}">
                 <Entry Grid.Column="0" Text="{Binding AmbeServerAddr}" Keyboard="Url" />
                 <Entry Grid.Column="1" Text="{Binding AmbeServerPort}" Keyboard="Numeric" />
               </Grid>
