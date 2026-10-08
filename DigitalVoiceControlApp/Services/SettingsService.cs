@@ -16,7 +16,7 @@ public class SettingsService()
 
     public static void ShowAboutDialog(Window owner)
     {
-        var box = MessageBoxManager.GetMessageBoxStandard("About", $"CsDigimodes\nVersion 1.0.0\nde Hans (DL1HGB)",
+        var box = MessageBoxManager.GetMessageBoxStandard("About", $".Net Digimodes\nVersion 1.0.0\nde Hans (DL1HGB)",
             ButtonEnum.Ok, windowStartupLocation: WindowStartupLocation.CenterOwner);
         if (owner is not null)
              box.ShowWindowDialogAsync(owner);

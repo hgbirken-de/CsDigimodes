@@ -64,6 +64,7 @@ public partial class SettingsViewModel : ObservableObject
 
     // ---- AMBE ----
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsSoftware))]
     [NotifyPropertyChangedFor(nameof(IsStick))]
     [NotifyPropertyChangedFor(nameof(IsServer))]
     private AmbeServiceType ambeServiceType;
@@ -75,6 +76,12 @@ public partial class SettingsViewModel : ObservableObject
     {
         get => AmbeServiceType == AmbeServiceType.Stick;
         set { if (value) AmbeServiceType = AmbeServiceType.Stick; }
+    }
+    
+    public bool IsSoftware
+    {
+        get => AmbeServiceType == AmbeServiceType.Software;
+        set { if (value) AmbeServiceType = AmbeServiceType.Software; }
     }
 
     public bool IsServer

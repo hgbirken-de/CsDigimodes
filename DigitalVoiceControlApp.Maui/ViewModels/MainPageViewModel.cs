@@ -975,7 +975,8 @@ public partial class MainPageViewModel : ObservableObject
     private StartResult? PrepareHardware()
     {
         UserSettings us = UserSettings.Instance();
-        bool useServer = us.Ambe.ServiceType == AmbeServiceType.Server; // AMBE-Server im Netz statt USB-Stick
+
+        bool useStick = us.Ambe.ServiceType == AmbeServiceType.Stick;
 
         Context? context = Platform.CurrentActivity;
         if (context == null)
@@ -984,8 +985,8 @@ public partial class MainPageViewModel : ObservableObject
         // 1) Nur im Stick-Betrieb: AMBE-Stick finden und USB-Berechtigung einholen (blockiert, solange der System-Dialog offen
         //    ist). Der Dialog pausiert die App kurz; es läuft noch kein Client, ein Pause-Ereignis ist an dieser Stelle also
         //    harmlos. Beim AMBE-Server entfällt das ganz.
-        var device = useServer ? null : AmbeUsb.FindDevice(context);
-        if (!useServer)
+        var device = useStick ? AmbeUsb.FindDevice(context) : null;
+        if (useStick)
         {
             if (device == null)
                 return new StartResult(false, "No AMBE stick (FTDI) found. Are the OTG adapter and the stick plugged in?");
@@ -1009,16 +1010,15 @@ public partial class MainPageViewModel : ObservableObject
         if (!AppLifecycle.WaitForForeground(TimeSpan.FromSeconds(2)) || _stopRequested)
             return new StartResult(false, Cancelled: true);
 
-        // 2) Hardware-Objekte (der Chip bzw. der Server wird erst von Client.Start() geöffnet)
-        if (useServer)
+        // 2) AMBE-Controller-Objekte (werden später von Client.Start() geöffnet u. geschlossen)
+        _ambeController = us.Ambe.ServiceType switch
         {
-            Log.Info($"AMBE server: {us.Ambe.ServerAddr}:{us.Ambe.ServerPort}");
-            _ambeController = new AmbeUdpClient(ip: us.Ambe.ServerAddr.Trim(), port: us.Ambe.ServerPort);
-        }
-        else
-        {
-            _ambeController = new Ambe3000UsbController(context, device!);
-        }
+            AmbeServiceType.Server => _ambeController = new AmbeUdpClient(ip: us.Ambe.ServerAddr.Trim(), port: us.Ambe.ServerPort),
+            //Log.Info($"AMBE server: {us.Ambe.ServerAddr}:{us.Ambe.ServerPort}");
+            AmbeServiceType.Software => _ambeController = new AmbeSoftwareController(),
+            AmbeServiceType.Stick => _ambeController = new Ambe3000UsbController(context, device!),
+            _ => throw new InvalidOperationException(),
+        };
 
         _audioPlayer = new AndroidAudioPlayer { GainDb = (float)RxVolume };
         _microphoneReader = new AndroidMicrophoneReader { GainDb = (float)MicGain }; // für TX später; wird hier nicht gestartet
