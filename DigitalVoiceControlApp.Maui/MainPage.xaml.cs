@@ -123,13 +123,17 @@ public partial class MainPage : ContentPage
         string settingsItem = ViewModel.IsSettingsEnabled ? "Settings" : "Settings (locked)";
         string talkgroupsItem = ViewModel.IsSettingsEnabled ? "Talkgroups…" : "Talkgroups (locked)";
         string logItem = ViewModel.IsSettingsEnabled ? "Log management…" : "Log management (locked)";
-        string action = await DisplayActionSheet("Menu", "Cancel", null, settingsItem, talkgroupsItem, logItem, "Help", "AMBE-Test", "Audio-Test", "Exit");
+        //string action = await DisplayActionSheet("Menu", "Cancel", null, settingsItem, talkgroupsItem, logItem, "Help", "AMBE-Test", "Audio-Test", "Exit");
+        string action = await DisplayActionSheet("Menu", "Cancel", null, "About", settingsItem, talkgroupsItem, logItem, "Help", "AMBE-Test", "Audio-Test", "Exit");
 
         // async void: eine unbehandelte Exception würde hier die ganze App beenden -> abfangen und anzeigen
         try
         {
             switch (action)
             {
+                case "About":
+                    await Navigation.PushAsync(new AboutPage());
+                    break;
                 case "Settings":
                     await Navigation.PushAsync(new SettingsPage());
                     break;

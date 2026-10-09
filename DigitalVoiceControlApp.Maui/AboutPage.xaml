@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="DigitalVoiceControlApp.Maui.AboutPage"
+             Title="About">
+
+  <ScrollView>
+    <VerticalStackLayout Padding="16" Spacing="14">
+
+      <!-- Kopf: Symbol, Name, Version -->
+      <VerticalStackLayout Spacing="6" HorizontalOptions="Center" Padding="0,10,0,6">
+        <Border WidthRequest="88" HeightRequest="88" StrokeThickness="0" StrokeShape="RoundRectangle 22"
+                BackgroundColor="#1565C0" HorizontalOptions="Center">
+          <Label Text="📻" FontSize="46" HorizontalOptions="Center" VerticalOptions="Center" />
+        </Border>
+        <Label Text="{Binding AppName}" FontSize="26" FontAttributes="Bold" HorizontalTextAlignment="Center" Margin="0,6,0,0" />
+        <Label Text="Digital voice modes for amateur radio" FontSize="13" TextColor="Gray" HorizontalTextAlignment="Center" />
+        <Label Text="{Binding VersionLine}" FontSize="15" HorizontalTextAlignment="Center" Margin="0,4,0,0" />
+      </VerticalStackLayout>
+
+      <!-- Version und System -->
+      <Border Stroke="{AppThemeBinding Light=#D0D5DD, Dark=#3A3F47}" StrokeThickness="1" StrokeShape="RoundRectangle 10" Padding="14"
+              BackgroundColor="{AppThemeBinding Light=#F7F9FC, Dark=#1E2228}">
+        <VerticalStackLayout Spacing="10">
+          <Label Text="Build and system" FontAttributes="Bold" FontSize="16" />
+          <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="6" ColumnSpacing="8">
+            <Label Grid.Row="0" Grid.Column="0" Text="Version" TextColor="Gray" />
+            <Label Grid.Row="0" Grid.Column="1" Text="{Binding Version}" />
+            <Label Grid.Row="1" Grid.Column="0" Text="Git build" TextColor="Gray" />
+            <Label Grid.Row="1" Grid.Column="1" Text="{Binding GitBuild}" />
+            <Label Grid.Row="2" Grid.Column="0" Text="Platform" TextColor="Gray" />
+            <Label Grid.Row="2" Grid.Column="1" Text="{Binding Platform}" />
+            <Label Grid.Row="3" Grid.Column="0" Text="Device" TextColor="Gray" />
+            <Label Grid.Row="3" Grid.Column="1" Text="{Binding Device}" />
+            <Label Grid.Row="4" Grid.Column="0" Text="Architecture" TextColor="Gray" />
+            <Label Grid.Row="4" Grid.Column="1" Text="{Binding Architecture}" />
+            <Label Grid.Row="5" Grid.Column="0" Text="Device ABIs" TextColor="Gray" />
+            <Label Grid.Row="5" Grid.Column="1" Text="{Binding DeviceAbis}" />
+            <Label Grid.Row="6" Grid.Column="0" Text="Runtime" TextColor="Gray" />
+            <Label Grid.Row="6" Grid.Column="1" Text="{Binding Runtime}" />
+          </Grid>
+          <Button Text="Copy build information" Clicked="OnCopyInfoClicked" BackgroundColor="Transparent" BorderColor="Gray" BorderWidth="1"
+                  TextColor="{AppThemeBinding Light=Black, Dark=White}" HeightRequest="40" Padding="12,0" HorizontalOptions="Start" />
+        </VerticalStackLayout>
+      </Border>
+
+      <!-- Copyright und Lizenz -->
+      <Border Stroke="{AppThemeBinding Light=#D0D5DD, Dark=#3A3F47}" StrokeThickness="1" StrokeShape="RoundRectangle 10" Padding="14"
+              BackgroundColor="{AppThemeBinding Light=#F7F9FC, Dark=#1E2228}">
+        <VerticalStackLayout Spacing="10">
+          <Label Text="Copyright and license" FontAttributes="Bold" FontSize="16" />
+          <Label Text="{Binding Copyright}" FontAttributes="Bold" />
+          <Label Text="{Binding LicenseText}" FontSize="13" />
+          <Grid ColumnDefinitions="Auto,Auto" ColumnSpacing="10">
+            <Button Grid.Column="0" Text="Project page" Clicked="OnProjectPageClicked" IsVisible="{Binding HasProjectUrl}"
+                    BackgroundColor="Transparent" BorderColor="Gray" BorderWidth="1"
+                    TextColor="{AppThemeBinding Light=Black, Dark=White}" HeightRequest="40" Padding="12,0" />
+            <Button Grid.Column="1" Text="License text" Clicked="OnLicenseUrlClicked"
+                    BackgroundColor="Transparent" BorderColor="Gray" BorderWidth="1"
+                    TextColor="{AppThemeBinding Light=Black, Dark=White}" HeightRequest="40" Padding="12,0" />
+          </Grid>
+        </VerticalStackLayout>
+      </Border>
+
+      <!-- Fremdsoftware -->
+      <Border Stroke="{AppThemeBinding Light=#D0D5DD, Dark=#3A3F47}" StrokeThickness="1" StrokeShape="RoundRectangle 10" Padding="14"
+              BackgroundColor="{AppThemeBinding Light=#F7F9FC, Dark=#1E2228}">
+        <VerticalStackLayout Spacing="12">
+          <Label Text="Third-party software" FontAttributes="Bold" FontSize="16" />
+
+          <VerticalStackLayout Spacing="2">
+            <Label Text="Software AMBE vocoder (decoder)" FontAttributes="Bold" />
+            <Label FontSize="13" TextColor="Gray"
+                   Text="C# port of mbelib, Copyright (C) 2010 mbelib Author, in the version contained in DroidStar by Doug McLain, AD8DP. ISC license." />
+            <Button x:Name="IscButton" Text="Show license text" Clicked="OnToggleIscClicked" BackgroundColor="Transparent"
+                    TextColor="{AppThemeBinding Light=#1565C0, Dark=#64B5F6}" HeightRequest="36" Padding="0" HorizontalOptions="Start" />
+            <Label x:Name="IscLabel" IsVisible="False" FontSize="11" TextColor="Gray" Text="{Binding IscText}" />
+          </VerticalStackLayout>
+
+          <VerticalStackLayout Spacing="2" IsVisible="{Binding HasGplEncoder}">
+            <Label Text="Software AMBE vocoder (encoder, speech analysis)" FontAttributes="Bold" />
+            <Label FontSize="13" TextColor="Gray"
+                   Text="C# port of imbe_vocoder (Project 25 IMBE Encoder/Decoder Fixed-Point implementation), developed by Pavel Yazev, Copyright 2009. GNU General Public License, version 3 or later." />
+          </VerticalStackLayout>
+
+          <VerticalStackLayout Spacing="2">
+            <Label Text="Libraries" FontAttributes="Bold" />
+            <Label FontSize="13" TextColor="Gray"
+                   Text=".NET MAUI (MIT license), CommunityToolkit.Mvvm (MIT license), NLog (BSD 3-Clause license)." />
+          </VerticalStackLayout>
+
+          <Label FontSize="12" TextColor="Gray"
+                 Text="AMBE+2 is a technology of Digital Voice Systems, Inc. (DVSI). The app can use an AMBE-3000 USB stick, an AMBE server or the software vocoder. Whether patents or licenses have to be observed when using a software vocoder is the responsibility of the user." />
+        </VerticalStackLayout>
+      </Border>
+
+    </VerticalStackLayout>
+  </ScrollView>
+</ContentPage>
