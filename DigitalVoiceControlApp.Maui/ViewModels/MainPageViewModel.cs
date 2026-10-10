@@ -9,6 +9,10 @@ using DigitalVoiceControlApp.Maui.Services;
 using NLog;
 using System.Collections.Concurrent;
 using DigitalVoice.AmbeSupport;
+using DigitalVoice.SoftwareVocoder;
+using DigitalVoice.SoftwareVocoder.Imbe;
+
+
 
 
 #if ANDROID
@@ -1015,7 +1019,8 @@ public partial class MainPageViewModel : ObservableObject
         {
             AmbeServiceType.Server => _ambeController = new AmbeUdpClient(ip: us.Ambe.ServerAddr.Trim(), port: us.Ambe.ServerPort),
             //Log.Info($"AMBE server: {us.Ambe.ServerAddr}:{us.Ambe.ServerPort}");
-            AmbeServiceType.Software => _ambeController = new AmbeSoftwareController(),
+            //AmbeServiceType.Software => _ambeController = new AmbeSoftwareController(),
+            AmbeServiceType.Software => new AmbeSoftwareController(encoder: new AmbeSoftwareEncoder(new ImbeAnalyzer())),
             AmbeServiceType.Stick => _ambeController = new Ambe3000UsbController(context, device!),
             _ => throw new InvalidOperationException(),
         };

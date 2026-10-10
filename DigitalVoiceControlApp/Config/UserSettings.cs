@@ -23,8 +23,8 @@ public class UserSettings
 
     public static string FileName { get; private set; } // file with yaml data to be read
 
-    //public static readonly string appDir = "CsDigimodes"; // <- must be defined here and only here!!!
-	public static readonly string appName = "CsDigimodes"; // <- must be defined here and only here!!!
+    //public static readonly string appDir = "HamDigiModes"; // <- must be defined here and only here!!!
+	public static readonly string appName = "HamDigiModes"; // <- must be defined here and only here!!!
 
     public static readonly string homeDir;
 

@@ -426,7 +426,7 @@ public class AmbeSettings
 {
     public string ServerAddr { get; set; } = "127.0.0.1";
     public int ServerPort { get; set; } = 2460;
-    public AmbeServiceType ServiceType { get; set; } = AmbeServiceType.Stick; // Android: USB-Stick
+    public AmbeServiceType ServiceType { get; set; } = AmbeServiceType.Software; // Android: USB-Stick
     public string StickPort { get; set; } = "COM9"; // nur Desktop (unter Android nicht benutzt)
 }
 

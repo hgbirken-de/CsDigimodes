@@ -19,7 +19,7 @@ public sealed class AboutInfo
     /// <summary>Adresse des Lizenztextes.</summary>
     public const string LicenseUrl = "https://www.gnu.org/licenses/gpl-3.0.html";
 
-    public string AppName => ".NET Digimodes";
+    public string AppName => "HamDigiQSO";
 
     public string Copyright => "Copyright © 2026 Hans-Gunther Birken, DL1HGB";
 

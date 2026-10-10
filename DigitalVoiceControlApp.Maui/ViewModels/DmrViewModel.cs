@@ -29,9 +29,27 @@ public partial class DmrViewModel : ObservableObject
     public ObservableCollection<LastHeardItemDmr> LastHeard { get; } = [];
 
     // Die Zeilen der Liste werden nicht umbrochen, sondern waagerecht gescrollt. Die Breite richtet sich nach der längsten
-    // Zeile (Schrift "monospace", 12: rund 7,2 dp pro Zeichen, mit etwas Reserve).
-    private const double MonoCharWidth = 7.4;
+    // Zeile. Die Zeichenbreite hängt an der Schrift (monospace: etwa das 0,62-fache der Schriftgröße, mit etwas Reserve);
+    // die Voreinstellung gilt für die Standardgröße 14, die View meldet beim Laden die tatsächliche Größe (ListFontSize).
+    private double _monoCharWidth = 8.7;
     private const double MinListWidth = 400;
+
+    /// <summary>
+    /// Schriftgröße der Last-Heard-Liste in dp. Die View setzt sie beim Laden aus der Größe der Felder (CALL, SRC ...);
+    /// danach passt sich die Breite der Liste an (Aufruf nur auf dem UI-Thread).
+    /// </summary>
+    public double ListFontSize
+    {
+        set
+        {
+            double width = value * 0.62;
+            if (Math.Abs(width - _monoCharWidth) < 0.01)
+                return;
+
+            _monoCharWidth = width;
+            UpdateLastHeardWidth();
+        }
+    }
 
     [ObservableProperty]
     private double lastHeardWidth = MinListWidth;
@@ -204,7 +222,7 @@ public partial class DmrViewModel : ObservableObject
     private void UpdateLastHeardWidth()
     {
         int longest = LastHeard.Count == 0 ? 0 : LastHeard.Max(i => i.Display.Length);
-        LastHeardWidth = Math.Max(MinListWidth, longest * MonoCharWidth + 24);
+        LastHeardWidth = Math.Max(MinListWidth, longest * _monoCharWidth + 24);
     }
 
     /// <summary>Leert die einfachen Felder (Aufruf nur auf dem UI-Thread).</summary>

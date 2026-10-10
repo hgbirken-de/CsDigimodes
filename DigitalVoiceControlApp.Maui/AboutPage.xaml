@@ -71,7 +71,7 @@
           <VerticalStackLayout Spacing="2">
             <Label Text="Software AMBE vocoder (decoder)" FontAttributes="Bold" />
             <Label FontSize="13" TextColor="Gray"
-                   Text="C# port of mbelib, Copyright (C) 2010 mbelib Author, in the version contained in DroidStar by Doug McLain, AD8DP. ISC license." />
+                   Text="C# port of mbelib, Copyright (C) 2010 mbelib Author. ISC license." />
             <Button x:Name="IscButton" Text="Show license text" Clicked="OnToggleIscClicked" BackgroundColor="Transparent"
                     TextColor="{AppThemeBinding Light=#1565C0, Dark=#64B5F6}" HeightRequest="36" Padding="0" HorizontalOptions="Start" />
             <Label x:Name="IscLabel" IsVisible="False" FontSize="11" TextColor="Gray" Text="{Binding IscText}" />

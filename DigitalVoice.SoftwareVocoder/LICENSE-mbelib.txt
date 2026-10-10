@@ -1,6 +1,8 @@
 The files in this folder are a C# port of the decoder part of "mbelib" (as included in DroidStar by Doug McLain,
-mbe/mbelib.c, ecc.c, ambe3600x2450.c, ambe3600x2400.c and their constant tables, and the bit mapping of
-mbe/vocoder_plugin.cpp). The original files carry the following license:
+mbe/mbelib.c, ecc.c, ambe3600x2450.c, ambe3600x2400.c and their constant tables) and of the plugin code of DroidStar
+(mbe/vocoder_plugin.cpp and mbe/vocoder_tables.h: bit mapping, encode_ambe quantization, FEC for encoding).
+(The speech analysis for the encoder is NOT part of this folder: it is GPL code and lives in the separate project
+DigitalVoice.SoftwareVocoder.Imbe.) The original files carry the following license:
 
   Copyright (C) 2010 mbelib Author
   GPG Key ID: 0xEA5EFE2C (9E7A 5527 9CDC EBF7 BF1B  D772 4F98 E863 EA5E FE2C)

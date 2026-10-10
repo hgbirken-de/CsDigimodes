@@ -13,6 +13,23 @@ public partial class DmrView : ContentView
     public DmrView()
     {
         InitializeComponent();
+        Loaded += OnLoaded;
+    }
+
+    /// <summary>
+    /// Die Last-Heard-Liste übernimmt die Schriftgröße der Felder (Vorbild ist die Beschriftung "CALL"). Die Breite der Liste
+    /// hängt an der Schriftgröße (monospace), deshalb erfährt auch das ViewModel die Größe.
+    /// </summary>
+    private void OnLoaded(object? sender, EventArgs e)
+    {
+        double size = RefLabel.FontSize;
+        if (size <= 0)
+            return;
+
+        Resources["ListFontSize"] = size;   // wirkt über DynamicResource auf alle Zeilen der Liste
+
+        if (BindingContext is DmrViewModel vm)
+            vm.ListFontSize = size;
     }
 
     /// <summary>

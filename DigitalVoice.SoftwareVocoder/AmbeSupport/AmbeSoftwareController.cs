@@ -8,9 +8,13 @@ namespace DigitalVoice.AmbeSupport;
 /// (DMR, YSF, FCS, NXDN, D-STAR) selbst bedient, statt sie an einen Stick oder einen AMBE-Server zu schicken. Die
 /// Clients bleiben unverändert.
 /// <para>
-/// <b>Nur Dekodieren.</b> Channel-Pakete (AMBE-Bits) werden mit dem <see cref="AmbeSoftwareDecoder"/> in Sprachpakete
-/// (160 PCM-Samples) umgewandelt. Sprachpakete zum <b>Kodieren</b> beantwortet der Controller nicht (siehe
-/// <see cref="CanEncode"/>): Senden ist damit nicht möglich, die Oberfläche sollte PTT sperren.
+/// <b>Dekodieren</b> (immer): Channel-Pakete (AMBE-Bits) werden mit dem <see cref="AmbeSoftwareDecoder"/> in Sprachpakete
+/// (160 PCM-Samples) umgewandelt.
+/// </para>
+/// <para>
+/// <b>Kodieren</b> (nur wenn ein <see cref="AmbeSoftwareEncoder"/> übergeben wurde): Sprachpakete werden mit diesem Kodierer in
+/// Channel-Pakete umgewandelt. Ohne Kodierer beantwortet der Controller Sprachpakete nicht (siehe <see cref="CanEncode"/>):
+/// Senden ist dann nicht möglich, die Oberfläche sollte PTT sperren.
 /// </para>
 /// <para>
 /// Ablauf wie beim Chip: <see cref="SendPacket"/> nimmt ein Paket an und legt die Antwort in eine Warteschlange,
@@ -65,24 +69,34 @@ public sealed class AmbeSoftwareController : IAmbe3000RController, IDisposable
     private readonly object _lock = new();
     private readonly Queue<byte[]> _responses = new();
     private readonly AmbeSoftwareDecoder _decoder;
+    private readonly AmbeSoftwareEncoder? _encoder;
     private readonly short[] _pcm = new short[160];
+    private readonly short[] _pcmIn = new short[160];
+    private readonly byte[] _ambeOut = new byte[9];
 
     private Mode _mode = Mode.Unknown;
     private long _lastChannelTick;
+    private long _lastSpeechTick;
     private bool _speechWarningLogged;
+    private bool _modeWarningLogged;
     private bool _disposed;
 
     /// <param name="noise">Zufallsquelle für die Rauschanteile (nur für Tests nötig).</param>
-    public AmbeSoftwareController(NoiseSource? noise = null)
+    /// <param name="encoder">
+    /// Kodierer für das Senden (PCM nach AMBE). Ohne Kodierer kann der Controller nur dekodieren. Der Kodierer braucht eine
+    /// Sprachanalyse (<c>ImbeAnalyzer</c> aus dem Projekt <c>DigitalVoice.SoftwareVocoder.Imbe</c>, GPL).
+    /// </param>
+    public AmbeSoftwareController(NoiseSource? noise = null, AmbeSoftwareEncoder? encoder = null)
     {
         _decoder = new AmbeSoftwareDecoder(noise);
+        _encoder = encoder;
     }
 
     /// <summary>
-    /// Immer <c>false</c>: Der Software-Controller kann nicht kodieren (PCM nach AMBE). Die Oberfläche sollte die Sendetaste
-    /// sperren, solange dieser Controller verwendet wird.
+    /// <c>true</c>, wenn ein Kodierer übergeben wurde und der Controller Sprachpakete (PCM nach AMBE) beantwortet. Sonst kann
+    /// nur dekodiert werden, und die Oberfläche sollte die Sendetaste sperren.
     /// </summary>
-    public bool CanEncode => false;
+    public bool CanEncode => _encoder != null;
 
     // ------------------------------------------------------------------
     // IAmbe3000RController
@@ -138,10 +152,26 @@ public sealed class AmbeSoftwareController : IAmbe3000RController, IDisposable
         }
     }
 
-    /// <summary>Nicht unterstützt: Der Software-Controller kann nur dekodieren.</summary>
-    /// <exception cref="NotSupportedException">Immer.</exception>
-    public byte[] Encode(short[] pcmSamples) =>
-        throw new NotSupportedException("The software vocoder can decode only (no encoder).");
+    /// <summary>
+    /// Kodiert 160 PCM-Samples und liefert den AMBE-Block (7 Byte bei YSF, FCS und NXDN in der Bitreihenfolge des Chips, sonst
+    /// 9 Byte). Der Modus ergibt sich aus der zuletzt gewählten Rate.
+    /// </summary>
+    /// <exception cref="NotSupportedException">Der Controller hat keinen Kodierer (<see cref="CanEncode"/> ist <c>false</c>).</exception>
+    public byte[] Encode(short[] pcmSamples)
+    {
+        ArgumentNullException.ThrowIfNull(pcmSamples);
+        if (_encoder == null)
+            throw new NotSupportedException("The software vocoder has no encoder.");
+
+        lock (_lock)
+        {
+            if (_disposed)
+                return [];
+
+            int length = EncodeFrame(pcmSamples);
+            return length == 0 ? [] : _ambeOut.AsSpan(0, length).ToArray();
+        }
+    }
 
     /// <inheritdoc />
     public void SendPacket(byte[] packet)
@@ -168,7 +198,7 @@ public sealed class AmbeSoftwareController : IAmbe3000RController, IDisposable
                     HandleChannel(packet);
                     break;
                 case TypeSpeech:
-                    HandleSpeech();
+                    HandleSpeech(packet);
                     break;
                 default:
                     logger.Warn($"Ignoring packet of unknown type {packet[3]:X2}.");
@@ -213,8 +243,10 @@ public sealed class AmbeSoftwareController : IAmbe3000RController, IDisposable
     {
         _responses.Clear();
         _decoder.Reset();
+        _encoder?.Reset();
         _mode = Mode.Unknown;
         _lastChannelTick = 0;
+        _lastSpeechTick = 0;
     }
 
     /// <summary>Steuerpakete: Rate merken, Kennung und Version melden, den Rest wie der Chip mit "OK" quittieren.</summary>
@@ -240,7 +272,9 @@ public sealed class AmbeSoftwareController : IAmbe3000RController, IDisposable
             case CtrlReset:
             case CtrlResetSoftCfg:
                 _decoder.Reset();
+                _encoder?.Reset();
                 _lastChannelTick = 0;
+                _lastSpeechTick = 0;
                 _responses.Enqueue(Control(CtrlReady));   // der Chip meldet sich nach dem Reset mit READY
                 break;
 
@@ -284,7 +318,9 @@ public sealed class AmbeSoftwareController : IAmbe3000RController, IDisposable
 
         logger.Debug($"Software vocoder mode: {_mode}");
         _decoder.Reset();
+        _encoder?.Reset();
         _lastChannelTick = 0;
+        _lastSpeechTick = 0;
     }
 
     /// <summary>
@@ -351,14 +387,80 @@ public sealed class AmbeSoftwareController : IAmbe3000RController, IDisposable
             _decoder.Decode2450x1150(ambe, pcm);   // DMR, oder 72 Bit ohne bekannte Rate
     }
 
-    /// <summary>Sprachpakete würden zum Kodieren dienen: Der Software-Controller antwortet nicht (der Client erhält <c>null</c>).</summary>
-    private void HandleSpeech()
+    /// <summary>
+    /// Sprachpaket <c>61 0142 02 00 A0 + 160 Samples</c> (Big Endian) zum Kodieren: Mit Kodierer wird ein Channel-Paket als
+    /// Antwort bereitgestellt (<c>61 00 0B 01 01 48 + 9 Byte</c> bei 72 Bit, <c>61 00 09 01 01 31 + 7 Byte</c> bei 49 Bit).
+    /// Ohne Kodierer gibt es keine Antwort (der Client erhält <c>null</c>).
+    /// </summary>
+    private void HandleSpeech(byte[] packet)
     {
-        if (_speechWarningLogged)
+        if (_encoder == null)
+        {
+            if (!_speechWarningLogged)
+            {
+                _speechWarningLogged = true;
+                logger.Warn("The software vocoder has no encoder: speech packets are ignored (transmitting is not possible).");
+            }
+
+            return;
+        }
+
+        if (packet.Length < SpeechPacketLength || packet[4] != 0x00 || packet[5] != 0xA0)
+        {
+            logger.Warn($"Ignoring unexpected speech packet of {packet.Length} bytes.");
+            return;
+        }
+
+        // Nach einer Pause beginnt ein neuer Datenstrom (neue Sendung): Der Kodierer startet mit leerem Gedächtnis
+        long now = Environment.TickCount64;
+        if (_lastSpeechTick != 0 && now - _lastSpeechTick > StreamGapMs)
+            _encoder.Reset();
+        _lastSpeechTick = now;
+
+        for (int i = 0; i < 160; i++)
+            _pcmIn[i] = (short)((packet[6 + (2 * i)] << 8) | packet[7 + (2 * i)]);
+
+        int length = EncodeFrame(_pcmIn);
+        if (length == 0)
             return;
 
-        _speechWarningLogged = true;
-        logger.Warn("The software vocoder cannot encode: speech packets are ignored (transmitting is not possible).");
+        var response = new byte[6 + length];
+        response[0] = StartByte;
+        response[1] = 0x00;
+        response[2] = (byte)(2 + length);
+        response[3] = TypeChannel;
+        response[4] = 0x01;
+        response[5] = length == 7 ? (byte)0x31 : (byte)0x48;   // 49 oder 72 Bit
+        Array.Copy(_ambeOut, 0, response, 6, length);
+        _responses.Enqueue(response);
+    }
+
+    /// <summary>
+    /// Kodiert einen Frame nach dem gewählten Modus in <see cref="_ambeOut"/> und liefert die Länge in Byte (0 = nicht möglich).
+    /// Bei 49 Bit steht die Bitreihenfolge des DVSI-Chips im Ergebnis.
+    /// </summary>
+    private int EncodeFrame(ReadOnlySpan<short> pcm)
+    {
+        switch (_mode)
+        {
+            case Mode.Dmr2450x1150:
+                _encoder!.Encode2450x1150(pcm, _ambeOut);
+                return 9;
+            case Mode.Ambe2450:
+                _encoder!.Encode2450DvsiOrder(pcm, _ambeOut);
+                return 7;
+            case Mode.DStar2400x1200:
+                _encoder!.Encode2400x1200(pcm, _ambeOut);
+                return 9;
+            default:
+                if (!_modeWarningLogged)
+                {
+                    _modeWarningLogged = true;
+                    logger.Warn("No rate selected yet: the mode for encoding is unknown.");
+                }
+
+                return 0;
+        }
     }
 
     // ------------------------------------------------------------------

@@ -5,7 +5,7 @@
              xmlns:views="clr-namespace:DigitalVoiceControlApp.Maui.Views"
              x:Class="DigitalVoiceControlApp.Maui.MainPage"
              x:DataType="vm:MainPageViewModel"
-             Title=".Net Digimodes">
+             Title="HamDigiQso">
 
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
 

@@ -9,8 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Decoder und AmbeSoftwareController liegen im neutralen Projekt DigitalVoice -->
+    <!-- Das neutrale Projekt DigitalVoice und der Software-Vocoder (Decoder, Kodierer, Controller) -->
     <ProjectReference Include="..\..\DigitalVoice\DigitalVoice.csproj" />
+    <ProjectReference Include="..\..\DigitalVoice.SoftwareVocoder\DigitalVoice.SoftwareVocoder.csproj" />
     <None Include="golden\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 

@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DigitalVoice.AmbeSupport\DigitalVoice.AmbeSupport.csproj" />
     <ProjectReference Include="..\DigitalVoice.AudioSupport\DigitalVoice.AudioSupport.csproj" />
+    <ProjectReference Include="..\DigitalVoice.SoftwareVocoder\DigitalVoice.SoftwareVocoder.csproj" />
     <ProjectReference Include="..\DigitalVoice\DigitalVoice.csproj" />
   </ItemGroup>
 

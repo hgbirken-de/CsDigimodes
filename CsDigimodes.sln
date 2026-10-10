@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.AmbeSupport", "Maui.Am
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maui.AudioSupport", "Maui.AudioSupport\Maui.AudioSupport.csproj", "{F58857B7-6CA9-EF98-8B9D-C9DE64C5CFED}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DigitalVoice.SoftwareVocoder", "DigitalVoice.SoftwareVocoder\DigitalVoice.SoftwareVocoder.csproj", "{5532ECE8-7227-2503-9980-3DA5FA4F6D5B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -106,6 +108,10 @@ Global
 		{F58857B7-6CA9-EF98-8B9D-C9DE64C5CFED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F58857B7-6CA9-EF98-8B9D-C9DE64C5CFED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F58857B7-6CA9-EF98-8B9D-C9DE64C5CFED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5532ECE8-7227-2503-9980-3DA5FA4F6D5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5532ECE8-7227-2503-9980-3DA5FA4F6D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5532ECE8-7227-2503-9980-3DA5FA4F6D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5532ECE8-7227-2503-9980-3DA5FA4F6D5B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

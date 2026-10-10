@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Software-Vocoder (AMBE): Decoder, Kodierer und AmbeSoftwareController in einem Projekt.
+    Das Projekt enthält GPL-Code (Sprachanalyse, Port von imbe_vocoder, Imbe\) und steht als Ganzes unter der
+    GNU General Public License Version 3 oder neuer (siehe LICENSE-GPL.txt und README.md). Die Dateien aus mbelib
+    behalten ihren ISC-Hinweis (LICENSE-mbelib.txt).
+    Eine Anwendung, die dieses Projekt enthält und weitergegeben wird, muss ihren Quelltext den Empfängern zugänglich machen.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DigitalVoice.SoftwareVocoder</RootNamespace>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- IAmbe3000RController, AmbeHelper (und NLog, das DigitalVoice mitbringt) -->
+    <ProjectReference Include="..\DigitalVoice\DigitalVoice.csproj" />
+  </ItemGroup>
+
+</Project>

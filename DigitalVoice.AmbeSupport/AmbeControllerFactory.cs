@@ -1,4 +1,7 @@
-﻿namespace DigitalVoice.AmbeSupport;
+﻿using DigitalVoice.SoftwareVocoder;
+using DigitalVoice.SoftwareVocoder.Imbe;
+
+namespace DigitalVoice.AmbeSupport;
 
 public static class AmbeControllerFactory
 {
@@ -7,8 +10,8 @@ public static class AmbeControllerFactory
         return cfg.AmbeServiceType switch
         {
             AmbeServiceType.Server => new AmbeUdpClient(cfg.ServerAddr, cfg.ServerPort),
+            AmbeServiceType.Software => new AmbeSoftwareController(encoder: new AmbeSoftwareEncoder(new ImbeAnalyzer())),
             AmbeServiceType.Stick => new Ambe3000RController(cfg.StickComport, cfg.StickBaudrate),
-            AmbeServiceType.Software => new AmbeSoftwareController(),
             _ => throw new InvalidOperationException(),
         };
     }

@@ -67,6 +67,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <ProjectReference Include="..\DigitalVoice.SoftwareVocoder\DigitalVoice.SoftwareVocoder.csproj" />
 	  <ProjectReference Include="..\Maui.AmbeSupport\Maui.AmbeSupport.csproj" />
 	  <ProjectReference Include="..\Maui.AudioSupport\Maui.AudioSupport.csproj" />
 	</ItemGroup>

@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\DigitalVoice.SoftwareVocoder\DigitalVoice.SoftwareVocoder.csproj" />
     <ProjectReference Include="..\DigitalVoice\DigitalVoice.csproj" />
   </ItemGroup>
 

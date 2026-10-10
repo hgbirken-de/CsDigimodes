@@ -5,13 +5,18 @@
              x:Class="DigitalVoiceControlApp.Maui.Views.DmrView"
              x:DataType="vm:DmrViewModel">
 
+    <ContentView.Resources>
+        <!-- Schriftgröße der Last-Heard-Liste: Voreinstellung 14 (Standard), beim Laden wird die Größe des Feldes CALL übernommen -->
+        <x:Double x:Key="ListFontSize">14</x:Double>
+    </ContentView.Resources>
+
     <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8" Padding="12,8">
 
         <!-- Gruppierter Block: CALL/TA, SRC/DST und RPT (unter SRC) -->
         <Border Grid.Row="0" Stroke="Gray" StrokeThickness="1" StrokeShape="RoundRectangle 6" Padding="10">
             <Grid ColumnDefinitions="Auto,*,Auto,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="8" RowSpacing="6">
 
-                <Label Grid.Row="0" Grid.Column="0" Text="CALL" VerticalOptions="Center" />
+                <Label x:Name="RefLabel" Grid.Row="0" Grid.Column="0" Text="CALL" VerticalOptions="Center" />
                 <Label Grid.Row="0" Grid.Column="1" Text="{Binding Callsign}" FontAttributes="Bold" VerticalOptions="Center" />
                 <Label Grid.Row="0" Grid.Column="2" Text="TA" VerticalOptions="Center" />
                 <Label Grid.Row="0" Grid.Column="3" Text="{Binding RxTa}" LineBreakMode="TailTruncation" VerticalOptions="Center" />
@@ -39,7 +44,7 @@
                 <CollectionView ItemsSource="{Binding LastHeard}" SelectionMode="None" WidthRequest="{Binding LastHeardWidth}">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="vm:LastHeardItemDmr">
-                        <Label Text="{Binding Display}" FontFamily="monospace" FontSize="12" Padding="8,5" LineBreakMode="NoWrap">
+                        <Label Text="{Binding Display}" FontFamily="monospace" FontSize="{DynamicResource ListFontSize}" Padding="8,5" LineBreakMode="NoWrap">
                             <Label.GestureRecognizers>
                                 <TapGestureRecognizer NumberOfTapsRequired="2" Tapped="OnLastHeardDoubleTapped" />
                             </Label.GestureRecognizers>
