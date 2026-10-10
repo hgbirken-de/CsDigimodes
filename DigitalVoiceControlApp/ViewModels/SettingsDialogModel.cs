@@ -361,6 +361,7 @@ internal class SettingsDialogModel : ViewModelBase
         // AMBE
         AmbeServiceType = us.Ambe.ServiceType;
 
+        AmbeStickPorts.Add("AUTO");
         for (int i = 0; i < 20; i++)
         {
             AmbeStickPorts.Add($"COM{i}");

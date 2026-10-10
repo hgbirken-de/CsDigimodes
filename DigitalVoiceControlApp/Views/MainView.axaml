@@ -143,6 +143,7 @@
       </Border.Resources>
       <StackPanel Orientation="Horizontal" Spacing="2">
 
+        <!-- Burger Menu -->
         <Button Width="33" Height="33" Content="&#9776;" FontSize="18" HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
           <Button.Flyout>
             <MenuFlyout Placement="BottomEdgeAlignedLeft">

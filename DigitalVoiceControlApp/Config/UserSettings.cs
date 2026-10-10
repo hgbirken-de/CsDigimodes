@@ -174,6 +174,8 @@ public class Ambe
     public AmbeServiceType ServiceType { get; set; } = AmbeServiceType.Software;
     public int StickBaudrate { get; set; } = 460800;
     public string StickPort { get; set; } = "COM9";
+    public int StickProductId { get; set; } = 0x6015;
+    public int StickVendorId { get; set; } = 0x0403;
 }
 
 public class Common

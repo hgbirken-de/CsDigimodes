@@ -507,14 +507,30 @@ public class MainViewModel : ViewModelBase
         {   // C O N N E C T
             UserSettings us = UserSettings.Instance();
             string? msg = null;
-            _ambeConfig = new() // für alle Mode
+            string? comPort = null;
+            
+            if (us.Ambe.ServiceType == AmbeServiceType.Stick && string.Equals(us.Ambe.StickPort, "AUTO", StringComparison.OrdinalIgnoreCase))
             {
-                AmbeServiceType = us.Ambe.ServiceType,
-                ServerAddr = us.Ambe.ServerAddr,
-                ServerPort = us.Ambe.ServerPort,
-                StickBaudrate = us.Ambe.StickBaudrate,
-                StickComport = us.Ambe.StickPort,
-            };
+                comPort = SerialPortFinder.FindComPort(us.Ambe.StickVendorId, us.Ambe.StickProductId);
+                if (comPort == null)
+                {
+                    IsServerConnected = false;
+                    ShowAlert("Alert", "COM port not detected automatically. Please select a valid port in Settings.");
+                    return;
+                }                    
+            }
+            else
+            {
+                comPort = us.Ambe.StickPort;
+            }
+                _ambeConfig = new() // für alle Mode
+                {
+                    AmbeServiceType = us.Ambe.ServiceType,
+                    ServerAddr = us.Ambe.ServerAddr,
+                    ServerPort = us.Ambe.ServerPort,
+                    StickBaudrate = us.Ambe.StickBaudrate,
+                    StickComport = comPort!,
+                };
 
             switch (SelectedMode)
             {
@@ -750,6 +766,15 @@ public class MainViewModel : ViewModelBase
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             owner = desktop.MainWindow;
         SettingsService.ShowAboutDialog(owner);
+    }
+
+    private static void ShowAlert(string? title, string message)
+    {
+        logger.Debug("");
+        Window? owner = null;
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            owner = desktop.MainWindow;
+        SettingsService.ShowAlertDialog(owner, title, message);
     }
 
     private async Task ShowTgEditor(object? parameter)

@@ -9,6 +9,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace DigitalVoiceControlApp.Services;
 
@@ -66,7 +67,22 @@ public class SettingsService()
         });
 
         if (owner is not null)
-             box.ShowWindowDialogAsync(owner);
+            box.ShowWindowDialogAsync(owner);
+    }
+
+    public static void ShowAlertDialog(Window owner, string? title, string message)
+    {
+        var box = MessageBoxManager.GetMessageBoxStandard(new MessageBoxStandardParams
+        {
+            ContentTitle = title ?? "Alert",
+            ContentMessage = message,
+            ButtonDefinitions = ButtonEnum.Ok,
+            //MaxWidth = 500,                                   // Zeilen werden darüber umgebrochen
+            SizeToContent = SizeToContent.WidthAndHeight,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+        });
+
+        if (owner is not null)
+            box.ShowWindowDialogAsync(owner);
     }
 }
-
