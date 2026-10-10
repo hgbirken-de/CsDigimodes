@@ -1,0 +1,41 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="DigitalVoiceControlApp.Views.TalkgroupEditorDialog"
+        Title="Talkgroups"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Width="560"
+        Height="620"
+        MinWidth="420"
+        MinHeight="320"
+        WindowStartupLocation="CenterOwner"
+        CanResize="True">
+
+  <Grid Margin="16" RowDefinitions="Auto,*,Auto" RowSpacing="10">
+
+    <TextBlock Grid.Row="0"
+               Text="Format: DMR-ID;Name;G (group) or P (private). Lines starting with # are comments. The list fills the talkgroup selection."
+               TextWrapping="Wrap"
+               FontSize="12"
+               Opacity="0.7" />
+
+    <TextBox Grid.Row="1"
+             Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+             AcceptsReturn="True"
+             AcceptsTab="False"
+             TextWrapping="NoWrap"
+             FontFamily="Consolas,Menlo,Courier New,monospace"
+             FontSize="13"
+             VerticalContentAlignment="Top"
+             ScrollViewer.HorizontalScrollBarVisibility="Auto"
+             ScrollViewer.VerticalScrollBarVisibility="Auto" />
+
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="12">
+      <Button Content="Save" Command="{Binding SaveCommand}" MinWidth="80" HorizontalContentAlignment="Center" />
+      <Button Content="Cancel" Command="{Binding CancelCommand}" MinWidth="80" HorizontalContentAlignment="Center" />
+      <Button Content="Default" Command="{Binding DefaultCommand}" MinWidth="80" HorizontalContentAlignment="Center" />
+      <Button Content="Import…" Command="{Binding ImportCommand}" MinWidth="80" HorizontalContentAlignment="Center" />
+      <Button Content="Export…" Command="{Binding ExportCommand}" MinWidth="80" HorizontalContentAlignment="Center" />
+    </StackPanel>
+
+  </Grid>
+</Window>

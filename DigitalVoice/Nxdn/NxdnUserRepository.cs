@@ -7,13 +7,13 @@ namespace DigitalVoice.Nxdn;
 /// Utility class to load and query NXDN user records. The records are stored 
 /// in a static dictionary keyed by the NXDN id.
 /// </summary>
-public static class NxdnUsers
+public static class NxdnUserRepository
 {
     const string fileName = "NXDNUsers.txt";
 
     private static readonly Logger logger = LogManager.GetCurrentClassLogger();
 
-    static NxdnUsers()
+    static NxdnUserRepository()
     {
         //LoadDataFromEmbeddedResource();
     }
@@ -71,6 +71,11 @@ public static class NxdnUsers
     public static void LoadData(string filePath)
     {
         logger.Debug($"filePath = {filePath}");
+        if (!File.Exists(filePath))
+        {
+            logger.Error($"NXDN user file '{filePath}' not found: user lookup is not available.");
+            return;
+        }
 
         _users.Clear();
         foreach (var line in File.ReadLines(filePath))

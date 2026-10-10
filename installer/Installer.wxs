@@ -1,39 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
+  <!-- Die Version kommt von build.ps1 (wix build ... -d Version=1.0.1.0) aus der gebauten Exe. Ohne Angabe gilt dieser Wert. -->
+  <?ifndef Version?>
+  <?define Version = "1.0.0.0"?>
+  <?endif?>
+
   <!--
-    WiX v5 Installer-Definition für CsDigimodes.
-    Bauen mit:  wix build Installer.wxs -o CsDigimodes-Setup.msi
+    WiX v5 Installer-Definition für HamDigiModes.
+    Bauen mit:  wix build Installer.wxs -o HamDigiModes-Setup.msi
     Voraussetzung: der publish-Ordner (siehe build.ps1) muss VOR diesem Befehl existieren.
   -->
-  <Package Name="CsDigimodes"
+  <Package Name="HamDigiModes"
            Manufacturer="DL1HGB"
-           Version="1.0.0.0"
+           Version="$(Version)"
            UpgradeCode="f134ff31-be71-4365-a36b-8e1c40ee6997">
     <!-- upgradeCode NIEMALS ändern, auch nicht bei neuen Versionen - sonst erkennt der
          Installer künftige Versionen nicht mehr als Update derselben App, sondern
-         installiert parallel ein zweites Mal. "version" bei jedem Release hochzählen. -->
+         installiert parallel ein zweites Mal. "version" bei jedem Release hochzählen (kommt jetzt aus build.ps1). Die Version muss HÖHER sein
+         als die der installierten MSI (nur die ersten drei Zahlen zählen), sonst meldet MajorUpgrade "neuere Version installiert". -->
 
     <!-- Verhindert, dass eine ältere MSI über eine neuere installiert wird, und
          deinstalliert automatisch die alte Version bei einem Update. -->
-    <MajorUpgrade DowngradeErrorMessage="Eine neuere Version von CsDigimodes ist bereits installiert." />
+    <MajorUpgrade DowngradeErrorMessage="Eine neuere Version von HamDigiModes ist bereits installiert." />
 
     <MediaTemplate EmbedCab="yes" />
 
-    <!-- Zielverzeichnis: %ProgramFiles%\CsDigimodes -->
+    <!-- Zielverzeichnis: %ProgramFiles%\HamDigiModes -->
     <StandardDirectory Id="ProgramFiles64Folder">
-      <Directory Id="INSTALLFOLDER" Name="CsDigimodes" />
+      <Directory Id="INSTALLFOLDER" Name="HamDigiModes" />
     </StandardDirectory>
 
     <!-- Start-Menü-Ordner -->
     <StandardDirectory Id="ProgramMenuFolder">
-      <Directory Id="ApplicationProgramsFolder" Name="CsDigimodes" />
+      <Directory Id="ApplicationProgramsFolder" Name="HamDigiModes" />
     </StandardDirectory>
 
     <!-- Desktop (für die optionale Desktop-Verknüpfung) -->
     <StandardDirectory Id="DesktopFolder" />
 
-    <Feature Id="MainFeature" Title="CsDigimodes" Level="1">
+    <Feature Id="MainFeature" Title="HamDigiModes" Level="1">
       <ComponentGroupRef Id="AppFiles" />
       <ComponentRef Id="ApplicationShortcutStartMenu" />
       <ComponentRef Id="ApplicationShortcutDesktop" />
@@ -48,24 +54,24 @@
     <!-- Start-Menü-Verknüpfung -->
     <Component Id="ApplicationShortcutStartMenu" Directory="ApplicationProgramsFolder" Guid="*">
       <Shortcut Id="StartMenuShortcut"
-                Name="CsDigimodes"
-                Description="CsDigimodes - Digital Voice Control App"
-                Target="[INSTALLFOLDER]DigitalVoiceControlApp.Desktop.exe"
+                Name="HamDigiModes"
+                Description="HamDigiModes - A Digital Voice Amateur Radio Client"
+                Target="[INSTALLFOLDER]HamDigiModes.exe"
                 WorkingDirectory="INSTALLFOLDER" />
       <!-- Sorgt dafür, dass der Start-Menü-Ordner beim Deinstallieren wieder entfernt wird. -->
       <RemoveFolder Id="CleanUpStartMenuFolder" Directory="ApplicationProgramsFolder" On="uninstall" />
-      <RegistryValue Root="HKCU" Key="Software\DL1HGB\CsDigimodes" Name="StartMenuShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKCU" Key="Software\DL1HGB\HamDigiModes" Name="StartMenuShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
     </Component>
 
     <!-- Desktop-Verknüpfung (optional - einfach den kompletten Component-Block und die
          ComponentRef oben entfernen, falls du keine Desktop-Verknüpfung willst) -->
     <Component Id="ApplicationShortcutDesktop" Directory="DesktopFolder" Guid="*">
       <Shortcut Id="DesktopShortcut"
-                Name="CsDigimodes"
-                Description="CsDigimodes - Digital Voice Control App"
-                Target="[INSTALLFOLDER]DigitalVoiceControlApp.Desktop.exe"
+                Name="HamDigiModes"
+                Description="HamDigiModes - A Digital Voice Amateur Radio Client"
+                Target="[INSTALLFOLDER]HamDigiModes.exe"
                 WorkingDirectory="INSTALLFOLDER" />
-      <RegistryValue Root="HKCU" Key="Software\DL1HGB\CsDigimodes" Name="DesktopShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKCU" Key="Software\DL1HGB\HamDigiModes" Name="DesktopShortcutInstalled" Type="integer" Value="1" KeyPath="yes" />
     </Component>
 
   </Package>

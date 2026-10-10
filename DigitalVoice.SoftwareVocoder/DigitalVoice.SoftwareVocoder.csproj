@@ -17,6 +17,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <AssemblyMetadata Include="ThirdParty" Value="mbelib (C# port): © 2010 mbelib Author, ISC license" />
+    <AssemblyMetadata Include="ThirdParty" Value="imbe_vocoder (C# port): © 2009 Pavel Yazev, GPL v3 or later" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- IAmbe3000RController, AmbeHelper (und NLog, das DigitalVoice mitbringt) -->
     <ProjectReference Include="..\DigitalVoice\DigitalVoice.csproj" />
   </ItemGroup>

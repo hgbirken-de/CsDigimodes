@@ -38,6 +38,11 @@ public static class DmrTalkgroups
     public static void LoadData(string filePath)
     {
         logger.Debug($"file_path = {filePath}");
+        if (!File.Exists(filePath))
+        {
+            logger.Error($"Talkgroup file '{filePath}' not found: TG lookup is not available.");
+            return;
+        }
 
         _talkgroups.Clear();
 

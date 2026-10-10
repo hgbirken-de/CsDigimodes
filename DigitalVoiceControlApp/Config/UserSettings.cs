@@ -97,6 +97,9 @@ public class UserSettings
             }
         }
 
+        // Standarddateien beim ersten Start bereitstellen (vorhandene Dateien bleiben unangetastet)
+        DefaultDataFiles.EnsureInstalled(Path.Combine(homeDir, Mode.Dmr.ToString(), appSpecificFolder[FileType.Data]), "DmrTalkGroups.csv");
+
         logger.Debug("");
     }
 
@@ -107,20 +110,37 @@ public class UserSettings
     /// <exception cref="ArgumentException"></exception>
     public static UserSettings Instance()
     {
-        if (_instance == null)
+        if (_instance != null)
+            return _instance;
+
+        if (!File.Exists(FileName))
         {
+            // Erster Start: Es gibt noch keine Einstellungsdatei. Das ist kein Fehler, es gelten die Property-Vorgaben.
+            logger.Info($"First start: '{FileName}' does not exist yet, using default settings.");
+            _instance = new UserSettings();
             try
             {
-                string yamlText = File.ReadAllText(FileName);
-                var deserializer = new DeserializerBuilder().Build();
-                _instance = deserializer.Deserialize<UserSettings>(yamlText);
+                Save();   // Datei mit den Vorgaben anlegen
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
+                logger.Error(ex, $"Could not create '{FileName}'.");
             }
-            _instance ??= new UserSettings(); // something went wrong, asure that we have values
+            return _instance;
         }
+
+        try
+        {
+            string yamlText = File.ReadAllText(FileName);
+            var deserializer = new DeserializerBuilder().Build();
+            _instance = deserializer.Deserialize<UserSettings>(yamlText);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $"Settings file '{FileName}' could not be read, using default settings.");
+        }
+
+        _instance ??= new UserSettings(); // leere oder defekte Datei: Vorgaben verwenden
         return _instance;
     }
 
@@ -151,7 +171,7 @@ public class Ambe
 {
     public string ServerAddr { get; set; } = "127.0.0.1";
     public int ServerPort { get; set; } = 2460;
-    public AmbeServiceType ServiceType { get; set; }
+    public AmbeServiceType ServiceType { get; set; } = AmbeServiceType.Software;
     public int StickBaudrate { get; set; } = 460800;
     public string StickPort { get; set; } = "COM9";
 }
@@ -162,11 +182,11 @@ public class Common
     public string Language { get; set; } = "en-US";
     public Mode LastMode { get; set; } = Mode.Fcs;
     public string Locator { get; set; } = "JO54OL";
-    public double MicGain { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
     public string Name { get; set; } = "Unknown";
-    public string Theme { get; set; } = "Dark"; // "Dark" oder "Light"
+    public string Theme { get; set; } = "Light"; // "Dark" oder "Light"
     public bool RecordRcvdUdpPackets { get; set; } = false;
-    public double RxVolume { get; set; } = 50;
+    public double RxVolume { get; set; } = 0;
     public bool TextToSpeech { get; set; } = false;
     public string Town { get; set; } = "Unknown";
 }
@@ -177,8 +197,8 @@ public class Dcs
     public char LastModule { get; set; } = 'C';
     public int HostPort { get; set; } = 30051;
     public string UserMessage { get; set; } = "DVC by DL1HGB";
-    public double MicGain { get; set; } = 50;
-    public double RxVolume { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
+    public double RxVolume { get; set; } = 0;
 }
 
 public class Dmr
@@ -193,8 +213,8 @@ public class Dmr
     public string Master { get; set; } = "BM_2621_Germany";
     public int TimeSlot { get; set; } = 1;
     public int ColorCode { get; set; } = 1;
-    public double MicGain { get; set; } = 50;
-    public double RxVolume { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
+    public double RxVolume { get; set; } = 0;
 }
 
 public class Fcs
@@ -202,8 +222,8 @@ public class Fcs
     public string Master { get; set; } = "FCS001 (DE)";
     public int Port { get; set; } = 62500;
     public string LastReflector { get; set; } = "FCS00199";
-    public double MicGain { get; set; } = 50;
-    public double RxVolume { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
+    public double RxVolume { get; set; } = 0;
 }
 
 public class Gui
@@ -227,8 +247,8 @@ public class Nxdn
 {
     public int NxdnId { get; set; } = 39251;
     public int LastReflectorId { get; set; } = 20000;
-    public double MicGain { get; set; } = 50;
-    public double RxVolume { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
+    public double RxVolume { get; set; } = 0;
 }
 
 public class Ref
@@ -237,8 +257,8 @@ public class Ref
     public char LastModule { get; set; } = 'A';
     public int HostPort { get; set; } = 20001;
     public string UserMessage { get; set; } = "DVC by DL1HGB";
-    public double MicGain { get; set; } = 50;
-    public double RxVolume { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
+    public double RxVolume { get; set; } = 0;
 }
 
 public class Xrf
@@ -247,13 +267,13 @@ public class Xrf
     public char LastModule { get; set; } = 'C';
     public int HostPort { get; set; } = 30001;
     public string UserMessage { get; set; } = "DVC by DL1HGB";
-    public double MicGain { get; set; } = 50;
-    public double RxVolume { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
+    public double RxVolume { get; set; } = 0;
 }
 
 public class Ysf
 {
     public string LastReflector { get; set; } = "99999";
-    public double MicGain { get; set; } = 50;
-    public double RxVolume { get; set; } = 50;
+    public double MicGain { get; set; } = 0;
+    public double RxVolume { get; set; } = 0;
 }

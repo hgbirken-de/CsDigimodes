@@ -1,7 +1,6 @@
 ﻿using Avalonia.Controls;
 using DigitalVoice.Common;
 using DigitalVoice.Dmr;
-using DigitalVoice.Nxdn;
 using DigitalVoiceControlApp.Config;
 using NLog;
 using System.Globalization;
@@ -27,12 +26,6 @@ public partial class MainView : UserControl
     public MainView()
     {
         InitializeComponent();
-
-        // Load User Repository (for DMR)
-        DmrUserRepository.LoadData(Path.Combine(UserSettings.Dir(Mode.Dmr, UserSettings.FileType.Data), "user.csv"));
-
-        // Load User Repository (for NXDN)
-        NxdnUsers.LoadData(Path.Combine(UserSettings.Dir(Mode.Nxdn, UserSettings.FileType.Data), "nxdn.csv"));
 
         // Load DMR talksgroups provided by the user
         string filePath = Path.Combine(UserSettings.Dir(Mode.Dmr, UserSettings.FileType.Data), "DmrTalkGroups.csv");

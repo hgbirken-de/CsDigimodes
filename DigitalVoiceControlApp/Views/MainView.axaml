@@ -153,6 +153,9 @@
               </MenuItem>
               <MenuItem Header="Dark theme" ToggleType="CheckBox" IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" />
               <Separator/>
+              <MenuItem Header="Talkgroups" Command="{Binding ShowTgEditorDialogCommand}">
+              </MenuItem>
+              <Separator/>
               <MenuItem Header="APRS.fi" Command="{Binding OpenUrlCommand}" CommandParameter="http://www.aprs.fi">
                 <MenuItem.Icon>
                   <Image Source="avares://DigitalVoiceControlApp/Assets/BrowserLink_16x.png" Width="16" Height="16"/>
@@ -252,8 +255,8 @@
       </Grid.RowDefinitions>
 
       <!-- Sliders -->
-      <Border BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="3" Background="{DynamicResource PanelBackgroundBrush}" Padding="0" HorizontalAlignment="Center" Width="400">
-      <Grid Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" Margin="0" >
+      <Border Grid.Column="0" Grid.ColumnSpan="4" Grid.Row="0" BorderBrush="{DynamicResource PanelBorderBrush}" BorderThickness="1" CornerRadius="3" Background="{DynamicResource PanelBackgroundBrush}" Padding="0" HorizontalAlignment="Center" Width="400">
+      <Grid Margin="0">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*"/>
           <ColumnDefinition Width="*"/>

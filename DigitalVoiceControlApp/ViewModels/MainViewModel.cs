@@ -39,6 +39,8 @@ public class MainViewModel : ViewModelBase
     public ICommand ExitCommand { get; }
     public ICommand OpenUrlCommand { get; }
     public ICommand ShowAboutCommand { get; }
+
+    public RelayCommand<object?> ShowTgEditorDialogCommand { get; }
     public RelayCommand<object?> ShowSettingsDialogCommand { get; }
     public ICommand TogglePttCommand { get; }
 
@@ -205,6 +207,8 @@ public class MainViewModel : ViewModelBase
             // Update command availability
             if (ShowSettingsDialogCommand is RelayCommand<object?> cmd)
                 cmd.RaiseCanExecuteChanged();
+            if (ShowTgEditorDialogCommand is RelayCommand<object?> cmd2)
+                cmd2.RaiseCanExecuteChanged();
         }
     }
 
@@ -445,6 +449,8 @@ public class MainViewModel : ViewModelBase
         OpenUrlCommand = new RelayCommand<string?>(url => OpenUrl(url));
         
         ShowAboutCommand = new RelayCommand(_ => ShowAbout());
+
+        ShowTgEditorDialogCommand = new RelayCommand<object?>(async param => await ShowTgEditor(param), _ => !IsServerConnected);
 
         ShowSettingsDialogCommand = new RelayCommand<object?>(async param => await ShowSettings(param), _ => !IsServerConnected);
 
@@ -722,6 +728,21 @@ public class MainViewModel : ViewModelBase
         catch { }
     }
 
+    /// <summary>Lädt die Talkgroup-Datei neu und füllt die Auswahl, wenn DMR aktiv ist.</summary>
+    private void ReloadTalkgroups()
+    {
+        TalkgroupFile.Reload();
+        if (SelectedMode != Mode.Dmr)
+            return;
+
+        LoadReflector();
+
+        // Wurde die bisherige Talkgroup gelöscht, bliebe SelectedLinkTarget auf dem alten Wert, während die
+        // Combobox leer ist. Dann den ersten Eintrag der neuen Liste wählen.
+        if (SelectedLinkTarget == null || !LinkTargets.Contains(SelectedLinkTarget))
+            SelectedLinkTarget = LinkTargets.FirstOrDefault();
+    }
+
     private static void ShowAbout()
     {
         logger.Debug("");
@@ -729,6 +750,21 @@ public class MainViewModel : ViewModelBase
         if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             owner = desktop.MainWindow;
         SettingsService.ShowAboutDialog(owner);
+    }
+
+    private async Task ShowTgEditor(object? parameter)
+    {
+        Window? owner = null;
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            owner = desktop.MainWindow;
+        bool result = await SettingsService.ShowTgEditorDialogAsync(owner);
+        if (result)
+        {
+            ReloadTalkgroups();   // Liste neu laden und die Combobox neu füllen
+        }
+        else
+        {
+        }
     }
 
     private static async Task ShowSettings(object? parameter)

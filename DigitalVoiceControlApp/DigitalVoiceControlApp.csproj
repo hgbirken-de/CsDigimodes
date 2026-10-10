@@ -64,8 +64,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="DmrTalkGroups.csv">
+    <!--<None Update="DmrTalkGroups.csv">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </None>-->
+    <EmbeddedResource Include="DmrTalkGroups.csv" LogicalName="DmrTalkGroups.csv" />
   </ItemGroup>
 </Project>

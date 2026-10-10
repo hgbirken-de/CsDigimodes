@@ -1,4 +1,6 @@
-﻿namespace DigitalVoice.Dmr;
+﻿using NLog;
+
+namespace DigitalVoice.Dmr;
 
 public record DmrUserRecord
 {
@@ -13,12 +15,20 @@ public record DmrUserRecord
 
 public static class DmrUserRepository
 {
+    static readonly Logger logger = LogManager.GetCurrentClassLogger();
+
     readonly static Dictionary<int, string> _byId = [];
 
     //readonly static Dictionary<string, int> _byCallsign = new(StringComparer.OrdinalIgnoreCase);
 
     public static void LoadData(string filePath)
     {
+        if (!File.Exists(filePath))
+        {
+            logger.Error($"DMR user file '{filePath}' not found: user lookup is not available.");
+            return;
+        }
+
         foreach (var line in File.ReadLines(filePath))
         {
             var parts = line.Split(',');

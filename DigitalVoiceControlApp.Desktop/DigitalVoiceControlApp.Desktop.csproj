@@ -1,13 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
+    <AssemblyName>HamDigiModes</AssemblyName>
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
     One for Windows with net8.0-windows TFM, one for MacOS with net8.0-macos and one with net8.0 TFM for Linux.-->
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <Product>HamDigiModes</Product>
+    <AssemblyTitle>HamDigiModes</AssemblyTitle>
+    <Description>A Digital Voice Amateur Radio Client</Description>
+    <Authors>Hans-Gunther Birken, DL1HGB</Authors>
+    <Copyright>Copyright © 2026 Hans-Gunther Birken, DL1HGB</Copyright>
+    <Version>1.0.0.0</Version> <!-- Major.Minor.Build.Revision -->
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="License" Value="GNU General Public License, version 3 or later. This program comes with ABSOLUTELY NO WARRANTY. See https://www.gnu.org/licenses/gpl-3.0.html" />
+    <AssemblyMetadata Include="ProjectUrl" Value="https://github.com/…/HamDigiModes" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\DigitalVoice.SoftwareVocoder\LICENSE-GPL.txt" Link="LICENSE-GPL.txt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="..\DigitalVoice.SoftwareVocoder\LICENSE-mbelib.txt" Link="LICENSE-mbelib.txt"
+          CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
@@ -25,4 +45,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
 </Project>
