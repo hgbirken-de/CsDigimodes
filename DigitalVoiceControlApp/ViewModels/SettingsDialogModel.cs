@@ -362,16 +362,20 @@ internal class SettingsDialogModel : ViewModelBase
         AmbeServiceType = us.Ambe.ServiceType;
 
         AmbeStickPorts.Add("AUTO");
-        for (int i = 0; i < 20; i++)
+        IReadOnlyList<SerialPortInfo> portList = SerialPortFinder.GetPorts();
+        foreach (SerialPortInfo port in portList)
         {
-            AmbeStickPorts.Add($"COM{i}");
+            AmbeStickPorts.Add(port.PortName);
         }
+        //for (int i = 0; i < 20; i++)
+        //{
+        //    AmbeStickPorts.Add($"COM{i}");
+        //}
         SelectedAmbeStickPort = us.Ambe.StickPort;
         SelectedAmbeStickBaudrate = us.Ambe.StickBaudrate;
 
         AmbeServerAddr = us.Ambe.ServerAddr;
         AmbeServerPort = us.Ambe.ServerPort.ToString();
-
     }
 
     /// <summary>

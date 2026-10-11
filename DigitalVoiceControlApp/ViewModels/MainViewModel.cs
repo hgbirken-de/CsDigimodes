@@ -508,7 +508,6 @@ public class MainViewModel : ViewModelBase
             UserSettings us = UserSettings.Instance();
             string? msg = null;
             string? comPort = null;
-            
             if (us.Ambe.ServiceType == AmbeServiceType.Stick && string.Equals(us.Ambe.StickPort, "AUTO", StringComparison.OrdinalIgnoreCase))
             {
                 comPort = SerialPortFinder.FindComPort(us.Ambe.StickVendorId, us.Ambe.StickProductId);
