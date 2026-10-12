@@ -3,6 +3,7 @@
         x:Class="DigitalVoiceControlApp.Views.TalkgroupEditorDialog"
         Title="Talkgroups"
         Background="{DynamicResource AppBackgroundBrush}"
+        Icon="/Assets/hamdigimodes.ico"
         Width="560"
         Height="620"
         MinWidth="420"

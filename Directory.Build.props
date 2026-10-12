@@ -2,5 +2,11 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <AvaloniaVersion>11.3.3</AvaloniaVersion>
+	<!--
+	<Version>1.0.1</Version>
+	<Product>HamDigiModes</Product>
+	<Authors>Hans-Gunther Birken, DL1HGB</Authors>
+	<Copyright>Copyright © 2026 Hans-Gunther Birken, DL1HGB</Copyright>
+	-->
   </PropertyGroup>
 </Project>

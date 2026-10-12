@@ -19,7 +19,10 @@ public sealed class AboutInfo
     /// <summary>Adresse des Lizenztextes.</summary>
     public const string LicenseUrl = "https://www.gnu.org/licenses/gpl-3.0.html";
 
-    public string AppName => "HamDigiQSO";
+    public string AppName => "HamDigiModes";
+
+    /// <summary>Untertitel unter dem Namen (wie in der Windows-Fassung).</summary>
+    public string Tagline => "A Digital Voice Amateur Radio Client";
 
     public string Copyright => "Copyright © 2026 Hans-Gunther Birken, DL1HGB";
 
@@ -49,8 +52,8 @@ public sealed class AboutInfo
     public bool HasProjectUrl => !string.IsNullOrWhiteSpace(ProjectUrl);
 
     /// <summary>
-    /// <c>true</c>, wenn die GPL-Sprachanalyse des Software-Kodierers (Projekt DigitalVoice.SoftwareVocoder.Imbe) Teil der App
-    /// ist. Dann erscheint ihr Hinweis in der Liste der Fremdsoftware.
+    /// <c>true</c>, wenn die GPL-Sprachanalyse des Software-Kodierers (Klasse <c>ImbeAnalyzer</c> im Projekt DigitalVoice.SoftwareVocoder) Teil
+    /// der App ist. Dann erscheint ihr Hinweis in der Liste der Fremdsoftware.
     /// </summary>
     public bool HasGplEncoder { get; } = DetectGplEncoder();
 
@@ -125,7 +128,7 @@ public sealed class AboutInfo
     {
         try
         {
-            return Type.GetType("DigitalVoice.SoftwareVocoder.Imbe.ImbeAnalyzer, DigitalVoice.SoftwareVocoder.Imbe") != null;
+            return Type.GetType("DigitalVoice.SoftwareVocoder.Imbe.ImbeAnalyzer, DigitalVoice.SoftwareVocoder") != null;
         }
         catch
         {
